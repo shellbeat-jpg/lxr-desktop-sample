@@ -352,7 +352,7 @@ int main(void)
 #else
 	//print boot up message
 lcd_clear();
-lcd_string("MOD Samples s1"); // modified firmware, not official
+lcd_string("MOD Samples s2"); // modified firmware, not official
 //goto 2nd line
 lcd_setcursor(0,2);
 lcd_string("LXR2 Drums V");
@@ -445,6 +445,7 @@ if(sd_card_ok)
 	sampleFlash_importAtBoot();
 	lcd_clear();
 }
+menu_setNumSamples(sampleFlash_getCount()); // MOD: samples appear as waveforms s1..sN
 
 adc_checkPots();
 adc_checkPots();

@@ -62,4 +62,9 @@ SampleFlashResult sampleFlash_importAtBoot(void);
 const SampleFlashHeader* sampleFlash_getHeader(void);
 uint8_t sampleFlash_getCount(void);
 
+/* Fast access for the audio engine (no validity check per call): the header is
+ * validated once by sampleFlash_importAtBoot(). Returns NULL for an empty or
+ * out-of-range slot (slot 0 = first file). */
+const SampleFlashEntry* sampleFlash_entry(uint8_t slot);
+
 #endif /* SAMPLEFLASH_H_ */

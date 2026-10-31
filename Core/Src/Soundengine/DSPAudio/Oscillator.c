@@ -18,6 +18,14 @@
 #include "Soundengine/MIDI/MidiParser.h"
 #include "Soundengine/MIDI/MidiNoteNumbers.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "SampleRom/sampleFlash.h"
+#include <string.h>
+
+/* MOD: user samples from flash. A sample plays at its original pitch when the
+ * oscillator is tuned to MIDI note SMP_ROOT_NOTE (coarse 60, fine centre). */
+#define SMP_ROOT_NOTE   60
+#define SMP_FRAC_BITS   17
+#define SMP_FRAC_MASK   ((1u << SMP_FRAC_BITS) - 1u)
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
@@ -400,10 +408,8 @@ IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_
 			calcPwmBlock(osc,buf,size, gain, pwm);
 			break;
 
-		default://sample playback
-		//	if( osc->waveform - OSC_SAMPLE_START > sampleMemory_getNumSamples() ) return; // return if out of range
-
-		//	calcUserSampleOscBlock(osc,buf,size, gain);
+		default://sample playback (MOD)
+			calcUserSampleOscBlock(osc,buf,size, gain);
 			break;
 		}
 }
@@ -554,76 +560,85 @@ int16_t calcSampleOscFm(OscInfo* osc, OscInfo* modOsc)
 //------------------------------------------------------------------
 void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain)
 {
-#if 0
-	//TODO optimize performance by moving sampleInfo to oscillator struct
-	SampleInfo info = sampleMemory_getSampleInfo(osc->waveform - OSC_SAMPLE_START);
-
-	//cast sample data to signed int16_t array
-	int16_t* sampleData = (int16_t*)((int8_t*)(info.offset));
-
+	/* MOD: one-shot sample with phase modulation from the mod oscillator.
+	 * The modulator shifts the read position by up to +/-4096 frames
+	 * (same scaling as the original Sonic Potions sample FM). */
+	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
+	if(e == NULL)
+	{
+		memset(buf, 0, size * sizeof(int16_t));
+		osc->output = 0;
+		return;
+	}
+	const int16_t* data = (const int16_t*)e->offset;
+	const uint32_t n = e->frames;
+	uint32_t pos = osc->phase;
+	uint32_t frac = osc->smpFrac;
+	int16_t out = 0;
 	uint8_t i;
 	for(i=0;i<size;i++)
 	{
-		const uint32_t oscPhase 	= osc->phase;
-		int16_t oscOut ;
-
-		const uint32_t index =  oscPhase + (((uint32_t)(modBuffer[i]*osc->fmMod))<<14);
-		uint32_t  itg	= index>>17;
-
-	#if INTERPOLATE_FM_OSC
-		oscOut = sampleData[itg++];
-		const float frac	= (index&20000)*0.00000762939453125f;//=> * 1/0x20000
-		oscOut += frac*(sampleData[itg] - oscOut);
-	#else
-		oscOut = sampleData[itg];
-	#endif
-
-		//one shot
-		if(itg < info.size)
+		if(pos >= n)
 		{
-			osc->phase = oscPhase + osc->phaseInc;
+			out = 0;
 		}
-		osc->output = oscOut;
-		buf[i] = oscOut * gain;
+		else
+		{
+			int32_t rp = (int32_t)pos + (((int32_t)(modBuffer[i]*osc->fmMod)) >> 3);
+			if(rp < 0) rp = 0;
+			if(rp >= (int32_t)n) rp = (int32_t)n - 1;
+			const int32_t s0 = data[rp];
+			const int32_t s1 = ((uint32_t)rp + 1u < n) ? data[rp + 1] : 0;
+			out = (int16_t)(s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15));
+			frac += osc->phaseInc;
+			pos  += frac >> SMP_FRAC_BITS;
+			frac &= SMP_FRAC_MASK;
+		}
+		buf[i] = out * gain;
 	}
-#endif
+	osc->phase = pos > n ? n : pos;
+	osc->smpFrac = frac;
+	osc->output = out;
 }
 //---------------------------------------------------------------
 void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain)
 {
-#if 0
-	//TODO optimize performance by moving sampleInfo to oscillator struct
-	SampleInfo info = sampleMemory_getSampleInfo(osc->waveform - OSC_SAMPLE_START);
-
-	//cast sample data to signed int16_t array
-	int16_t* sampleData = (int16_t*)((int8_t*)(info.offset));
-
+	/* MOD: one-shot playback of a flash sample with linear interpolation.
+	 * phase = integer frame position, smpFrac = 17 bit fraction. After the
+	 * last frame the oscillator outputs silence until the next trigger. */
+	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
+	if(e == NULL)
+	{
+		memset(buf, 0, size * sizeof(int16_t));
+		osc->output = 0;
+		return;
+	}
+	const int16_t* data = (const int16_t*)e->offset;
+	const uint32_t n = e->frames;
+	uint32_t pos = osc->phase;
+	uint32_t frac = osc->smpFrac;
+	int16_t out = 0;
 	uint8_t i;
 	for(i=0;i<size;i++)
 	{
-		const uint32_t oscPhase = osc->phase;
-		int16_t oscOut ;
-		uint32_t  itg	= oscPhase>>17;
-
-
-	#if INTERPOLATE_OSC
-
-		oscOut = sampleData[itg++];
-		const float frac = (oscPhase&20000)*0.00000762939453125f;//=> * 1/0x20000
-		oscOut += frac*(sampleData[itg] - oscOut);
-	#else
-		oscOut = sampleData[itg];
-	#endif
-	//	oscOut = (oscOut - 127)*256;
-
-		//one shot
-		if(itg < info.size)
+		if(pos >= n)
 		{
-			osc->phase = oscPhase + osc->phaseInc;
+			out = 0;
 		}
-		buf[i] = oscOut * gain;
+		else
+		{
+			const int32_t s0 = data[pos];
+			const int32_t s1 = (pos + 1u < n) ? data[pos + 1u] : 0;
+			out = (int16_t)(s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15));
+			frac += osc->phaseInc;
+			pos  += frac >> SMP_FRAC_BITS;
+			frac &= SMP_FRAC_MASK;
+		}
+		buf[i] = out * gain;
 	}
-#endif
+	osc->phase = pos > n ? n : pos;
+	osc->smpFrac = frac;
+	osc->output = out;
 }
 //---------------------------------------------------------------
 /*
@@ -746,8 +761,15 @@ void osc_calcSampleFreq(OscInfo* osc)
 //-----------------------------------------------------------
 void osc_calcUserSampleFreq(OscInfo* osc)
 {
+	/* MOD: frames per output sample (17 bit fixed point). Original pitch at
+	 * SMP_ROOT_NOTE, corrected for the sample's own rate. */
+	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
+	const float rate = (e != NULL && e->rate > 0u) ? (float)e->rate : REAL_FS;
 	const float currentFreq = osc->freq*osc->pitchMod*osc->modNodeValue;
-	osc->phaseInc = freq2PhaseIncr32767(currentFreq);
+	float inc = (currentFreq / MidiNoteFrequencies[SMP_ROOT_NOTE]) * (rate / REAL_FS) * (float)(1u << SMP_FRAC_BITS);
+	if(!(inc > 0.f)) inc = 0.f;                                      /* also catches NaN */
+	if(inc > 64.f * (float)(1u << SMP_FRAC_BITS)) inc = 64.f * (float)(1u << SMP_FRAC_BITS);
+	osc->phaseInc = (uint32_t)inc;
 }
 //-----------------------------------------------------------
  void osc_setFreq(OscInfo* osc)
@@ -799,6 +821,13 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 
 	 osc->freq = MidiNoteFrequencies[note]*cent;
 	 osc->baseNote = baseNote;
+
+	 /* MOD: called on every voice trigger - samples always restart at frame 0 */
+	 if(osc->waveform >= NUM_OSC_WAVEFORMS)
+	 {
+		 osc->phase = 0;
+		 osc->smpFrac = 0;
+	 }
  };
 
  //-----------------------------------------------------------

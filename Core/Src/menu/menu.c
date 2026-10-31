@@ -2636,7 +2636,7 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		{
 			buf[0]='s';
 			buf[2]=' ';
-			numtostru(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0]));
+			numtostru(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0] + 1)); // MOD: s1 = first file
 			return;
 		}
 		break;
