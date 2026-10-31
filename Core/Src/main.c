@@ -48,6 +48,7 @@ typedef struct ImageFileHeaderStruct
 #include "Soundengine/DSPAudio/random.h"
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/MIDI/Uart.h"
+#include "SampleRom/sampleFlash.h"
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -351,7 +352,7 @@ int main(void)
 #else
 	//print boot up message
 lcd_clear();
-lcd_string("Sonic Potions");
+lcd_string("MOD Samples s1"); // modified firmware, not official
 //goto 2nd line
 lcd_setcursor(0,2);
 lcd_string("LXR2 Drums V");
@@ -437,6 +438,13 @@ else
 
 HAL_Delay(1000);
 lcd_clear();
+
+// MOD: import /SAMPLES into flash sectors 6+7 (before the sound engine starts)
+if(sd_card_ok)
+{
+	sampleFlash_importAtBoot();
+	lcd_clear();
+}
 
 adc_checkPots();
 adc_checkPots();
