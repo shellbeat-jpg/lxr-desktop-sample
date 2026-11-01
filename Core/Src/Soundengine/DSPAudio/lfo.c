@@ -34,15 +34,65 @@ void lfo_init(Lfo *lfo)
 	lfo->freq			= 1;
 	lfo->modNodeValue	= 1;
 	lfo->cycleCount		= 0;
+	lfo->osDelay		= 0;
+	lfo->osDone			= 1;	//one-shots wait for the first trigger
 
 	modNode_init(&lfo->modTarget);
 }
 //-------------------------------------------------------------
+//MOD: the shapes, also used by the one-shot versions (x = phase 0..1)
+static inline float lfo_expTri(const float x)
+{
+	const float y = x < 0.5f ? 2.f * x : 2.f * (1.f - x);
+	return y * y * y;
+}
+//-------------------------------------------------------------
+//MOD: one-shot waveforms: delay, one cycle, hold
+__attribute__((noinline)) static float lfo_calcOneShot(Lfo *lfo, const uint32_t incInt)
+{
+	const uint8_t w = lfo->waveform;
+	if(w == LFO_NOISE_1)
+		return lfo->rnd;		//drawn at the trigger
+	if(lfo->osDelay)
+	{
+		if(lfo->osDelay > incInt) lfo->osDelay -= incInt;
+		else lfo->osDelay = 0;
+		lfo->phase = 0;
+	}
+	else if(!lfo->osDone)
+	{
+		const uint32_t old = lfo->phase;
+		lfo->phase += incInt;
+		if(lfo->phase < old)	//the cycle ended: hold its end
+		{
+			lfo->phase = 0xffffffff;
+			lfo->osDone = 1;
+		}
+	}
+	const float x = lfo->phase / (float)0xffffffff;
+	switch(w)
+	{
+	case LFO_SINE_1:		return ((sine_table[(lfo->phase>>20)]/32767.f) + 1)/2.f;
+	case LFO_TRI_1:			return 1.f - fabsf(x*2 - 1);
+	case LFO_SAW_UP_1:		return x;
+	case LFO_SAW_DOWN_1:	return 1.f - x;
+	case LFO_REC_1:			return (lfo->osDelay || lfo->osDone || lfo->phase > 0x7fffffff) ? 0.f : 1.f;
+	case LFO_EXP_UP_1:		return x*x*x;
+	case LFO_EXP_DOWN_1:	{ const float y = 1.f - x; return y*y*y; }
+	default:				return lfo_expTri(x);	//LFO_EXP_TRI_1
+	}
+}
+//-------------------------------------------------------------
 IN_ITCM_RAM float lfo_calc(Lfo *lfo)
 {
-	uint32_t oldPhase 		= lfo->phase;
 	float inc = lfo->phaseInc*lfo->modNodeValue;
 	uint32_t incInt = inc;
+
+	//MOD: one-shot waveforms (in flash, not in the nearly full ITCM)
+	if(lfo->waveform >= LFO_SINE_1)
+		return lfo_calcOneShot(lfo, incInt);
+
+	uint32_t oldPhase 		= lfo->phase;
 	lfo->phase 			   += incInt;//lfo->phaseInc*lfo->modNodeValue;
 	const uint8_t overflow 	= oldPhase>lfo->phase;
 
@@ -103,6 +153,9 @@ IN_ITCM_RAM float lfo_calc(Lfo *lfo)
 				return ((float)k + 0.5f) / (float)n;
 			}
 			break;
+	//---
+		case LFO_EXP_TRI:	//MOD
+			return lfo_expTri(lfo->phase/(float)0xffffffff);
 	//---
 		case LFO_EXP_DOWN:
 			{
@@ -235,6 +288,16 @@ void lfo_retrigger(uint8_t voice)
 		if(lfo->waveform == LFO_CYCLE && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
 		{
 			lfo->cycleCount++;
+		}
+		//MOD: one-shot waveforms start (after the delay = offset) on each trigger
+		//of the retrigger voice, without retrigger of the LFO's own voice
+		if(lfo->waveform >= LFO_SINE_1 && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
+		{
+			lfo->phase   = 0;
+			lfo->osDone  = 0;
+			lfo->osDelay = lfo->phaseOffset;
+			if(lfo->waveform == LFO_NOISE_1)
+				lfo->rnd = GetRngValue() / (float)0xffffffff;
 		}
 	}
 }

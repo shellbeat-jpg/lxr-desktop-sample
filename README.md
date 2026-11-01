@@ -157,6 +157,20 @@ Recommended settings:
 - Project template: `INIT.SND` in the project folder (needs a saved project; `Save proj first`
   otherwise; a project save keeps it). Global template: `/INIT.SND`.
 
+### 7. Performance and sequencer additions (1.2.4, in test)
+
+- **Mod wheel** (CC 1) on the global MIDI channel = kit morph `mrp`.
+- **Morph target quick access:** in the edit view of a sound parameter, hold **SHIFT**: `Morph>`
+  shows and the encoder edits the value of the morph kit.
+- **Velocity 0** on a step = automation only (no trigger, no MIDI note).
+- **Instant pattern switching:** global settings page 2, `ips` on: a pattern selected by hand starts
+  on the next step at the same position.
+- **LFO waveforms:** `xtr` (exp. triangle) and one-shots `si1` `tr1` `su1` `sd1` `sq1` `rn1` `xu1`
+  `xd1` `xt1`: one cycle per trigger, then hold; `ofs` = delay before the start; `rn1` = a new random
+  value per trigger; `sq1` = a gate after each trigger.
+
+Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-124-in-test).
+
 ### Compatibility
 
 Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `all`, no choke

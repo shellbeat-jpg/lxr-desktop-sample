@@ -35,6 +35,18 @@ enum
 	LFO_EXP_UP,
 	LFO_EXP_DOWN,
 	LFO_CYCLE,		//MOD: steps through mod+1 values, one step per trigger
+	LFO_EXP_TRI,	//MOD: exponential rise, then exponential fall
+	//MOD: one-shot versions: run one cycle after a trigger (of the rtg voice,
+	//without rtg of the LFO's own voice), then hold; the offset is a start delay
+	LFO_SINE_1,
+	LFO_TRI_1,
+	LFO_SAW_UP_1,
+	LFO_SAW_DOWN_1,
+	LFO_REC_1,		//inverted: on first, then off; during the delay off
+	LFO_NOISE_1,	//one random value per trigger
+	LFO_EXP_UP_1,
+	LFO_EXP_DOWN_1,
+	LFO_EXP_TRI_1,
 	NUM_LFO_WAVEFORMS
 };
 
@@ -55,6 +67,8 @@ typedef struct LfoStruct
 	ModulationNode modTarget;
 	float		modNodeValue;
 	uint32_t	cycleCount;	//MOD: triggers counted by LFO_CYCLE
+	uint32_t	osDelay;	//MOD: one-shot: remaining start delay (phase units)
+	uint8_t		osDone;		//MOD: one-shot: the cycle has ended
 } Lfo;
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo);

@@ -163,7 +163,7 @@ static uint8_t* preset_morphEngines()
 	return kitEngines_ram[(morphParameters - first) / END_OF_SOUND_PARAMETERS];
 }
 //is par an engine specific parameter of a slot that has another engine in the morph kit?
-static uint8_t preset_isMorphEngineMismatch(uint16_t par)
+uint8_t preset_isMorphEngineMismatch(uint16_t par)
 {
 	const uint8_t slot = kitEngines_rolePar2Slot(par);
 	return slot < NUM_VOICE_SLOTS && kitEngines[slot] != preset_morphEngines()[slot];

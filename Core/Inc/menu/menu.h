@@ -281,6 +281,7 @@ enum NamesEnum
 	TEXT_CHOKE,			//MOD: the active voice is in the kit's choke group
 	TEXT_VMORPH_PAIR,	//MOD: voice morph source > target
 	TEXT_VMORPH_AMT,	//MOD: voice morph amount
+	TEXT_INSTANT_PAT,	//MOD: instant pattern switching
 
 
 	NUM_NAMES
@@ -397,7 +398,8 @@ enum shortNamesEnum
 	SHORT_SMP_START,
 	SHORT_CHOKE,
 	SHORT_VMORPH_PAIR,
-	SHORT_VMORPH_AMT
+	SHORT_VMORPH_AMT,
+	SHORT_INSTANT_PAT
 
 	
 };
@@ -536,7 +538,8 @@ enum longNamesEnum
 	LONG_SMP_START,
 	LONG_CHOKE,
 	LONG_VMORPH_PAIR,
-	LONG_VMORPH_AMT
+	LONG_VMORPH_AMT,
+	LONG_INSTANT_PAT
 	
 };
 
@@ -650,6 +653,8 @@ extern uint8_t mainParameters[NUM_KIT_SLOTS][END_OF_SOUND_PARAMETERS];		// keeps
 extern uint8_t activeParameters[NUM_PARAMS];					// keeps the currently used kit in memory -> editBuffer
 //extern uint8_t morphParameters[END_OF_SOUND_PARAMETERS];
 extern uint8_t *morphParameters;
+//MOD: SHIFT held: the edit view shows/edits the morph kit's value
+void menu_setMorphEdit(uint8_t on);
 //extern uint8_t abs_pot_Parameter_position[NUM_PARAMS];
 
 extern const Page menuPages[NUM_PAGES][NUM_SUB_PAGES];

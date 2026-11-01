@@ -1860,6 +1860,7 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 			 */
 
 			led_setValue(1, LED_SHIFT);
+			menu_setMorphEdit(1);	//MOD: edit view shows the morph kit's value
 			switch(buttonHandler_stateMemory.selectButtonMode) {
 				case SELECT_MODE_VOICE:
 					//step parameter function not available via shift anymore.
@@ -2180,6 +2181,7 @@ void buttonHandler_buttonReleased(uint8_t buttonNr) {
 			copyClear_Mode = MODE_NONE;
 		}
 		led_setValue(0, LED_SHIFT);
+		menu_setMorphEdit(0);
 
 		switch(buttonHandler_stateMemory.selectButtonMode) {
 

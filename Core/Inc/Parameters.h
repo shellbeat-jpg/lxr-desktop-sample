@@ -392,6 +392,7 @@ enum ParamEnums
 	PAR_MIDI_CHAN_6,
 
 	PAR_FETCH,							// bool - UNUSED
+#define PAR_INSTANT_PAT PAR_FETCH		//MOD: instant pattern switching (was the unused PAR_FETCH, saved with the globals)
 	PAR_FOLLOW,							// bool
 	
 	

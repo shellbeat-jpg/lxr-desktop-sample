@@ -11,6 +11,7 @@
  * Public License version 3, with the additional permission and terms in
  * NOTICE.md. See LICENSE and NOTICE.md in the root of the repository.
  */ 
+#include "Soundengine/MIDI/MidiParser.h"
 #include "frontPanelParser_ui.h"
 #include "menu/menu.h"
 #include <stdio.h>
@@ -135,6 +136,17 @@ void frontPanel_ccHandler()
 			frontParser_nrpnNr |= frontParser_midiMsg.data2<<7;
 	}
 	END_DISABLE_WARNING
+
+	//MOD: mod wheel (CC 1) on the global MIDI channel sets the kit morph
+	//(0..127 doubled, 127 = full morph 255)
+	if(parNr == 0 && (frontParser_midiMsg.status & 0x0F) == midi_MidiChannels[7])
+	{
+		const uint8_t v = frontParser_midiMsg.data2;
+		activeParameters[PAR_MORPH] = v >= 127 ? 255 : (uint8_t)(v * 2u);
+		preset_morph(activeParameters[PAR_MORPH]);
+		menu_repaint();
+		return;
+	}
 	
 	//set the parameter value
 	if(parNr >= END_OF_SOUND_PARAMETERS)

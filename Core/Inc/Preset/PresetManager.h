@@ -137,6 +137,7 @@ FRESULT preset_loadPatternRAM(uint8_t presetNr);
 void preset_morph(uint8_t morph);
 void preset_morph_tick(); //handler for non blocking morph
 uint8_t preset_getMorphValue(uint16_t index, uint8_t morph);
+uint8_t preset_isMorphEngineMismatch(uint16_t par);
 void preset_sendDrumsetParameters();
 void preset_sendDrumsetParametersImmediate();
 

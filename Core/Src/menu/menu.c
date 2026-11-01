@@ -271,6 +271,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_CHOKE, CAT_VELO_EG, LONG_CHOKE},/*TEXT_CHOKE*/
 		{SHORT_VMORPH_PAIR, CAT_VMORPH, LONG_VMORPH_PAIR},/*TEXT_VMORPH_PAIR*/
 		{SHORT_VMORPH_AMT, CAT_VMORPH, LONG_VMORPH_AMT},/*TEXT_VMORPH_AMT*/
+		{SHORT_INSTANT_PAT, CAT_PATTERN, LONG_INSTANT_PAT},/*TEXT_INSTANT_PAT*/
 
 
 };
@@ -914,6 +915,39 @@ uint8_t mainParameters[NUM_KIT_SLOTS][END_OF_SOUND_PARAMETERS];
 uint8_t activeParameters[NUM_PARAMS];
 //uint8_t morphParameters[END_OF_SOUND_PARAMETERS];/**< a second array for sound x-fade to another preset*/
 uint8_t *morphParameters;
+
+//MOD: morph target quick access. While SHIFT is held in the edit view of a sound
+//parameter, the display shows and the encoder edits the value of the morph kit
+//(the kit morph's target) instead of the active kit.
+static uint8_t menu_morphEditHeld = 0;
+static uint8_t menu_morphEditBusy = 0;
+static uint8_t menu_morphEditFor(const uint16_t p)
+{
+	if(!menu_morphEditHeld || !editModeActive || p >= END_OF_SOUND_PARAMETERS)
+		return 0;
+	if((p >= PAR_AUDIO_OUT1 && p <= PAR_AUDIO_OUT6) || p == PAR_CHOKE_GROUP)
+		return 0;
+	switch(menu_paramDtype(p) & 0xFF)
+	{
+	case DTYPE_TARGET_SELECTION_VELO:
+	case DTYPE_TARGET_SELECTION_LFO:
+	case DTYPE_VOICE_LFO:
+	case DTYPE_AUTOM_TARGET:
+		return 0;
+	default:
+		break;
+	}
+	return (uint8_t)!preset_isMorphEngineMismatch(p);
+}
+void menu_setMorphEdit(uint8_t on)
+{
+	on = on ? 1 : 0;
+	if(on == menu_morphEditHeld)
+		return;
+	menu_morphEditHeld = on;
+	if(editModeActive)
+		menu_repaintAll();
+}
 //-----------------------------------------------------------------
 static void menu_copyStringToEditBuffer(const char* name)
 {
@@ -1875,7 +1909,8 @@ void menu_repaintGeneric()
 		uint8_t parName = pgm_read_byte(&ap->top1 + activeParameter);
 		uint16_t parNr = pgm_read_word(&ap->bot1 + activeParameter);
 
-		curParmVal = activeParameters[parNr];
+		const uint8_t morphEdit = menu_morphEditFor(parNr);
+		curParmVal = morphEdit ? morphParameters[parNr] : activeParameters[parNr];
 
 		// just clear the whole thing
 		memset(&editDisplayBuffer[0][0],' ',16);
@@ -1912,6 +1947,8 @@ void menu_repaintGeneric()
 			//Top row right -> long name
 			strcpy(&editDisplayBuffer[0][8],
 				(const char PROGMEM *)(&longNames[pgm_read_byte(&valueNames[parName].longName)]));
+			if(morphEdit)
+				memcpy(&editDisplayBuffer[0][0], "Morph>  ", 8);	//MOD: morph kit's value
 
 			//Bottom row -> parameter value (set below)
 			if(menu_sampleEditText(parNr, curParmVal))
@@ -3370,6 +3407,25 @@ static void menu_encoderChangeParameter(int8_t inc)
 		frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),activeParameters[paramNr]);
 		return;
 	}
+	//MOD: SHIFT held: edit the morph kit's value. The normal path below clamps it
+	//(on a swapped in copy, without sending); the engine then gets the morphed value.
+	if(!menu_morphEditBusy && menu_morphEditFor(paramNr))
+	{
+		const uint8_t keep = activeParameters[paramNr];
+		activeParameters[paramNr] = morphParameters[paramNr];
+		menu_morphEditBusy = 1;
+		menu_encoderChangeParameter(inc);
+		menu_morphEditBusy = 0;
+		morphParameters[paramNr] = activeParameters[paramNr];
+		activeParameters[paramNr] = keep;
+		const uint8_t v = preset_getMorphValue(paramNr, activeParameters[PAR_MORPH]);
+		if(paramNr < 128)
+			frontPanel_sendData(MIDI_CC,(uint8_t)paramNr,v);
+		else
+			frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),v);
+		voiceMorph_paramEdited(paramNr);
+		return;
+	}
 
 	paramValue = &activeParameters[paramNr];
 
@@ -3550,6 +3606,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 	} //parameter_dtypes[paramNr] & 0x0F
 
 
+	if(menu_morphEditBusy)
+		return;	//MOD: morph kit edit, sent by the caller
 	// TODO this will also send MIDI_CC or CC_2 for the above items that have already been sent. is this desired?
 	//send parameter change to uart tx
 	if(paramNr < 128) // => Sound Parameter

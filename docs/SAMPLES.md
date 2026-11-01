@@ -149,6 +149,56 @@ but between two voices. Performance page, after `res` of the DJ filter (scroll o
   back. Editing a parameter of either voice keeps the morph.
 - Not saved; after loading a kit turn `vmo` once to apply the morph again. Not a modulation target.
 
+## Performance and sequencer additions (1.2.4, in test)
+
+### Mod wheel → kit morph
+
+The mod wheel (MIDI CC 1) on the **global MIDI channel** sets the kit morph (`mrp` on the
+performance page): 0 = the active kit, 127 = the morph kit. CC 1 had no function before.
+
+### Morph target quick access
+
+In the edit view of a sound parameter (click the encoder), **hold SHIFT**: the top row shows
+`Morph>` and the value is the one of the **morph kit** (the target of `mrp`); turning the encoder
+changes it there. Release SHIFT to see and edit the active kit's value again.
+
+- With `mrp` above 0 the sound follows the change right away.
+- The change is in the morph kit's copy in memory: a project save (Save → Project / All) stores it in
+  that kit. Saving the active kit into the same slot overwrites it.
+- Not for LFO/velocity/automation targets, the audio outputs, the choke group and engine specific
+  parameters of slots whose engine differs in the morph kit.
+
+### Velocity 0 = automation only
+
+A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its step automation
+(`p1`/`p2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
+sound no longer do.
+
+### Instant pattern switching
+
+Global settings (SHIFT + step button 12, CONFIG), second page: **`ips`** (Pattern Instant)
+on/off, saved with the global settings. On: a pattern selected by hand starts on the **next step at
+the same position** instead of at the end of the playing pattern. Automatic changes (pattern chains,
+songs) still happen at the end of the pattern. Tracks shorter in the new pattern wrap at their length.
+
+### LFO waveforms
+
+New after `cyc`:
+
+| Display | Waveform |
+|---|---|
+| `xtr` | exponential triangle (free-running) |
+| `si1` `tr1` `su1` `sd1` `sq1` `xu1` `xd1` `xt1` | one-shot sine, triangle, saw up, saw down, square, exp. up, exp. down, exp. triangle |
+| `rn1` | one-shot random: a new random value at every trigger, held until the next one |
+
+- One-shots run **one cycle per trigger** and then hold their end value. They start with a trigger of
+  the voice set with `rtg`; with `rtg` off with a trigger of the LFO's own voice.
+- **`ofs` is the delay** before the cycle starts (a fraction of one cycle: 64 ≈ half a cycle). The
+  value stays at the start during the delay.
+- `frq`/`snc` set the length of the cycle.
+- `sq1` is 1 (high) in the first half of the cycle and 0 in the second half, before the start and
+  after the end: a gate after each trigger.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:
@@ -185,5 +235,6 @@ relies on the verify after writing.
 Tested on the device: sample import and playback, the skipping of invalid files, start and length
 (`sta`/`len`), loops, the modulated sample selection (`rnd` and `cyc`), the choke group (`chk`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
-samples above 1 MB play correctly). Host tests (Linux, gcc) for import and playback:
+samples above 1 MB play correctly). The additions of 1.2.4 (mod wheel, morph target access, velocity 0, instant pattern switching, the
+new LFO waveforms) are not tested on the device yet. Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.

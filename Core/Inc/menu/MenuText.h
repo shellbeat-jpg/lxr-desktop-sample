@@ -248,7 +248,7 @@ const char retriggerNames[][4]  =
 //-----------------------------------------------------------------
 const char lfoWaveNames[][4]  =
 {
-	{9},		//number of entries
+	{19},		//number of entries
 	{"sin"},
 	{"tri"},
 	{"sup"},
@@ -258,6 +258,16 @@ const char lfoWaveNames[][4]  =
 	{"xup"},
 	{"xdn"},
 	{"cyc"},	//MOD: one step per trigger
+	{"xtr"},	//MOD: exponential triangle
+	{"si1"},	//MOD: one-shot versions
+	{"tr1"},
+	{"su1"},
+	{"sd1"},
+	{"sq1"},
+	{"rn1"},
+	{"xu1"},
+	{"xd1"},
+	{"xt1"},
 };
 //-----------------------------------------------------------------
 const char rollRateNames[][4]  =
@@ -488,6 +498,7 @@ const char shortNames[][4]  =
 	{"chk"},
 	{"vmv"},
 	{"vmo"},
+	{"ips"},
 
 };
 //-----------------------------------------------------------------
@@ -628,6 +639,7 @@ const char longNames[][16] =
 	{"Choke"},
 	{" Voices"},	//after the category: "V.Morph  Voices"
 	{" Amount"},
+	{"Instant"},	//"Pattern Instant"
 };
 
 

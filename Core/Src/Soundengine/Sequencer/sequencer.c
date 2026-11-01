@@ -507,6 +507,11 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 		seq_parseAutomationNodes(voiceNr, &seq_patternSet.seq_subStepPattern[seq_activePattern][voiceNr][step]);
 #endif
 
+	//MOD: a sequencer step with velocity 0 only sets its step automation and
+	//doesn't trigger the voice (like a trigless lock); no MIDI note either
+	if(step >= 0 && vol == 0)
+		return;
+
 	//turn the trigger off before sending the next one
 	/*
 	if(voiceNr>=5)
@@ -1258,6 +1263,19 @@ void seq_MidiSyncQueue(uint8_t cnt)
 }
 
 
+//MOD: instant pattern switching (global option): a pattern selected by hand starts
+//on the next step at the same position instead of at the end of the pattern
+__attribute__((noinline)) static void seq_switchPatternNow(void)
+{
+	int8_t idx[NUM_TRACKS];
+	uint8_t last[NUM_TRACKS];
+	memcpy(idx, seq_stepIndex, sizeof(idx));
+	memcpy(last, seq_lastMasterStep, sizeof(last));
+	seq_setPendingPatternActive();
+	memcpy(seq_stepIndex, idx, sizeof(idx));
+	memcpy(seq_lastMasterStep, last, sizeof(last));
+	midi_process_block = 0;
+}
 IN_ITCM_RAM void seq_nextStep()
 {
   midi_process_block = 1;
@@ -1337,6 +1355,10 @@ IN_ITCM_RAM void seq_nextStep()
 		seq_setPendingPatternActive();
 
     midi_process_block = 0;
+	}
+	else if(seq_loadPendigFlag && activeParameters[PAR_INSTANT_PAT])
+	{
+		seq_switchPatternNow();
 	}
 
 	//---------- now check if the master track is at a full beat position to flash the start/stop button --------
