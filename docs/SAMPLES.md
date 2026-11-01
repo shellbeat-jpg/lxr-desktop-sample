@@ -31,6 +31,21 @@ The samples stay in the internal flash: they also play without SD card.
 - **A firmware update erases the samples.** Keep `/SAMPLES` on the card: the next normal start
   imports them again. Remove the `LXR*.img` file from the card after the update.
 
+## Experimental: 1.5 MB sample memory
+
+The chip of the LXR-02 reports 1 MB flash (shown at the start as "Flash: 1024 KB"). Its die
+usually has 2 MB; the upper megabyte is not guaranteed by ST (not tested by the manufacturer,
+no specified data retention). Use it at your own risk:
+
+- Put an empty file named `BIGFLASH` (no extension) into `/SAMPLES`. The next start imports again
+  with up to about 17.8 s (44.1 kHz mono) instead of 5.9 s.
+- Before that the firmware checks that the flash is in single-bank mode and that sectors 8-11 can
+  be read; otherwise it shows "Big flash: not usable" and uses 512 KB.
+- Every sample is verified after writing. If something in the upper area fails: "Big flash
+  failed / using 512K", then the import is repeated into the normal 512 KB.
+- The start screen shows "Flash 1024K big" while samples are stored above 1 MB.
+- Removing `BIGFLASH` imports again into the normal 512 KB.
+
 ## Playing samples
 
 On the OSC page of a voice, turn **Waveform** past Sin, Tri, Saw, Rec, Noi and PWM: s1..sN follow.
