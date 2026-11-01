@@ -65,6 +65,7 @@ add_library(lxr_preset OBJECT
     Src/Preset/initKit.c
     Src/Preset/KitEngines.c
     Src/Preset/presetManager.c
+    Src/SampleRom/sampleFlash.c
 )
 
 # DSP building blocks, drum voices and master effects.
