@@ -71,8 +71,9 @@ the display (as in the LXR manual). The start screen shows "OE+Samples" and the 
 - Files: 16-bit PCM WAV, mono or stereo (mixed to mono), any sample rate (the pitch is corrected),
   8.3 names such as `01KICK.WAV`. Up to **31** files; slots s1..s31 follow the name order with numbers
   by value (`2KICK` before `10KICK`).
-- Total length about **5.9 s** mono at 44.1 kHz (11.9 s at 22.05 kHz). Files that are not 16 bit
-  (`Not 16bit, skip:`) or no longer fit (`Full(5.9s) skip:`) are skipped, the others are imported.
+- Total length about **5.9 s** mono at 44.1 kHz (11.9 s at 22.05 kHz), with the 1.5 MB mode below
+  about **17.8 s** (35.6 s at 22.05 kHz). Files that are not 16 bit (`Not 16bit, skip:`) or no longer
+  fit (`Full(5.9s) skip:` or `Full(17.8s) skip:`) are skipped, the others are imported.
 - **Experimental: 1.5 MB (about 17.8 s).** A file or folder `BIGFLASH` in `SAMPLES` also uses the
   flash above the 1 MB the chip reports (works on the tested unit, not guaranteed by ST; verified
   after writing, falls back to 512 KB on errors). Start screen: `Big flash: on`, later

@@ -19,15 +19,16 @@ The samples stay in the internal flash: they also play without SD card.
 | Format | WAV, 16-bit PCM, mono or stereo (stereo is mixed to mono), any sample rate |
 | File names | 8.3 format, e.g. `01KICK.WAV` (long names are not recognized) |
 | Number | up to 31 (both folders together); slots s1..s31 follow the order of the names, numbers by value (`2KICK` before `10KICK`), letters without case |
-| Total length | 511 KB in flash = about 5.9 s mono at 44.1 kHz (11.9 s at 22.05 kHz); a stereo file counts half its size |
+| Total length | 511 KB in flash = about 5.9 s mono at 44.1 kHz (11.9 s at 22.05 kHz); with the 1.5 MB mode (`BIGFLASH`, see below) about 17.8 s (35.6 s at 22.05 kHz); a stereo file counts half its size |
 | Ignored | names starting with `.` or `_` (e.g. the `._` files of macOS) |
 
 - **Changes are detected by file names and sizes.** A file replaced by another one with the same
   name and exactly the same size is not imported again: rename it.
 - **Files that are not 16 bit** are skipped ("Not 16bit, skip:" with the name); the others are
   imported.
-- **Files that don't fit** are skipped in name order ("Full(5.9s) skip:"); a later, smaller file may
-  still fit. If not even one file fits: "Too big: x.ys / max 5.9s @44.1k", the flash stays unchanged.
+- **Files that don't fit** are skipped in name order ("Full(5.9s) skip:", with `BIGFLASH`
+  "Full(17.8s) skip:"); a later, smaller file may still fit. If not even one file fits:
+  "Too big: x.ys / max 5.9s @44.1k" (or 17.8s), the flash stays unchanged.
 - **A firmware update erases the samples.** Keep `/SAMPLES` on the card: the next normal start
   imports them again. Remove the `LXR*.img` file from the card after the update.
 
@@ -167,9 +168,3 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.
-
-Under investigation, not yet attributed to this fork or the base: after the first save of a kit and
-a project and switching the unit off and on again, the display stayed dark and there was no sound
-for a few starts (buttons and LEDs worked); the `LXR*.img` was still on the card. As a precaution,
-remove the image after an update and leave the unit off for at least 10 s before switching it on
-again.
