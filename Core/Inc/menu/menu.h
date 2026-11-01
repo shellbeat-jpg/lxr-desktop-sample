@@ -655,6 +655,7 @@ extern uint8_t activeParameters[NUM_PARAMS];					// keeps the currently used kit
 extern uint8_t *morphParameters;
 //MOD: SHIFT held: the edit view shows/edits the morph kit's value
 void menu_setMorphEdit(uint8_t on);
+void menu_restartDisplay();	//MOD: display init after the display interrupt ran
 //extern uint8_t abs_pot_Parameter_position[NUM_PARAMS];
 
 extern const Page menuPages[NUM_PAGES][NUM_SUB_PAGES];

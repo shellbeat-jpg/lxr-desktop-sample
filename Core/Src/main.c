@@ -927,9 +927,10 @@ led_updateSeqLeds();
 preset_resetAllSaveTimers();
 //-----------------------------
 
-//MOD: once more before the menu takes over the display (see above)
-lcd_init();
-menu_repaintAll();
+//MOD: once more before the menu takes over the display (see above). Loading the
+//project has already turned the display interrupt on: stop it first (1.2.2-1.2.4
+//initialized in parallel to it, which could leave the display dark)
+menu_restartDisplay();
 lcd_process_display_interrupt = 1;
 
   /* EXTI interrupt init*/
