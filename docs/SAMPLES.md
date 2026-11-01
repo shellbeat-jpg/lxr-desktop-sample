@@ -78,8 +78,12 @@ When the waveform of a voice is a sample, modulating the waveform (LFO or veloci
 the waveform as target) selects within a range of samples instead of switching to the built-in
 waveforms:
 
-- **The range starts at the selected waveform** and covers **as many further samples as the
-  modulation amount** (amount 4 with s5 selected: s5..s9). Amount 0 = always the selected sample.
+- **Target:** `wav` = the waveform of the main oscillator (OSC page). The other waveform targets
+  are shown as `fwv` (FM/mod oscillator) and `cwv` (transient/click) and don't select samples.
+- **The range starts at the selected waveform** (OSC page `wav`) and covers **as many further
+  samples as the modulation amount**: LFO page `mod`, velocity modulation `amt` (amount 4 with s5
+  selected: s5..s9). Amount 0 = always the selected sample. The range starts at the waveform of the
+  target voice (LFO `voi`).
 - The LFO or velocity value is quantized evenly onto the range: with 5 samples each fifth of the
   velocity (or of the LFO swing) selects one sample. The range ends at the last stored sample.
 - Example hi-hats only: name the hat files so they follow each other (`5HAT_A` ... `9HAT_E`), select

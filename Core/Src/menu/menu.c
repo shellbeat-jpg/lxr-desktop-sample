@@ -1794,6 +1794,18 @@ void menu_setNumSamples(uint8_t num)
 }
 //-----------------------------------------------------------------
 
+//MOD: several targets share the short name "wav": the main oscillator keeps
+//"wav", the FM/mod oscillators get "fwv", the transient (click) "cwv"
+static const char* menu_modTargetWaveCode(const uint8_t idx, const uint8_t nameidx)
+{
+	const uint16_t par = pgm_read_word(&modTargets[idx].param);
+	if(nameidx == TEXT_TRANSIENT_WAVE)
+		return "cwv";
+	if(nameidx == TEXT_WAVEFORM && !(par == PAR_OSC_WAVE_DRUM1 || par == PAR_OSC_WAVE_DRUM2 || par == PAR_OSC_WAVE_DRUM3
+			|| par == PAR_OSC_WAVE_SNARE || par == PAR_WAVE1_CYM || par == PAR_WAVE1_HH))
+		return "fwv";
+	return NULL;
+}
 static void menu_displayModTargetFull(uint8_t curParmVal)
 {
 
@@ -1814,6 +1826,9 @@ static void menu_displayModTargetFull(uint8_t curParmVal)
 		(const char PROGMEM *)(&longNames[
 					pgm_read_byte(&valueNames[nameidx].longName)
 										 ]));
+	const char* code = menu_modTargetWaveCode(curParmVal, nameidx);
+	if(code && code[0] == 'f')
+		memcpy(&editDisplayBuffer[1][0], "FM Osc  ", 8);	//MOD: not the main oscillator
 }
 
 static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, char inclVoice)
@@ -1831,7 +1846,8 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 			valueAsText[off++]=(char)(voiceFromModTargValue(curParmVal) + '0');
 		}
 
-		memcpy(&valueAsText[off],shortNames[pgm_read_byte(&valueNames[name].shortName)],(size_t)(3-off));
+		const char* code = menu_modTargetWaveCode(curParmVal, name);	//MOD
+		memcpy(&valueAsText[off],code ? code : shortNames[pgm_read_byte(&valueNames[name].shortName)],(size_t)(3-off));
 
 	}
 }
