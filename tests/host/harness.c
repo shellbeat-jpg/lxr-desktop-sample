@@ -90,8 +90,8 @@ int main(){
   CHECK(expect("2.WAV",1,30000,&sampleFlash_getHeader()->entry[1]),"gueltige Dateien unveraendert korrekt");
   RUN("5b Neustart mit uebersprungener Datei"); CHECK(last==SF_OK_UNCHANGED && eraseCalls==0,"kein erneuter Import");
   wav("0.WAV",1,24,44100,100,0); wav("25.WAV",1,16,44100,500,0);
-  RUN("5c ungueltige Datei vorne + neue gueltige"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==4,"luckenlos: 1,2,25,3");
-  CHECK(!strcmp(sampleFlash_getHeader()->entry[0].name,"1.WAV") && !strcmp(sampleFlash_getHeader()->entry[2].name,"25.WAV") && sampleFlash_getHeader()->reserved[0]==2,"Reihenfolge stimmt, 2 uebersprungen");
+  RUN("5c ungueltige Datei vorne + neue gueltige"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==4,"luckenlos: 1,2,3,25");
+  CHECK(!strcmp(sampleFlash_getHeader()->entry[0].name,"1.WAV") && !strcmp(sampleFlash_getHeader()->entry[2].name,"3.WAV") && !strcmp(sampleFlash_getHeader()->entry[3].name,"25.WAV") && sampleFlash_getHeader()->reserved[0]==2,"Zahlen-Sortierung (3 vor 25), 2 uebersprungen");
   system("rm sd/SAMPLES/0.WAV sd/SAMPLES/25.WAV; mkdir -p sd2/SAMPLES; mv sd/SAMPLES/*.WAV sd2/; cp sd/SAMPLES/../SAMPLES/../../sd2/*.WAV sd2/ 2>/dev/null; true");
   wav("4B.WAV",1,24,44100,100,0); system("rm -f sd/SAMPLES/4.WAV");
   RUN("5d nur ungueltige Datei im Ordner"); CHECK(last==SF_ERR_FORMAT && eraseCalls==0 && sampleFlash_getCount()==4,"nichts importierbar -> Flash unberuehrt");
@@ -111,10 +111,22 @@ int main(){
   RUN("8 Stromausfall/Schreibfehler simuliert"); CHECK(last==SF_ERR_FLASH && sampleFlash_getCount()==0,"Header ungueltig -> Samples aus");
   failAfter=-1;
   RUN("9 naechster Start nach Ausfall"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==5,"automatischer Reimport");
-  system("rm -f sd/SAMPLES/*.WAV"); char nm[16]; for(int i=0;i<20;i++){snprintf(nm,16,"%02d.WAV",i);wav(nm,1,16,44100,100,0);}
-  RUN("10 zwanzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==16,"max 16 uebernommen");
+  /* Loops aus /SAMPLES/LOOPS, gemeinsam nach Namen sortiert */
+  system("rm -f sd/SAMPLES/*.WAV; mkdir -p sd/SAMPLES/LOOPS");
+  wav("10HAT.WAV",1,16,44100,500,0); wav("2KICK.WAV",1,16,44100,500,0);
+  { char b[600]; snprintf(b,600,"%s/SAMPLES/LOOPS/5PAD.WAV",root); FILE* f=fopen(b,"wb"); fclose(f); }
+  system("cp sd/SAMPLES/2KICK.WAV sd/SAMPLES/LOOPS/5PAD.WAV; cp sd/SAMPLES/2KICK.WAV sd/SAMPLES/LOOPS/2KICK.WAV");
+  RUN("9b Loops-Ordner"); { const SampleFlashHeader* hh=sampleFlash_getHeader();
+    CHECK(last==SF_OK_IMPORTED && hh && hh->count==4,"Samples + Loops importiert");
+    CHECK(hh && !strcmp(hh->entry[0].name,"2KICK.WAV") && !(hh->entry[0].flags&SF_FLAG_LOOP) && !strcmp(hh->entry[1].name,"2KICK.WAV") && (hh->entry[1].flags&SF_FLAG_LOOP)
+          && !strcmp(hh->entry[2].name,"5PAD.WAV") && (hh->entry[2].flags&SF_FLAG_LOOP) && !strcmp(hh->entry[3].name,"10HAT.WAV"),"Reihenfolge 2KICK, 2KICK(L), 5PAD(L), 10HAT; Loop-Kennung"); }
+  system("mv sd/SAMPLES/LOOPS/5PAD.WAV sd/SAMPLES/5PAD.WAV");
+  RUN("9c Datei von LOOPS nach SAMPLES verschoben"); CHECK(last==SF_OK_IMPORTED && !(sampleFlash_getHeader()->entry[2].flags&SF_FLAG_LOOP),"Ordnerwechsel erkannt, kein Loop mehr");
+  system("rm -rf sd/SAMPLES/LOOPS");
+  system("rm -f sd/SAMPLES/*.WAV"); char nm[16]; for(int i=0;i<40;i++){snprintf(nm,16,"%02d.WAV",i);wav(nm,1,16,44100,100,0);}
+  RUN("10 vierzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==31,"max 31 uebernommen");
   RUN("11 erneuter Start"); CHECK(last==SF_OK_UNCHANGED,"Signatur stabil");
-  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples in flash|16|"),"Statuszeile beim Start");
+  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples in flash|31|"),"Statuszeile beim Start");
   CHECK(badErase==0,"NIE ein anderer Sektor als 6/7 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}

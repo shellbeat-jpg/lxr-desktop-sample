@@ -19,11 +19,15 @@
 #define SF_REGION_END        ((uint32_t)0x08100000u)   /* exclusive */
 #define SF_HEADER_SIZE       ((uint32_t)0x00000400u)   /* 1 KB header/table */
 #define SF_DATA_START        (SF_REGION_START + SF_HEADER_SIZE)
-#define SF_MAX_SAMPLES       16u
+#define SF_MAX_SAMPLES       31u
+
+#define SF_FLAG_LOOP         0x01u   /* from /SAMPLES/LOOPS: loops between start and end */
 
 typedef struct
 {
-	char     name[16];   /* 8.3 file name, zero terminated */
+	char     name[13];   /* 8.3 file name, zero terminated */
+	uint8_t  flags;      /* SF_FLAG_... */
+	uint8_t  pad[2];
 	uint32_t offset;     /* absolute flash address of int16 mono PCM */
 	uint32_t frames;     /* number of int16 frames */
 	uint32_t rate;       /* original sample rate in Hz (no conversion yet) */
@@ -32,13 +36,13 @@ typedef struct
 
 typedef struct
 {
-	char     magic[8];   /* "LXRSMP01" - written last, marks a complete import */
+	char     magic[8];   /* "LXRSMP02" - written last, marks a complete import */
 	uint32_t count;
 	uint32_t signature;  /* hash of the /SAMPLES file list (names + sizes) */
 	uint32_t totalFrames;
 	uint32_t reserved[3];  /* skipped files: [0] not 16 bit, [1] did not fit */
 	SampleFlashEntry entry[SF_MAX_SAMPLES];
-} SampleFlashHeader;     /* 32 + 16*32 = 544 bytes */
+} SampleFlashHeader;     /* 32 + 31*32 = 1024 bytes */
 
 /* Result codes, also shown on the LCD. */
 typedef enum
@@ -71,5 +75,11 @@ uint8_t sampleFlash_getCount(void);
  * validated once by sampleFlash_importAtBoot(). Returns NULL for an empty or
  * out-of-range slot (slot 0 = first file). */
 const SampleFlashEntry* sampleFlash_entry(uint8_t slot);
+
+/* Modulated waveform of a main oscillator. base = the waveform set in the kit,
+ * v = the modulated value [0:1] (base/127 +- modulation). A sample as base:
+ * the modulation selects among the stored samples (1/127 = one sample, clamped
+ * to s1..sN). A built-in waveform as base: as before (0..numOscWaves-1). */
+uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves);
 
 #endif /* SAMPLEFLASH_H_ */

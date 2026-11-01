@@ -663,6 +663,25 @@ static uint8_t menu_sampleEditText(const uint16_t parNr, const uint8_t val)
 		snprintf(&editDisplayBuffer[1][8], 9, "%5lu ms", (unsigned long)(ms > 99999 ? 99999 : ms));
 	return 1;
 }
+uint16_t menu_paramDtype(const uint16_t par);
+//edit view of a waveform parameter with a sample: "KICK01    L  s12"
+//(file name without extension, L = loop sample, slot number)
+static uint8_t menu_sampleWaveEditText(const uint16_t parNr, const uint8_t val)
+{
+	if((menu_paramDtype(parNr) & 0xFF) != DTYPE_MENU || (menu_paramDtype(parNr) >> 8) != MENU_WAVEFORM)
+		return 0;
+	if(val < waveformNames[0][0])
+		return 0;
+	const uint8_t slot = (uint8_t)(val - waveformNames[0][0]);
+	const SampleFlashEntry* e = sampleFlash_entry(slot);
+	char name[9];
+	uint8_t k = 0;
+	if(e)
+		while(k < 8 && e->name[k] && e->name[k] != '.') { name[k] = e->name[k]; k++; }
+	name[k] = 0;
+	snprintf(&editDisplayBuffer[1][0], 17, "%-8s  %c  s%-2u", e ? name : "(empty)", (e && (e->flags & SF_FLAG_LOOP)) ? 'L' : ' ', (unsigned)((slot + 1u) % 100u));
+	return 1;
+}
 //---------------------------------------------------------------
 //Voice pages of slots that run a non-stock engine: built from the engine's stock
 //page, every parameter moved to the slot's parameter with the same function
@@ -1878,6 +1897,10 @@ void menu_repaintGeneric()
 			if(menu_sampleEditText(parNr, curParmVal))
 			{
 				//MOD: sample start/length in ms
+			}
+			else if(menu_sampleWaveEditText(parNr, curParmVal))
+			{
+				//MOD: file name of the selected sample
 			}
 			else if(parNr == PAR_DJ_FILTER)
 			{

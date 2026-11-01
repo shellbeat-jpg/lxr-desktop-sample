@@ -61,18 +61,24 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 
 User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
 
-- **Sample import at boot.** Up to 16 WAV files from the folder `/SAMPLES` on the SD card are copied
+- **Sample import at boot.** Up to 31 WAV files from the folders `/SAMPLES` and `/SAMPLES/LOOPS` on the SD card are copied
   into the internal flash (sectors 6 and 7, 512 KB) and verified. The import runs only when the folder
   content changed (file names and sizes).
   - 16-bit PCM, mono or stereo (mixed to mono), any sample rate (pitch is corrected).
-  - 8.3 file names (e.g. `01KICK.WAV`); slots s1..s16 follow the alphabetical order.
+  - 8.3 file names (e.g. `01KICK.WAV`); slots s1..s31 follow the name order, numbers by value
+    (`2KICK` before `10KICK`).
   - Total length about 5.9 s mono at 44.1 kHz. Files that are not 16 bit or no longer fit are
     skipped and reported; the others are imported.
   - The start screen shows "Samples in flash" with the count.
   - A firmware update erases the samples: keep `/SAMPLES` on the card, the next boot imports again.
 - **Playback.** After the 6 standard waveforms the waveform menu lists s1..sN. Coarse 60 plays the
   original pitch, one-shot, linear interpolation, FM from the mod oscillator works as for the other
-  waveforms. Works in every slot that runs an engine with a main oscillator.
+  waveforms. Works in every slot that runs an engine with a main oscillator. The edit view of the
+  waveform shows the file name.
+- **Loops.** Files from `/SAMPLES/LOOPS` repeat between start and end (Sta/Len) until the amp
+  envelope ends them, with a crossfade at the loop point.
+- **Modulated sample selection.** With a sample as waveform, LFO or velocity modulation of the
+  waveform selects among the neighbouring samples (round robin, velocity layers).
 - **Start and length.**
   - Start: while a sample is selected, the PWM knob becomes "Sta" (all 6 slots, modulatable).
   - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").

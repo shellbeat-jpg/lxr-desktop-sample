@@ -63,6 +63,7 @@ typedef struct OscStruct
 	uint32_t smpStart;		// MOD: first frame of the current playback (start parameter = PWM)
 	uint32_t smpEnd;		// MOD: frame after the last one (length parameter)
 	uint8_t  smpLen;		// MOD: length parameter 0..127, 0 = to the end of the sample
+	uint8_t  smpWrapped;	// MOD: a loop sample passed its loop point (no fade-in any more)
 } OscInfo;
 //-----------------------------------------------------------
 

@@ -30,6 +30,9 @@
 #define SMP_MIN_LEN     64u           /* frames, shortest length */
 #define SMP_FADE_IN     32u           /* frames, only if start > 0 */
 #define SMP_FADE_OUT    64u           /* frames, only if the length cuts the sample */
+#define SMP_MIN_LOOP    16u           /* frames, shorter regions play once */
+#define SMP_LOOP_XF     256u          /* frames, max. crossfade at the loop point */
+#define SMP_LOOP_DIP    32u           /* frames, fade out/in at the loop point if start = 0 */
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
@@ -585,6 +588,7 @@ static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
 	osc->smpEnd   = end;
 	osc->phase    = start;
 	osc->smpFrac  = 0;
+	osc->smpWrapped = 0;
 }
 //------------------------------------------------------------------
 /* one-shot playback core: linear interpolation, phase = integer frame position,
@@ -592,6 +596,14 @@ static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
  * end before the last frame) avoid clicks. modBuffer != NULL: phase modulation
  * from the mod oscillator shifts the read position by up to +/-4096 frames
  * (same scaling as the original Sonic Potions sample FM). */
+static inline int32_t smp_read(const int16_t* data, const uint32_t n, int32_t rp, const uint32_t frac)
+{
+	if(rp < 0) rp = 0;
+	if(rp >= (int32_t)n) rp = (int32_t)n - 1;
+	const int32_t s0 = data[rp];
+	const int32_t s1 = ((uint32_t)rp + 1u < n) ? data[rp + 1] : 0;
+	return s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15);
+}
 static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, const uint8_t size, const float gain, const float pwm)
 {
 	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
@@ -606,9 +618,23 @@ static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, con
 	const int16_t* data = (const int16_t*)e->offset;
 	const uint32_t n     = e->frames;
 	const uint32_t start = osc->smpStart < n ? osc->smpStart : 0u;
-	const uint32_t end   = osc->smpEnd   < n ? osc->smpEnd   : n;   /* also a stale end of another sample */
-	const uint8_t fadeIn  = start > 0u;
-	const uint8_t fadeOut = end < n;
+	uint32_t end         = osc->smpEnd   < n ? osc->smpEnd   : n;   /* also a stale end of another sample */
+	if(end <= start) end = start + 1u <= n ? start + 1u : n;
+	/* loop samples (from /SAMPLES/LOOPS) repeat start..end until the amp
+	 * envelope ends them. The loop point is crossfaded with the audio before
+	 * the start (up to SMP_LOOP_XF frames); with start 0 there is none, then
+	 * a short dip (fade out/in) avoids the click. */
+	const uint8_t  loop = (e->flags & SF_FLAG_LOOP) && end - start >= SMP_MIN_LOOP;
+	const uint32_t len  = end - start;
+	uint32_t xf = 0;
+	if(loop)
+	{
+		xf = len / 4u;
+		if(xf > SMP_LOOP_XF) xf = SMP_LOOP_XF;
+		if(xf > start) xf = start;
+	}
+	const uint8_t fadeOut = !loop && end < n;
+	uint8_t wrapped = osc->smpWrapped;
 	uint32_t pos  = osc->phase;
 	uint32_t frac = osc->smpFrac;
 	int16_t out = 0;
@@ -616,31 +642,47 @@ static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, con
 	{
 		if(pos >= end)
 		{
-			out = 0;
-		}
-		else
-		{
-			int32_t rp = (int32_t)pos;
-			if(modBuffer)
+			if(!loop)
 			{
-				rp += ((int32_t)(modBuffer[i]*osc->fmMod)) >> 3;
-				if(rp < 0) rp = 0;
-				if(rp >= (int32_t)n) rp = (int32_t)n - 1;
+				out = 0;
+				buf[i] = 0;
+				continue;
 			}
-			const int32_t s0 = data[rp];
-			const int32_t s1 = ((uint32_t)rp + 1u < n) ? data[rp + 1] : 0;
-			int32_t s = s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15);
-			if(fadeOut && end - pos < SMP_FADE_OUT) s = (s * (int32_t)(end - pos)) / (int32_t)SMP_FADE_OUT;
-			if(fadeIn  && pos - start < SMP_FADE_IN) s = (s * (int32_t)(pos - start + 1u)) / (int32_t)SMP_FADE_IN;
-			out = (int16_t)s;
-			frac += osc->phaseInc;
-			pos  += frac >> SMP_FRAC_BITS;
-			frac &= SMP_FRAC_MASK;
+			pos = start + (pos - end) % len;
+			wrapped = 1;
 		}
+		int32_t rp = (int32_t)pos;
+		if(modBuffer)
+			rp += ((int32_t)(modBuffer[i]*osc->fmMod)) >> 3;
+		int32_t s = smp_read(data, n, rp, frac);
+		const uint32_t toEnd = end - pos;		/* 1..len */
+		if(loop)
+		{
+			if(xf)
+			{
+				if(toEnd <= xf)		/* crossfade into the audio just before the start */
+				{
+					const int32_t t = smp_read(data, n, rp - (int32_t)len, frac);
+					s = (s * (int32_t)toEnd + t * (int32_t)(xf - toEnd)) / (int32_t)xf;
+				}
+			}
+			else
+			{
+				if(toEnd < SMP_LOOP_DIP) s = (s * (int32_t)toEnd) / (int32_t)SMP_LOOP_DIP;
+				if(wrapped && pos - start < SMP_LOOP_DIP) s = (s * (int32_t)(pos - start + 1u)) / (int32_t)SMP_LOOP_DIP;
+			}
+		}
+		if(fadeOut && toEnd < SMP_FADE_OUT) s = (s * (int32_t)toEnd) / (int32_t)SMP_FADE_OUT;
+		if(start > 0u && !wrapped && pos - start < SMP_FADE_IN) s = (s * (int32_t)(pos - start + 1u)) / (int32_t)SMP_FADE_IN;
+		out = (int16_t)s;
+		frac += osc->phaseInc;
+		pos  += frac >> SMP_FRAC_BITS;
+		frac &= SMP_FRAC_MASK;
 		buf[i] = out * gain;
 	}
-	osc->phase = pos > end ? end : pos;
+	osc->phase = (!loop && pos > end) ? end : pos;
 	osc->smpFrac = frac;
+	osc->smpWrapped = wrapped;
 	osc->output = out;
 }
 //------------------------------------------------------------------

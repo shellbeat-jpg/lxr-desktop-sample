@@ -30,6 +30,7 @@
 #include "Soundengine/USB/usb_manager.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
+#include "SampleRom/sampleFlash.h"
 
 #include "Soundengine/MIDI/MidiMessages.h"
 
@@ -345,8 +346,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 		case OSC_WAVE_DRUM1:
 			if(isFloatModulator)
 			{
-				uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-				wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+				//MOD: with a sample as base the modulation selects among the samples
+				const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_OSC_WAVE_DRUM1], value.flt, NUM_OSC_WAVEFORMS);
 				voiceSlots[0].u.drum.osc.waveform = wave;
 			}
 			else
@@ -358,8 +359,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 		case OSC_WAVE_DRUM2:
 			if(isFloatModulator)
 			{
-				uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-				wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+				//MOD: with a sample as base the modulation selects among the samples
+				const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_OSC_WAVE_DRUM2], value.flt, NUM_OSC_WAVEFORMS);
 				voiceSlots[1].u.drum.osc.waveform = wave;
 			}
 			else
@@ -371,8 +372,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 		case OSC_WAVE_DRUM3:
 			if(isFloatModulator)
 			{
-				uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-				wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+				//MOD: with a sample as base the modulation selects among the samples
+				const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_OSC_WAVE_DRUM3], value.flt, NUM_OSC_WAVEFORMS);
 				voiceSlots[2].u.drum.osc.waveform = wave;
 			}
 			else
@@ -384,8 +385,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 		case OSC_WAVE_SNARE:
 			if(isFloatModulator)
 			{
-				uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-				wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+				//MOD: with a sample as base the modulation selects among the samples
+				const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_OSC_WAVE_SNARE], value.flt, NUM_OSC_WAVEFORMS);
 				voiceSlots[3].u.snare.osc.waveform = wave;
 			}
 			else
@@ -526,8 +527,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 			case CYM_WAVE1:
 				if(isFloatModulator)
 				{
-					uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-					wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+					//MOD: with a sample as base the modulation selects among the samples
+					const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_WAVE1_CYM], value.flt, NUM_OSC_WAVEFORMS);
 					voiceSlots[4].u.cymbal.osc.waveform = wave;
 				}
 				else
@@ -556,8 +557,8 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 			case WAVE1_HH:
 				if(isFloatModulator)
 				{
-					uint8_t wave = NUM_OSC_WAVEFORMS * value.flt;
-					wave = wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+					//MOD: with a sample as base the modulation selects among the samples
+					const uint8_t wave = sampleFlash_modulatedWave(activeParameters[PAR_WAVE1_HH], value.flt, NUM_OSC_WAVEFORMS);
 					voiceSlots[5].u.hat.osc.waveform = wave;
 				}
 				else

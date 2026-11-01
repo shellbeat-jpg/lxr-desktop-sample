@@ -5,7 +5,8 @@ OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.m
 
 ## Importing samples
 
-1. Create the folder `SAMPLES` in the top folder of the SD card and copy WAV files into it.
+1. Create the folder `SAMPLES` in the top folder of the SD card and copy WAV files into it. Loop
+   samples go into the subfolder `SAMPLES/LOOPS`.
 2. Switch the LXR-02 on normally (without holding the encoder). If the folder changed since the
    last import, the display shows "Import x/y", then "Import+Verify OK".
 3. The start screen then shows "Samples in flash" with the number of stored samples.
@@ -16,7 +17,7 @@ The samples stay in the internal flash: they also play without SD card.
 |---|---|
 | Format | WAV, 16-bit PCM, mono or stereo (stereo is mixed to mono), any sample rate |
 | File names | 8.3 format, e.g. `01KICK.WAV` (long names are not recognized) |
-| Number | up to 16; slots s1..s16 follow the alphabetical order of the names |
+| Number | up to 31 (both folders together); slots s1..s31 follow the order of the names, numbers by value (`2KICK` before `10KICK`), letters without case |
 | Total length | 511 KB in flash = about 5.9 s mono at 44.1 kHz (11.9 s at 22.05 kHz); a stereo file counts half its size |
 | Ignored | names starting with `.` or `_` (e.g. the `._` files of macOS) |
 
@@ -36,6 +37,8 @@ On the OSC page of a voice, turn **Waveform** past Sin, Tri, Saw, Rec, Noi and P
 - **Coarse 60** plays the sample at its original pitch (the sample rate is taken into account).
 - One-shot: the sample plays once per trigger; the AEG decay can end it earlier.
 - FM from the mod oscillator works as for the other waveforms.
+- Clicking into the waveform parameter (edit view) shows the file name, `L` for a loop and the
+  slot, e.g. `KICK01        s3`.
 - Works in every voice whose engine has a main oscillator. For snare, cymbal or hi-hat tracks give
   the voice the drum engine first (SHIFT + KIT, see [ENGINES.md](ENGINES.md)) if needed.
 
@@ -55,6 +58,33 @@ On the OSC page of a voice, turn **Waveform** past Sin, Tri, Saw, Rec, Noi and P
   fade-out only if the length cuts the sample. A sample started at 0 and played to the end is
   unchanged.
 - Both are stored in kits. Kits without them play from the start to the end.
+
+## Loops
+
+Files from `/SAMPLES/LOOPS` are loop samples: they play from the start (Sta) to the end (Len, "all"
+= end of the file) and then jump back to the start, until the amp envelope (AEG decay) ends the
+sound. Drum voices have no gate, so a long decay keeps the loop going.
+
+- Sta and Len set the loop points, shown in ms.
+- The loop point is crossfaded with the audio just before the start (up to 256 frames, at most a
+  quarter of the loop). With start 0 there is no audio before it: then a short fade out/in (32
+  frames) avoids the click.
+- The fade-in at a later start happens only once, not on every repeat.
+
+## Modulated sample selection
+
+When the waveform of a voice is a sample, modulating the waveform (LFO or velocity modulation with
+the waveform as target) selects among the stored samples around it instead of switching to the
+built-in waveforms:
+
+- The modulation amount sets the range: about one sample per step of the amount (1/127).
+  Modulation is bipolar around the selected sample (velocity 0 = below, full velocity = above).
+- The selection stays within s1..sN.
+- Velocity layers: put soft, middle and loud versions of a hit next to each other (e.g. `1SNR_P`,
+  `2SNR_M`, `3SNR_F`), select the middle one and set a small velocity amount.
+- Round robin: an LFO (e.g. random waveform) on the waveform picks a different neighbour on each
+  hit.
+- With a built-in waveform as base the modulation works as before.
 
 ## Voice INIT
 
@@ -82,9 +112,10 @@ from. One step further is "Change Project" as before. Click the INIT row for its
 
 ## Test status
 
-Tested on the device: sample import and playback, voice INIT. Start/length and the skipping of
-files that are invalid or don't fit are host-tested (`sh tests/host/run.sh`, Linux, gcc), a full
-test on the device is pending.
+Tested on the device: sample import and playback, voice INIT. Start/length, the skipping of files
+that are invalid or don't fit, loops, the order of the names, 31 slots and the modulated sample
+selection are host-tested (`sh tests/host/run.sh`, Linux, gcc), a full test on the device is
+pending.
 
 Under investigation, not yet attributed to this fork or the base: after the first save of a kit and
 a project and switching the unit off and on again, the display stayed dark and there was no sound

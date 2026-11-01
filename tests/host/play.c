@@ -100,4 +100,28 @@ int main(){
   { int16_t buf[32],mod[32]={0}; for(int b=0;b<2;b++){ osc_calcUserSampleFreq(&o); calcNextOscSampleFmBlock(&o,mod,buf,32,1.f,0.5f);} CHECK(buf[31]==ramp(750+63),"FM-Pfad: Start 50% ebenso"); }
   /* Wellenform-Wechsel waehrend Wiedergabe: Ende eines anderen Samples */
   o=mk(1); o.smpLen=0; osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; { int16_t buf[32]; osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0.f); o.waveform=NUM_OSC_WAVEFORMS; o.smpEnd=999999; calcNextOscSampleBlock(&o,buf,32,1.f,0.f); CHECK(1,"veraltetes Ende wird begrenzt (kein Absturz)"); }
+  /* 10: Loop (Schritt 7) - Slot 0 als Loop markieren (Header im Test-Flash patchen) */
+  { SampleFlashEntry* le=(SampleFlashEntry*)&sampleFlash_getHeader()->entry[0]; le->flags|=SF_FLAG_LOOP; }
+  PLAY(0.f,0,7000);   /* ganzes Sample (3000) als Loop, Start 0 -> Einbruch statt Crossfade */
+  CHECK(out[3000]!=0 || out[3001]!=0 || out[3020]!=0,"Loop: nach dem Ende geht es weiter");
+  CHECK(out[3040]==ramp(40) && out[6040]==ramp(40),"Loop: springt an den Start zurueck (jede Runde)");
+  CHECK(abs(out[2999]) < abs(ramp(2999))/16+1,"Loop mit Start 0: Ausblenden vor dem Loop-Punkt");
+  PLAY(0.5f,64,4000); /* Start 750, Laenge 761 -> Loop 750..1511, Crossfade min(190,256)=190 */
+  { int st=750, ln=761, xf=190, ok=1;
+    for(int k=0;k<3*ln;k++){ int pos=st+(k%ln); int toEnd=st+ln-pos; int exp=ramp(pos);
+      if(toEnd<=xf) exp=(ramp(pos)*toEnd + ramp(pos-ln)*(xf-toEnd))/xf;
+      if(k<32) exp=(exp*(k+1))/32;   /* Einblenden nur beim ersten Start */
+      if(out[k]!=(int16_t)exp){ printf("   k=%d out=%d exp=%d\n",k,out[k],exp); ok=0; break; } }
+    CHECK(ok,"Loop zwischen Sta und Len, Crossfade mit dem Material vor dem Start, Einblenden nur einmal"); }
+  CHECK(out[3*761+100]!=0,"Loop laeuft weiter (Ende nur durch die Huellkurve)");
+  { SampleFlashEntry* le=(SampleFlashEntry*)&sampleFlash_getHeader()->entry[0]; le->flags&=~SF_FLAG_LOOP; }
+  PLAY(0.f,0,3200); CHECK(out[3100]==0,"ohne Loop-Kennung wieder One-Shot");
+  /* 11: modulierte Sample-Auswahl */
+  { const uint8_t W=NUM_OSC_WAVEFORMS;
+    CHECK(sampleFlash_modulatedWave(W, (W)/127.f, W)==W,"Sample-Basis ohne Modulation bleibt");
+    CHECK(sampleFlash_modulatedWave(W, (W+1)/127.f, W)==W+1,"+1/127 -> naechstes Sample");
+    CHECK(sampleFlash_modulatedWave(W, (W+9)/127.f, W)==W+1,"ueber dem letzten Sample begrenzt (nur 2 da)");
+    CHECK(sampleFlash_modulatedWave(W+1, 0.f, W)==W,"unter s1 begrenzt, nie eine normale Wellenform");
+    CHECK(sampleFlash_modulatedWave(2, 0.5f, W)==3,"normale Wellenform: Verhalten wie bisher");
+    CHECK(sampleFlash_modulatedWave(W, NAN, W)==W,"NaN -> s1"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }
