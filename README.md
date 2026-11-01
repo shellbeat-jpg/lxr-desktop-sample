@@ -60,7 +60,7 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 ## What this fork adds
 
 Full user guide: [docs/SAMPLES.md](docs/SAMPLES.md). Menu names below are the short names shown on
-the display (as in the LXR manual). The start screen shows "OE+Samples" and the version.
+the display (as in the LXR manual). The start screen shows "OE02-Samples" and the version.
 
 ### 1. Getting samples onto the device
 
@@ -165,7 +165,7 @@ cmake --preset release
 cmake --build --preset release
 ```
 
-Copy `build/release/LXR_OpenElixir-02_V<version>.img` to the SD card and install it with the
+Copy `build/release/LXR_OE02-Samples_V<version>.img` to the SD card and install it with the
 LXR-02's updater (hold the encoder while switching on). Host tests of the sample code:
 `sh tests/host/run.sh` (Linux, gcc).
 

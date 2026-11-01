@@ -9,6 +9,8 @@ on:
   workflow_dispatch:
 
 env:
+  # name of the firmware (project() in CMakeLists.txt): names the build outputs
+  FW_NAME: OE02-Samples
   # Arm GNU Toolchain used for the build. The ITCM is nearly full, so the
   # compiler version matters: change all three values together.
   # Releases: https://gitlab.arm.com/tooling/gnu-toolchains-for-arm (branch releases/<version>)
@@ -65,7 +67,7 @@ jobs:
           {
             echo '## Memory usage (${{ matrix.variant }})'
             echo '```'
-            python3 cmake/tools/memreport.py build/${{ matrix.variant }}/OpenElixir-02.elf \
+            python3 cmake/tools/memreport.py build/${{ matrix.variant }}/${{ env.FW_NAME }}.elf \
               --baseline memory_baseline.json --top 15 --no-history
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -73,7 +75,7 @@ jobs:
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: OpenElixir-02-${{ matrix.variant }}-${{ github.sha }}
+          name: ${{ env.FW_NAME }}-${{ matrix.variant }}-${{ github.sha }}
           path: |
             build/${{ matrix.variant }}/*.img
             build/${{ matrix.variant }}/*.elf
@@ -96,7 +98,7 @@ jobs:
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: OpenElixir-02 ${{ github.ref_name }}
+          name: ${{ env.FW_NAME }} ${{ github.ref_name }}
           body_path: .github/releases/${{ github.ref_name }}.md
           prerelease: ${{ startsWith(github.ref_name, 'v0.') }}
           fail_on_unmatched_files: true
