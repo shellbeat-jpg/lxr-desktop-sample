@@ -97,7 +97,13 @@ int main(){
   RUN("5d nur ungueltige Datei im Ordner"); CHECK(last==SF_ERR_FORMAT && eraseCalls==0 && sampleFlash_getCount()==4,"nichts importierbar -> Flash unberuehrt");
   system("rm sd/SAMPLES/4B.WAV; mv sd2/*.WAV sd/SAMPLES/; rm -rf sd2"); wav("4.WAV",1,24,44100,100,0);
   system("rm sd/SAMPLES/4.WAV"); wav("5.WAV",1,16,44100,300000,0);
-  RUN("6 zu gross (600 KB)"); CHECK(last==SF_ERR_TOO_BIG && eraseCalls==0,"zu gross, Flash unberuehrt");
+  sawSkip=0; RUN("6 Datei passt nicht mehr (600 KB)"); CHECK(last==SF_OK_IMPORTED && sawSkip && sampleFlash_getCount()==3 && sampleFlash_getHeader()->reserved[1]==1,"zu grosse Datei uebersprungen, Rest importiert");
+  wav("6.WAV",1,16,44100,1000,0);
+  RUN("6b kleine Datei nach der zu grossen"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==4 && !strcmp(sampleFlash_getHeader()->entry[3].name,"6.WAV"),"passt noch -> uebernommen");
+  system("mkdir -p sd2; mv sd/SAMPLES/1.WAV sd/SAMPLES/2.WAV sd/SAMPLES/3.WAV sd/SAMPLES/6.WAV sd2/");
+  RUN("6c nur eine zu grosse Datei"); CHECK(last==SF_ERR_TOO_BIG && eraseCalls==0 && sampleFlash_getCount()==4,"nichts passt -> Flash unberuehrt, alter Bestand bleibt");
+  CHECK(!strcmp(lcdbuf,"Too big: 6.8s|max 5.9s @44.1k|"),"Meldung in Sekunden");
+  system("mv sd2/1.WAV sd2/2.WAV sd2/3.WAV sd/SAMPLES/; rm -rf sd2");
   system("rm sd/SAMPLES/5.WAV"); wav("5.WAV",1,16,44100,200000,0);
   RUN("7 groesser als 1 Sektor (400 KB)"); CHECK(last==SF_OK_IMPORTED && eraseCalls==2,"Sektor 6+7");
   CHECK(expect("5.WAV",1,200000,&sampleFlash_getHeader()->entry[3]),"5.WAV ueber Sektorgrenze korrekt");

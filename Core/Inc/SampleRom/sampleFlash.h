@@ -36,7 +36,7 @@ typedef struct
 	uint32_t count;
 	uint32_t signature;  /* hash of the /SAMPLES file list (names + sizes) */
 	uint32_t totalFrames;
-	uint32_t reserved[3];  /* [0]: number of skipped (non 16-bit) files */
+	uint32_t reserved[3];  /* skipped files: [0] not 16 bit, [1] did not fit */
 	SampleFlashEntry entry[SF_MAX_SAMPLES];
 } SampleFlashHeader;     /* 32 + 16*32 = 544 bytes */
 
@@ -47,7 +47,7 @@ typedef enum
 	SF_OK_IMPORTED,       /* new import written and verified */
 	SF_NO_FOLDER,         /* no /SAMPLES folder - feature unused, flash untouched */
 	SF_ERR_FORMAT,        /* a WAV file is not 16-bit PCM mono/stereo */
-	SF_ERR_TOO_BIG,       /* total data does not fit into 511 KB */
+	SF_ERR_TOO_BIG,       /* not even one file fits (511 KB = 5.9 s mono @44.1k) */
 	SF_ERR_READ,          /* SD read error */
 	SF_ERR_FLASH,         /* erase/program error or guard tripped */
 	SF_ERR_VERIFY         /* read-back checksum mismatch */

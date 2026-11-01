@@ -27,6 +27,8 @@
 #define SF_MAGIC        "LXRSMP01"
 #define SF_FOLDER       "/SAMPLES"
 #define SF_READ_FRAMES  256u
+#define SF_CAPACITY     (SF_REGION_END - SF_DATA_START)   /* bytes for PCM data */
+#define SF_MAX_SECONDS  "5.9"                             /* SF_CAPACITY/2 frames at 44.1 kHz */
 
 /* the header must fit into the reserved header area */
 typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= SF_HEADER_SIZE) ? 1 : -1];
@@ -323,7 +325,8 @@ static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, 
 	case SF_NO_FOLDER:
 		return;
 	case SF_ERR_FORMAT:  sf_lcd("Not 16bit WAV:", name); break;
-	case SF_ERR_TOO_BIG: sf_lcd("Samples too big", "max 511KB total"); break;
+	case SF_ERR_TOO_BIG: /* name carries "Too big: x.ys" */
+		sf_lcd(name, "max " SF_MAX_SECONDS "s @44.1k"); break;
 	case SF_ERR_READ:    sf_lcd("SD read error:", name); break;
 	case SF_ERR_FLASH:   sf_lcd("Flash error!", "Samples disabled"); break;
 	case SF_ERR_VERIFY:  sf_lcd("Verify FAILED:", name); break;
@@ -331,13 +334,19 @@ static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, 
 	HAL_Delay(3000);
 }
 /*----------------------------------------------------------------------------*/
-static void sf_showSkipped(uint8_t skipped, const char* firstName)
+static void sf_showSkipped(const char* line1, uint8_t skipped, const char* firstName)
 {
 	char l2[17];
 	if(skipped > 1) snprintf(l2, sizeof(l2), "%-12.12s +%u", firstName, (unsigned)(skipped - 1u));
 	else            snprintf(l2, sizeof(l2), "%s", firstName);
-	sf_lcd("Not 16bit, skip:", l2);
+	sf_lcd(line1, l2);
 	HAL_Delay(2500);
+}
+/* "Too big: x.ys" - mono length at 44.1 kHz */
+static void sf_fmtSeconds(char* out, uint32_t bytes)
+{
+	uint32_t ds = (uint32_t)(((uint64_t)bytes / 2u) * 10u / 44100u);
+	snprintf(out, 17, "Too big: %lu.%lus", (unsigned long)(ds / 10u), (unsigned long)(ds % 10u));
 }
 /*----------------------------------------------------------------------------*/
 void sampleFlash_showStatus(void)
@@ -346,8 +355,8 @@ void sampleFlash_showStatus(void)
 	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
 	const SampleFlashHeader* h = sf_cache;
 	if(h == NULL)                   snprintf(l2, sizeof(l2), "none");
-	else if(h->reserved[0] && h->reserved[0] <= 99u)
-	                                snprintf(l2, sizeof(l2), "%u (%u skipped)", (unsigned)h->count, (unsigned)h->reserved[0]);
+	else if(h->reserved[0] + h->reserved[1] && h->reserved[0] + h->reserved[1] <= 99u)
+	                                snprintf(l2, sizeof(l2), "%u (%u skipped)", (unsigned)h->count, (unsigned)(h->reserved[0] + h->reserved[1]));
 	else                            snprintf(l2, sizeof(l2), "%u", (unsigned)h->count);
 	sf_lcd("Samples in flash", l2);
 	HAL_Delay(1200);
@@ -367,12 +376,15 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	}
 
 	/* 1. parse all files and check the total size before touching the flash.
-	 *    Files that are no 16-bit PCM WAV are skipped (not fatal); the others
-	 *    move up, so s1..sN stay gap-free and keep the name order. */
-	uint32_t needed = 0;
-	uint8_t kept = 0, skipped = 0;
-	char skipName[13];
+	 *    Files that are no 16-bit PCM WAV are skipped (not fatal), and so are
+	 *    files that no longer fit (in name order: earlier names have priority,
+	 *    a later, smaller file may still fit). The others move up, so s1..sN
+	 *    stay gap-free and keep the name order. */
+	uint32_t needed = 0, wanted = 0;
+	uint8_t kept = 0, skipped = 0, full = 0;
+	char skipName[13], fullName[13];
 	memset(skipName, 0, sizeof(skipName));
+	memset(fullName, 0, sizeof(fullName));
 	for(uint8_t i = 0; i < count; i++)
 	{
 		SampleFlashResult r = sf_parseWav(&sf_files[i]);
@@ -383,18 +395,29 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 			continue;
 		}
 		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_files[i].name, 0, 0); return sf_finish(r); }
+		const uint32_t bytes = (sf_files[i].frames * 2u + 3u) & ~3u;
+		wanted += bytes;
+		if(needed + bytes > SF_CAPACITY)
+		{
+			if(full == 0) strncpy(fullName, sf_files[i].name, 12);
+			full++;
+			continue;
+		}
 		if(kept != i) sf_files[kept] = sf_files[i];
-		needed += (sf_files[kept].frames * 2u + 3u) & ~3u;
+		needed += bytes;
 		kept++;
 	}
-	if(skipped) sf_showSkipped(skipped, skipName);
+	if(skipped) sf_showSkipped("Not 16bit, skip:", skipped, skipName);
+	if(kept == 0 && full)
+	{
+		char l1[17];
+		sf_fmtSeconds(l1, wanted);
+		sf_showResult(SF_ERR_TOO_BIG, l1, 0, 0);
+		return sf_finish(SF_ERR_TOO_BIG);   /* nothing fits, flash untouched */
+	}
+	if(full) sf_showSkipped("Full(" SF_MAX_SECONDS "s) skip:", full, fullName);
 	if(kept == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
 	count = kept;
-	if(needed > (SF_REGION_END - SF_DATA_START))
-	{
-		sf_showResult(SF_ERR_TOO_BIG, "", 0, 0);
-		return sf_finish(SF_ERR_TOO_BIG);
-	}
 
 	/* 2. erase - code runs from flash, so the CPU stalls ~1-2 s per sector */
 	sf_lcd("Samples changed", "Erasing flash...");
@@ -448,6 +471,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 		sf_newHeader.signature   = signature;
 		sf_newHeader.totalFrames = totalFrames;
 		sf_newHeader.reserved[0] = skipped;   /* shown by sampleFlash_showStatus() */
+		sf_newHeader.reserved[1] = full;
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
 		if(!sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))
