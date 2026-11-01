@@ -1311,19 +1311,6 @@ void menu_uiTick()
 	}
 }
 //-----------------------------------------------------------------
-//MOD: restart the display (see lcd_restart) and repaint it; the caller turns the
-//display interrupt on again
-void menu_restartDisplay()
-{
-	//like the project save: stop the interrupt and finish the running transfer
-	lcd_process_display_interrupt = 0;
-	while(sendDisplayBuffer() != 0);
-	lcd_restart();
-	display_refresh_state = 0;
-	display_needs_refresh = 0;
-	menu_repaintAll();
-}
-//-----------------------------------------------------------------
 void menu_repaintAll()
 {
 

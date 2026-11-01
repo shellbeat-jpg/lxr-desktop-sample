@@ -75,22 +75,6 @@ static void lcd_out( uint8_t data )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//MOD: initialize the display again after the display interrupt has run. The
-//interrupt sends the display contents in small steps (one nibble per tick); an init
-//in parallel to it, or after it stopped in the middle of a character, leaves the
-//display's 4 bit interface out of step (dark display until power off). So: stop
-//it, end a started enable pulse, forget the started transfer, then the init.
-void lcd_restart( void )
-{
-	lcd_process_display_interrupt = 0;
-	LCD_E_GPIO_Port->BSRR = (uint32_t)LCD_E_Pin<<16U;
-	lcd_command_state = 0;
-	lcd_data_state = 0;
-	lcd_clear_state = 0;
-	lcd_chargen_state = 0;
-	lcd_init();
-}
-////////////////////////////////////////////////////////////////////////////////
 // Initialisierung: muss ganz am Anfang des Programms aufgerufen werden.
 void lcd_init( void )
 {

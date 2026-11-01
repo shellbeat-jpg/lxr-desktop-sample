@@ -353,10 +353,6 @@ int main(void)
   lcd_string("Bootloader...");
 
 #else
-	//MOD: the Winstar OLED sometimes stays dark after a power cycle or the
-	//updater's restart (its init only works once it is fully powered up):
-	//initialize it a second time, about a second after the first init
-	lcd_init();
 	//print boot up message
 lcd_clear();
 lcd_string(FIRMWARE_NAME); // OE02-Samples: modified OpenElixir-02, not official
@@ -927,10 +923,6 @@ led_updateSeqLeds();
 preset_resetAllSaveTimers();
 //-----------------------------
 
-//MOD: once more before the menu takes over the display (see above). Loading the
-//project has already turned the display interrupt on: stop it first (1.2.2-1.2.4
-//initialized in parallel to it, which could leave the display dark)
-menu_restartDisplay();
 lcd_process_display_interrupt = 1;
 
   /* EXTI interrupt init*/
