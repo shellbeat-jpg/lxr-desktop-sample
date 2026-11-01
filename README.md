@@ -59,44 +59,97 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 
 ## What this fork adds
 
-User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
+Full user guide: [docs/SAMPLES.md](docs/SAMPLES.md). Menu names below are the short names shown on
+the display (as in the LXR manual). The start screen shows "OE+Samples" and the version.
 
-- **Sample import at boot.** Up to 31 WAV files from the folders `/SAMPLES` and `/SAMPLES/LOOPS` on the SD card are copied
-  into the internal flash (sectors 6 and 7, 512 KB) and verified. The import runs only when the folder
-  content changed (file names and sizes).
-  - 16-bit PCM, mono or stereo (mixed to mono), any sample rate (pitch is corrected).
-  - 8.3 file names (e.g. `01KICK.WAV`); slots s1..s31 follow the name order, numbers by value
-    (`2KICK` before `10KICK`).
-  - Total length about 5.9 s mono at 44.1 kHz. Files that are not 16 bit or no longer fit are
-    skipped and reported; the others are imported.
-  - The start screen shows the number of samples and the flash size of the chip.
-  - A firmware update erases the samples: keep `/SAMPLES` on the card, the next boot imports again.
-- **Playback.** After the 6 standard waveforms the waveform menu lists s1..sN. Coarse 60 plays the
-  original pitch, one-shot, linear interpolation, FM from the mod oscillator works as for the other
-  waveforms. Works in every slot that runs an engine with a main oscillator. The edit view of the
-  waveform shows the file name.
-- **Loops.** Files from `/SAMPLES/LOOPS` repeat between start and end (Sta/Len) until the amp
-  envelope ends them, with a crossfade at the loop point.
-- **Modulated sample selection.** With a sample as waveform, LFO or velocity modulation of the
-  waveform selects within a range: the selected sample plus as many following samples as the
-  modulation amount (round robin, velocity layers, e.g. only the hi-hat samples).
-- **Start and length.**
-  - Start: while a sample is selected, the PWM knob becomes "Sta" (all 6 slots, modulatable).
-  - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").
-  - Both are shown in ms, use a quadratic scale and are stored in kits. Short fades avoid clicks
-    when the start or the length cuts the sample.
-- **Choke group.** AEG page `chk`: the tracks in the group cut each other when triggered.
-- **Voice INIT templates.** In the voice load menu (hold LOAD + step button 1-7) an "INIT" row sits
-  between "Change Project" and kit 0. Clicking it opens: Load INIT, Save to Project, Save to Global,
-  Del Project INIT, Del Global INIT.
-  - Load INIT takes the voice from the project template, else from the global template, else the
-    factory values of its engine (the engine and the step automation stay).
-  - Saving stores only this voice (incl. engine, sample, start/length) in the template; the other
-    voices of the template stay. Deleting removes only this voice.
-  - Project template: `INIT.SND` in the project folder (needs a saved project; a project save keeps
-    it). Global template: `/INIT.SND`.
+### 1. Getting samples onto the device
 
-Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length "all").
+- Copy WAV files into the folder **`SAMPLES`** in the top folder of the SD card, loop samples into
+  **`SAMPLES/LOOPS`**. Switch the LXR-02 on normally (without holding the encoder).
+- If the folder changed, the display shows `Import x/y`, then `Import+Verify OK`. The start screen
+  then shows `Samples: N` and the chip's flash size.
+- Files: 16-bit PCM WAV, mono or stereo (mixed to mono), any sample rate (the pitch is corrected),
+  8.3 names such as `01KICK.WAV`. Up to **31** files; slots s1..s31 follow the name order with numbers
+  by value (`2KICK` before `10KICK`).
+- Total length about **5.9 s** mono at 44.1 kHz (11.9 s at 22.05 kHz). Files that are not 16 bit
+  (`Not 16bit, skip:`) or no longer fit (`Full(5.9s) skip:`) are skipped, the others are imported.
+- Changes are detected by file names and sizes: rename a file you replaced with one of the same size.
+- A firmware update erases the samples: keep `SAMPLES` on the card, the next normal start imports
+  them again. Remove the `LXR*.img` from the card after an update.
+
+### 2. Playing a sample - OSC page
+
+| Display | Function |
+|---|---|
+| `wav` | waveform: after `sin tri saw rec noi pwm` come **s1..sN**. Click into it: file name, `L` for a loop, slot number |
+| `coa` | coarse tune: **60 = original pitch**, ±12 = one octave |
+| `sta` | **start** (the `pwm` knob while a sample is selected), shown in ms, all voices |
+| `len` | **length**, 5th parameter (second half of the page), drum 1-3, `all` = to the end |
+
+- Samples play one-shot; the AEG `dec` ends them earlier. Use a long decay for long samples.
+- `sta` and `len` use a quadratic scale (fine steps at the beginning) and are stored in the kit.
+  Short fades avoid clicks where start or length cut the sample.
+- Every voice whose engine has a main oscillator can play samples (`len` only on the tracks drum
+  1-3). The drum engine (SHIFT + KIT) also adds FM on other tracks.
+
+### 3. Loops
+
+- Files from `SAMPLES/LOOPS` (display `L`) repeat between `sta` and the end of `len` until the AEG
+  `dec` ends the sound; `sta`/`len` are the loop points.
+- The loop point is crossfaded with the audio just before `sta`; with `sta` = 0 a short dip avoids
+  the click. Drum voices have no gate: a long `dec` keeps the loop going.
+
+### 4. Modulated sample selection (round robin, velocity layers)
+
+With a sample as waveform, modulating **`wav`** selects within a range of samples:
+
+- **Range start** = OSC `wav` of the target voice. **Range size** = the modulation amount (LFO `mod`,
+  velocity `amt`) = number of **further** samples. Example: `wav` = s5, `mod` = 4 → s5..s9.
+- The modulation value is spread evenly over the range; the sample is chosen at the trigger and kept
+  until the next one.
+- As target choose **`wav`** (main oscillator). `fwv` (FM oscillator) and `cwv` (transient/click)
+  don't select samples.
+- Name the files of a group so they follow each other (`5HAT_A` ... `9HAT_E`) to use only them.
+
+Recommended settings:
+
+| Goal | Settings |
+|---|---|
+| **Round robin in order** (s5, s6, ... s9, s5, ...) | LFO page: `wav` = **`cyc`**, `mod` = number of samples − 1, `voi` = the voice, `dst` = `wav`, `rtg` = **off** (counts the voice's own triggers) or the voice whose triggers should count. `frq`/`snc` don't matter |
+| **Random sample per hit** | LFO page: `wav` = `rnd`, `mod` = number of samples − 1, `voi`/`dst` as above, **`rtg` = off**, `frq` faster than the hits (with `rtg` on the voice every hit gets the same value) |
+| **Velocity layers** (soft → loud) | OSC `wav` = the softest sample; modulation page: `dst`/`dsr` = `wav`, `amt` = number of layers − 1. Step velocities (`vel`) or played velocity choose the layer |
+| **Fixed sample per step** | step automation (`p1d`/`p2d`) on `wav` sets the sample directly per step |
+
+### 5. Choke group - AEG page
+
+- **`chk`** = on/off puts the track into the kit's choke group (4th parameter for drum 1-3 and the
+  hats, 5th for snare and cymbal). Click into it to see all tracks of the group (e.g. `--3-5--`).
+- A track of the group fades the other tracks of the group out (about 2 ms) when it is triggered;
+  they stay silent until their next trigger. CL HH/OP HH cut each other anyway.
+- One group per kit, stored in the kit.
+
+### 6. Voice INIT templates - voice load menu
+
+- Hold **LOAD** and press the **step button of the voice** (1-7). From kit 0 turn the encoder one
+  step back: the row **`INIT: Project`**, `INIT: Global` or `INIT: Factory` shows where this voice's
+  INIT comes from (one step further: `Change Project`).
+- Click the row, choose with the encoder, click to run:
+
+| Action | |
+|---|---|
+| `Load INIT` | voice from the project template, else the global one, else the factory values of its engine (engine and step automation stay) |
+| `Save to Project` / `Save to Global` | stores **only this voice** (engine, sound, LFO/velocity, sample, start/length) in the template |
+| `Del Project INIT` / `Del Global INIT` | removes only this voice from the template (2nd click: `Delete? Click`) |
+| `Back` | back to the kit list |
+
+- Project template: `INIT.SND` in the project folder (needs a saved project; `Save proj first`
+  otherwise; a project save keeps it). Global template: `/INIT.SND`.
+
+### Compatibility
+
+Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `all`, no choke
+group). The sample memory stays at 512 KB: the area above 1 MB that the LXR02Open port uses is not
+readable on the tested unit (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 
 ## Building and installing
 
