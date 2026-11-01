@@ -33,6 +33,7 @@ void lfo_init(Lfo *lfo)
 	lfo->sync			= 0;
 	lfo->freq			= 1;
 	lfo->modNodeValue	= 1;
+	lfo->cycleCount		= 0;
 
 	modNode_init(&lfo->modTarget);
 }
@@ -89,6 +90,17 @@ IN_ITCM_RAM float lfo_calc(Lfo *lfo)
 			{
 				float x = lfo->phase/(float)0xffffffff;
 				return x*x*x;
+			}
+			break;
+	//---
+		case LFO_CYCLE:
+			{
+				//MOD: mod+1 steps (the modulation amount counts the further
+				//values), one step per trigger; the step's centre so that a
+				//sample range (sampleFlash_rangeValue) gets exactly one sample
+				const uint32_t n = (uint32_t)(lfo->modTarget.amount * 127.f + 0.5f) + 1u;
+				const uint32_t k = (lfo->cycleCount + n - 1u) % n;
+				return ((float)k + 0.5f) / (float)n;
 			}
 			break;
 	//---
@@ -217,6 +229,12 @@ void lfo_retrigger(uint8_t voice)
 		if(lfo->retrigger == voice+1)
 		{
 			lfo->phase = lfo->phaseOffset;
+		}
+		//MOD: the cycle LFO steps on each trigger of its retrigger voice, without
+		//retrigger on each trigger of its own voice
+		if(lfo->waveform == LFO_CYCLE && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
+		{
+			lfo->cycleCount++;
 		}
 	}
 }

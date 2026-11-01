@@ -34,6 +34,7 @@ enum
 	LFO_NOISE,
 	LFO_EXP_UP,
 	LFO_EXP_DOWN,
+	LFO_CYCLE,		//MOD: steps through mod+1 values, one step per trigger
 	NUM_LFO_WAVEFORMS
 };
 
@@ -53,6 +54,7 @@ typedef struct LfoStruct
 	float 		freq;
 	ModulationNode modTarget;
 	float		modNodeValue;
+	uint32_t	cycleCount;	//MOD: triggers counted by LFO_CYCLE
 } Lfo;
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo);

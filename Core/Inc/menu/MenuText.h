@@ -248,7 +248,7 @@ const char retriggerNames[][4]  =
 //-----------------------------------------------------------------
 const char lfoWaveNames[][4]  =
 {
-	{8},		//number of entries
+	{9},		//number of entries
 	{"sin"},
 	{"tri"},
 	{"sup"},
@@ -257,6 +257,7 @@ const char lfoWaveNames[][4]  =
 	{"rnd"},
 	{"xup"},
 	{"xdn"},
+	{"cyc"},	//MOD: one step per trigger
 };
 //-----------------------------------------------------------------
 const char rollRateNames[][4]  =

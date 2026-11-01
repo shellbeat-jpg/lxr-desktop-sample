@@ -89,7 +89,14 @@ waveforms:
 - Example hi-hats only: name the hat files so they follow each other (`5HAT_A` ... `9HAT_E`), select
   s5 as waveform and set the amount to 4.
 - Velocity layers: soft to loud versions in a row, the softest selected, amount = number of layers - 1.
-- Round robin: an LFO with the random waveform picks a different sample of the range on each hit.
+- **The sample is chosen at the trigger** and kept until the next trigger: modulation in between
+  doesn't switch samples in the middle of a hit.
+- **Round robin in order:** LFO waveform `cyc` (cycle) steps through the range, one sample per
+  trigger (s5, s6, ... s9, s5, ...). It counts the triggers of the voice set with `rtg`, with
+  `rtg` off those of the LFO's own voice. Rate and sync don't matter for `cyc`.
+- Random round robin: LFO waveform `rnd`; with `rtg` on the voice the value stays the same for
+  every hit (the LFO restarts), so leave `rtg` off and use a rate faster than the hits.
+- A retrigger cuts the sample that still plays with a short fade (about 1 ms) instead of a click.
 - With a built-in waveform as base the modulation works as before.
 
 ## Voice INIT

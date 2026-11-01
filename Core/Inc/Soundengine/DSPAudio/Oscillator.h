@@ -64,6 +64,9 @@ typedef struct OscStruct
 	uint32_t smpEnd;		// MOD: frame after the last one (length parameter)
 	uint8_t  smpLen;		// MOD: length parameter 0..127, 0 = to the end of the sample
 	uint8_t  smpWrapped;	// MOD: a loop sample passed its loop point (no fade-in any more)
+	uint8_t  smpWave;		// MOD: the sample (waveform) latched at the trigger
+	int16_t  smpTail;		// MOD: output when retriggered, faded out over SMP_DECLICK frames
+	uint8_t  smpTailPos;
 } OscInfo;
 //-----------------------------------------------------------
 

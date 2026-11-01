@@ -131,4 +131,12 @@ int main(){
     CHECK(sampleFlash_modulatedWave(W, sampleFlash_rangeValue(W, 1/127.f, 1.f), W)==W+1,"Bereich: Wert 1 -> letztes Sample des Bereichs");
     CHECK(fabsf(sampleFlash_rangeValue(W+4, 4/127.f, 0.6f)*127.f-(W+7))<0.01f,"Bereich s5..s9: 0.6 -> s8 (5 gleiche Stufen)");
     CHECK(fabsf(sampleFlash_rangeValue(W+4, 0.f, 0.9f)*127.f-(W+4))<0.01f,"Amount 0 -> immer das gewaehlte Sample"); }
+  /* 12: Sample beim Trigger festhalten, Retrigger ohne Klick */
+  o=mk(0); o.freq=MidiNoteFrequencies[60]; osc_setBaseNote(&o,60);
+  { int16_t buf[32]; osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0.f);
+    o.waveform=NUM_OSC_WAVEFORMS+1; /* Modulation wechselt waehrend des Spielens */
+    calcNextOscSampleBlock(&o,buf,32,1.f,0.f); CHECK(buf[0]==ramp(32),"Waveform-Wechsel waehrend des Spielens: Sample bleibt bis zum naechsten Trigger");
+    int16_t last=o.output; osc_setBaseNote(&o,60); osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0.f);
+    CHECK(o.smpWave==NUM_OSC_WAVEFORMS+1,"naechster Trigger nimmt das neue Sample");
+    CHECK(abs(buf[0]-last) < 2000,"Retrigger: kein Sprung (Ausblenden des alten Klangs)"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

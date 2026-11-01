@@ -33,6 +33,7 @@
 #define SMP_MIN_LOOP    16u           /* frames, shorter regions play once */
 #define SMP_LOOP_XF     256u          /* frames, max. crossfade at the loop point */
 #define SMP_LOOP_DIP    32u           /* frames, fade out/in at the loop point if start = 0 */
+#define SMP_DECLICK     48u           /* output frames, a retrigger fades the cut-off sound out */
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
@@ -589,6 +590,10 @@ static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
 	osc->phase    = start;
 	osc->smpFrac  = 0;
 	osc->smpWrapped = 0;
+	/* a retrigger cuts the sound that still plays: fade its last value out
+	 * instead of jumping (choke without click) */
+	osc->smpTail    = osc->output;
+	osc->smpTailPos = osc->output ? SMP_DECLICK : 0u;
 }
 //------------------------------------------------------------------
 /* one-shot playback core: linear interpolation, phase = integer frame position,
@@ -606,11 +611,17 @@ static inline int32_t smp_read(const int16_t* data, const uint32_t n, int32_t rp
 }
 static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, const uint8_t size, const float gain, const float pwm)
 {
-	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
+	/* the sample is chosen at the trigger (incl. LFO/velocity modulation of the
+	 * waveform) and kept until the next one: a modulation that changes the
+	 * waveform meanwhile doesn't switch samples in the middle */
+	if(osc->phase == SMP_PENDING) osc->smpWave = osc->waveform;
+	const uint8_t wave = osc->smpWave >= NUM_OSC_WAVEFORMS ? osc->smpWave : osc->waveform;
+	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(wave - NUM_OSC_WAVEFORMS));
 	if(e == NULL || e->frames == 0)
 	{
 		memset(buf, 0, size * sizeof(int16_t));
 		osc->output = 0;
+		osc->smpTailPos = 0;
 		return;
 	}
 	if(osc->phase == SMP_PENDING) smp_begin(osc, e, pwm);
@@ -674,6 +685,13 @@ static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, con
 		}
 		if(fadeOut && toEnd < SMP_FADE_OUT) s = (s * (int32_t)toEnd) / (int32_t)SMP_FADE_OUT;
 		if(start > 0u && !wrapped && pos - start < SMP_FADE_IN) s = (s * (int32_t)(pos - start + 1u)) / (int32_t)SMP_FADE_IN;
+		if(osc->smpTailPos)
+		{
+			s += ((int32_t)osc->smpTail * (int32_t)osc->smpTailPos) / (int32_t)SMP_DECLICK;
+			osc->smpTailPos--;
+			if(s > 32767) s = 32767;
+			if(s < -32768) s = -32768;
+		}
 		out = (int16_t)s;
 		frac += osc->phaseInc;
 		pos  += frac >> SMP_FRAC_BITS;
