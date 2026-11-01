@@ -156,20 +156,47 @@ Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, len
 group). The 1.5 MB mode is opt-in (`BIGFLASH`) because ST doesn't guarantee the flash above 1 MB on this
 chip (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 
-## Building and installing
+## Installing
 
-As for OpenElixir-02 (see [README_OPENELIXIR.md](README_OPENELIXIR.md)):
+Ready-made firmware: the [Releases](https://github.com/shellbeat-jpg/lxr-desktop-app/releases)
+page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
+[Actions](https://github.com/shellbeat-jpg/lxr-desktop-app/actions) tab (artifacts, sign-in needed).
+
+1. Copy `LXR_OE02-Samples_V<version>.img` to the top folder of the SD card and delete any other
+   `LXR*.img` files there.
+2. Switch the LXR-02 off, insert the card, hold the encoder button and switch it on; keep holding it
+   until "LXR Updater" appears.
+3. Wait for "Update OK!", then remove the image from the card. The start screen shows
+   "OE02-Samples" and the version.
+4. Put your WAV files into `SAMPLES` (loops into `SAMPLES/LOOPS`) and switch on normally: they are
+   imported at the first start. A firmware update erases the samples; keep `SAMPLES` on the card and
+   they are imported again.
+5. Optional, experimental: a folder (or file) `BIGFLASH` in `SAMPLES` gives about 17.8 s instead of
+   5.9 s of samples (start: `Big flash: on`, later `Flash 1024K big`). It uses flash above the 1 MB
+   the chip reports, which ST doesn't guarantee; every sample is verified, errors fall back to
+   512 KB. If the unit ever hangs at the start screen, remove `BIGFLASH` or start without card.
+
+To go back, install the OpenElixir-02 or the Erica Synths image the same way. Kits saved with this
+firmware load there; start, length, the choke group and the `cyc` LFO waveform are ignored, voices
+with a sample as waveform stay silent.
+
+## Building
+
+As for OpenElixir-02 (requirements, toolchain: [README_OPENELIXIR.md](README_OPENELIXIR.md) and
+[README_LXR.md](README_LXR.md)):
 
 ```sh
-cmake --preset release
+cmake --preset release      # add -DARM_TOOLCHAIN_DIR=<toolchain>/bin if arm-none-eabi-gcc isn't on PATH
 cmake --build --preset release
 ```
 
-Copy `build/release/LXR_OE02-Samples_V<version>.img` to the SD card and install it with the
-LXR-02's updater (hold the encoder while switching on). Host tests of the sample code:
-`sh tests/host/run.sh` (Linux, gcc).
+This creates `build/release/LXR_OE02-Samples_V<version>.img` (name and version from `project()` in
+`CMakeLists.txt`). The GitHub Actions build uses the Arm GNU Toolchain 15.3; GCC 13.2 also works.
 
-To go back, install the official OpenElixir-02 or Erica Synths image the same way.
+Host tests of the sample code (Linux, gcc): `sh tests/host/run.sh`.
+
+Releases: pushing a tag `v<version>` that matches the version in `CMakeLists.txt` builds the firmware
+and publishes a release with the notes in `.github/releases/v<version>.md`.
 
 ## Licence
 
