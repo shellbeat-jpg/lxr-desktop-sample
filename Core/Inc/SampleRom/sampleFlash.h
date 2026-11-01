@@ -36,7 +36,7 @@ typedef struct
 	uint32_t count;
 	uint32_t signature;  /* hash of the /SAMPLES file list (names + sizes) */
 	uint32_t totalFrames;
-	uint32_t reserved[3];
+	uint32_t reserved[3];  /* [0]: number of skipped (non 16-bit) files */
 	SampleFlashEntry entry[SF_MAX_SAMPLES];
 } SampleFlashHeader;     /* 32 + 16*32 = 544 bytes */
 
@@ -57,6 +57,11 @@ typedef enum
  * starts (erasing a sector stalls code running from flash for ~2 s).
  * Shows progress and the result on the LCD. */
 SampleFlashResult sampleFlash_importAtBoot(void);
+
+/* Call once at boot, with or without SD card, after the import: makes the
+ * stored samples available to the audio engine and shows "Samples in flash"
+ * with the count (and skipped files) on the LCD. */
+void sampleFlash_showStatus(void);
 
 /* Read access for later steps (playback). NULL / 0 if nothing valid stored. */
 const SampleFlashHeader* sampleFlash_getHeader(void);

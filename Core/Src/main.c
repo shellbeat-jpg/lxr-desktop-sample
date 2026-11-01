@@ -355,7 +355,7 @@ int main(void)
 #else
 	//print boot up message
 lcd_clear();
-lcd_string("OE+Samples s2"); // modified OpenElixir-02, not official
+lcd_string("OE+Samples s3"); // modified OpenElixir-02, not official
 //goto 2nd line
 lcd_setcursor(0,2);
 lcd_string("Version");
@@ -446,8 +446,9 @@ lcd_clear();
 if(sd_card_ok)
 {
 	sampleFlash_importAtBoot();
-	lcd_clear();
 }
+sampleFlash_showStatus(); // MOD: also without SD card, enables playback of stored samples
+lcd_clear();
 menu_setNumSamples(sampleFlash_getCount()); // MOD: samples appear as waveforms s1..sN
 
 adc_checkPots();

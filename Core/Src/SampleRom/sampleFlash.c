@@ -310,17 +310,15 @@ static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, 
 	switch(r)
 	{
 	case SF_OK_UNCHANGED:
-		snprintf(l2, sizeof(l2), "%u stored", count);
-		sf_lcd("Samples OK", l2);
-		HAL_Delay(800);
-		return;
+		return;   /* sampleFlash_showStatus() shows the count */
 	case SF_OK_IMPORTED:
 	{
 		/* duration at 44.1 kHz in 1/100 s, the real rate may differ */
 		uint32_t cs = (uint32_t)((uint64_t)totalFrames * 100u / 44100u);
 		snprintf(l2, sizeof(l2), "%u smp %lu.%02lus", count, (unsigned long)(cs / 100), (unsigned long)(cs % 100));
 		sf_lcd("Import+Verify OK", l2);
-		break;
+		HAL_Delay(1500);
+		return;
 	}
 	case SF_NO_FOLDER:
 		return;
@@ -331,6 +329,28 @@ static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, 
 	case SF_ERR_VERIFY:  sf_lcd("Verify FAILED:", name); break;
 	}
 	HAL_Delay(3000);
+}
+/*----------------------------------------------------------------------------*/
+static void sf_showSkipped(uint8_t skipped, const char* firstName)
+{
+	char l2[17];
+	if(skipped > 1) snprintf(l2, sizeof(l2), "%-12.12s +%u", firstName, (unsigned)(skipped - 1u));
+	else            snprintf(l2, sizeof(l2), "%s", firstName);
+	sf_lcd("Not 16bit, skip:", l2);
+	HAL_Delay(2500);
+}
+/*----------------------------------------------------------------------------*/
+void sampleFlash_showStatus(void)
+{
+	char l2[17];
+	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
+	const SampleFlashHeader* h = sf_cache;
+	if(h == NULL)                   snprintf(l2, sizeof(l2), "none");
+	else if(h->reserved[0] && h->reserved[0] <= 99u)
+	                                snprintf(l2, sizeof(l2), "%u (%u skipped)", (unsigned)h->count, (unsigned)h->reserved[0]);
+	else                            snprintf(l2, sizeof(l2), "%u", (unsigned)h->count);
+	sf_lcd("Samples in flash", l2);
+	HAL_Delay(1200);
 }
 /*----------------------------------------------------------------------------*/
 SampleFlashResult sampleFlash_importAtBoot(void)
@@ -346,14 +366,30 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 		return sf_finish(SF_OK_UNCHANGED);
 	}
 
-	/* 1. parse all files and check the total size before touching the flash */
+	/* 1. parse all files and check the total size before touching the flash.
+	 *    Files that are no 16-bit PCM WAV are skipped (not fatal); the others
+	 *    move up, so s1..sN stay gap-free and keep the name order. */
 	uint32_t needed = 0;
+	uint8_t kept = 0, skipped = 0;
+	char skipName[13];
+	memset(skipName, 0, sizeof(skipName));
 	for(uint8_t i = 0; i < count; i++)
 	{
 		SampleFlashResult r = sf_parseWav(&sf_files[i]);
+		if(r == SF_ERR_FORMAT)
+		{
+			if(skipped == 0) strncpy(skipName, sf_files[i].name, 12);
+			skipped++;
+			continue;
+		}
 		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_files[i].name, 0, 0); return sf_finish(r); }
-		needed += (sf_files[i].frames * 2u + 3u) & ~3u;
+		if(kept != i) sf_files[kept] = sf_files[i];
+		needed += (sf_files[kept].frames * 2u + 3u) & ~3u;
+		kept++;
 	}
+	if(skipped) sf_showSkipped(skipped, skipName);
+	if(kept == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
+	count = kept;
 	if(needed > (SF_REGION_END - SF_DATA_START))
 	{
 		sf_showResult(SF_ERR_TOO_BIG, "", 0, 0);
@@ -411,6 +447,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 		sf_newHeader.count       = count;
 		sf_newHeader.signature   = signature;
 		sf_newHeader.totalFrames = totalFrames;
+		sf_newHeader.reserved[0] = skipped;   /* shown by sampleFlash_showStatus() */
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
 		if(!sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))

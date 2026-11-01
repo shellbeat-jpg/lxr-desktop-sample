@@ -28,9 +28,9 @@ HAL_StatusTypeDef HAL_FLASH_Unlock(void){locked=0;return HAL_OK;}
 HAL_StatusTypeDef HAL_FLASH_Lock(void){locked=1;return HAL_OK;}
 void SCB_CleanInvalidateDCache(void){}
 void HAL_Delay(uint32_t x){(void)x;}
-static char lcdbuf[64]; static int quiet=1;
+static char lcdbuf[64]; static int quiet=1, sawSkip=0;
 void lcd_clear(void){lcdbuf[0]=0;} void lcd_home(void){}
-void lcd_string(const char* s){strcat(lcdbuf,s); strcat(lcdbuf,"|"); if(!quiet) printf("   LCD: %s\n",lcdbuf);}
+void lcd_string(const char* s){if(strstr(s,"skip"))sawSkip=1; strcat(lcdbuf,s); strcat(lcdbuf,"|"); if(!quiet) printf("   LCD: %s\n",lcdbuf);}
 void lcd_setcursor(uint8_t x,uint8_t y){(void)x;(void)y;}
 static void mkpath(char* out,const char* p){snprintf(out,600,"%s%s",root,p);}
 FRESULT f_open(FIL* f,const char* p,BYTE m){char b[600];mkpath(b,p);f->f=fopen(b,"rb");return f->f?FR_OK:FR_NO_FILE;}
@@ -85,8 +85,17 @@ int main(){
   wav("2.WAV",1,16,44100,30000,0);
   RUN("4 Datei geaendert"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getHeader()->entry[1].frames==30000,"Reimport");
   wav("4.WAV",1,24,44100,100,0);
-  RUN("5 24-Bit-WAV dazu"); CHECK(last==SF_ERR_FORMAT && eraseCalls==0,"Formatfehler, Flash unberuehrt");
-  CHECK(sampleFlash_getCount()==3,"alter Bestand bleibt gueltig");
+  sawSkip=0; RUN("5 24-Bit-WAV dazu"); CHECK(last==SF_OK_IMPORTED && sawSkip,"24-Bit-Datei uebersprungen und gemeldet");
+  CHECK(sampleFlash_getCount()==3 && sampleFlash_getHeader()->reserved[0]==1,"3 importiert, 1 als uebersprungen vermerkt");
+  CHECK(expect("2.WAV",1,30000,&sampleFlash_getHeader()->entry[1]),"gueltige Dateien unveraendert korrekt");
+  RUN("5b Neustart mit uebersprungener Datei"); CHECK(last==SF_OK_UNCHANGED && eraseCalls==0,"kein erneuter Import");
+  wav("0.WAV",1,24,44100,100,0); wav("25.WAV",1,16,44100,500,0);
+  RUN("5c ungueltige Datei vorne + neue gueltige"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==4,"luckenlos: 1,2,25,3");
+  CHECK(!strcmp(sampleFlash_getHeader()->entry[0].name,"1.WAV") && !strcmp(sampleFlash_getHeader()->entry[2].name,"25.WAV") && sampleFlash_getHeader()->reserved[0]==2,"Reihenfolge stimmt, 2 uebersprungen");
+  system("rm sd/SAMPLES/0.WAV sd/SAMPLES/25.WAV; mkdir -p sd2/SAMPLES; mv sd/SAMPLES/*.WAV sd2/; cp sd/SAMPLES/../SAMPLES/../../sd2/*.WAV sd2/ 2>/dev/null; true");
+  wav("4B.WAV",1,24,44100,100,0); system("rm -f sd/SAMPLES/4.WAV");
+  RUN("5d nur ungueltige Datei im Ordner"); CHECK(last==SF_ERR_FORMAT && eraseCalls==0 && sampleFlash_getCount()==4,"nichts importierbar -> Flash unberuehrt");
+  system("rm sd/SAMPLES/4B.WAV; mv sd2/*.WAV sd/SAMPLES/; rm -rf sd2"); wav("4.WAV",1,24,44100,100,0);
   system("rm sd/SAMPLES/4.WAV"); wav("5.WAV",1,16,44100,300000,0);
   RUN("6 zu gross (600 KB)"); CHECK(last==SF_ERR_TOO_BIG && eraseCalls==0,"zu gross, Flash unberuehrt");
   system("rm sd/SAMPLES/5.WAV"); wav("5.WAV",1,16,44100,200000,0);
@@ -99,6 +108,7 @@ int main(){
   system("rm -f sd/SAMPLES/*.WAV"); char nm[16]; for(int i=0;i<20;i++){snprintf(nm,16,"%02d.WAV",i);wav(nm,1,16,44100,100,0);}
   RUN("10 zwanzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==16,"max 16 uebernommen");
   RUN("11 erneuter Start"); CHECK(last==SF_OK_UNCHANGED,"Signatur stabil");
+  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples in flash|16|"),"Statuszeile beim Start");
   CHECK(badErase==0,"NIE ein anderer Sektor als 6/7 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}
