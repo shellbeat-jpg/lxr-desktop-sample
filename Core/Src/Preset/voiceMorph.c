@@ -59,30 +59,48 @@ static uint8_t vm_isSwitch(const uint16_t par)
 	return dtype == DTYPE_MENU || dtype == DTYPE_ON_OFF || dtype == DTYPE_0b1;
 }
 //---------------------------------------------------
-static void vm_send_slot(const uint8_t src, const uint8_t dst, const uint8_t amount)
+//switch-like values change to the target's at this amount (PAR_VMORPH_SWITCH,
+//0 = the default 64)
+static uint8_t vm_switchPoint(void)
 {
-	uint8_t ls[KITENGINES_MAX_SLOT_PARAMS], ld[KITENGINES_MAX_SLOT_PARAMS];
-	const uint8_t n = kitEngines_getSlotParams(src, ls);
-	kitEngines_getSlotParams(dst, ld);
-	const uint8_t sameEngine = kitEngines[src] == kitEngines[dst];
-	for(uint8_t i=0;i<n;i++)
-	{
-		const uint16_t p = ls[i];
-		const uint8_t a = activeParameters[p];
-		uint8_t v = a;
-		if(amount && !(p >= PAR_AUDIO_OUT1 && p <= PAR_AUDIO_OUT6)
-				&& (sameEngine || kitEngines_rolePar2Slot(p) != src))
-		{
-			const uint8_t b = activeParameters[ld[i]];
-			if(vm_isSwitch(p))
-				v = amount >= 64 ? b : a;
-			else
-				v = (uint8_t)(a + (((int16_t)b - (int16_t)a) * (int16_t)amount) / 127);
-		}
-		vm_send(p, v);
-	}
+	const uint8_t s = activeParameters[PAR_VMORPH_SWITCH];
+	return s == 0 ? 64u : s > 127u ? 127u : s;
 }
 //---------------------------------------------------
+//entry i of the slot parameter lists: the source's value morphed towards the target's
+static void vm_send_one(const uint8_t src, const uint8_t dst, const uint8_t amount, const uint8_t i)
+{
+	uint8_t ls[KITENGINES_MAX_SLOT_PARAMS], ld[KITENGINES_MAX_SLOT_PARAMS];
+	kitEngines_getSlotParams(src, ls);
+	kitEngines_getSlotParams(dst, ld);
+	const uint8_t sameEngine = kitEngines[src] == kitEngines[dst];
+	const uint16_t p = ls[i];
+	const uint8_t a = activeParameters[p];
+	uint8_t v = a;
+	if(amount && !(p >= PAR_AUDIO_OUT1 && p <= PAR_AUDIO_OUT6)
+			&& (sameEngine || kitEngines_rolePar2Slot(p) != src))
+	{
+		const uint8_t b = activeParameters[ld[i]];
+		if(vm_isSwitch(p))
+			v = amount >= vm_switchPoint() ? b : a;
+		else
+			v = (uint8_t)(a + (((int16_t)b - (int16_t)a) * (int16_t)amount) / 127);
+	}
+	vm_send(p, v);
+}
+//---------------------------------------------------
+//The values are sent in small steps from the main loop (voiceMorph_tick), like the
+//kit morph: sending all of a voice's parameters at once took so long that the
+//audio blocks (computed in the main loop) were late while the amount was turned,
+//which sounded like a jump in pitch.
+#define VM_PARAMS_PER_TICK	2
+static uint8_t vm_restoreSlot = 0xFF;	//old source: gets its own values again
+static uint8_t vm_passSrc = 0xFF;		//running pass (0xFF = none)
+static uint8_t vm_passDst = 0;
+static uint8_t vm_passRestore = 0;
+static uint8_t vm_passIdx = 0;
+static uint8_t vm_dirty = 0;			//values changed: another pass after the running one
+
 void voiceMorph_apply(void)
 {
 	uint8_t src, dst;
@@ -91,13 +109,50 @@ void voiceMorph_apply(void)
 	//another source (or off): the previous source gets its own values again
 	if(vm_activeSrc < NUM_VOICE_SLOTS && (!on || vm_activeSrc != src))
 	{
-		vm_send_slot(vm_activeSrc, vm_activeSrc, 0);
+		vm_restoreSlot = vm_activeSrc;
 		vm_activeSrc = 0xFF;
 	}
-	if(!on)
-		return;
-	vm_send_slot(src, dst, activeParameters[PAR_VMORPH_AMT] > 127 ? 127 : activeParameters[PAR_VMORPH_AMT]);
-	vm_activeSrc = src;
+	if(on)
+	{
+		vm_activeSrc = src;
+		vm_dirty = 1;
+	}
+}
+//---------------------------------------------------
+void voiceMorph_tick(void)
+{
+	if(vm_passSrc == 0xFF)
+	{
+		uint8_t src, dst;
+		if(vm_restoreSlot < NUM_VOICE_SLOTS)
+		{
+			vm_passSrc = vm_restoreSlot;
+			vm_passDst = vm_restoreSlot;
+			vm_passRestore = 1;
+			vm_restoreSlot = 0xFF;
+		}
+		else if(vm_dirty && voiceMorph_decode(activeParameters[PAR_VMORPH_PAIR], &src, &dst))
+		{
+			vm_passSrc = src;
+			vm_passDst = dst;
+			vm_passRestore = 0;
+			vm_dirty = 0;
+		}
+		else
+		{
+			vm_dirty = 0;
+			return;
+		}
+		vm_passIdx = 0;
+	}
+	const uint8_t amount = vm_passRestore ? 0u
+			: (activeParameters[PAR_VMORPH_AMT] > 127 ? 127u : activeParameters[PAR_VMORPH_AMT]);
+	uint8_t list[KITENGINES_MAX_SLOT_PARAMS];
+	const uint8_t n = kitEngines_getSlotParams(vm_passSrc, list);
+	for(uint8_t k=0;k<VM_PARAMS_PER_TICK && vm_passIdx < n;k++)
+		vm_send_one(vm_passSrc, vm_passDst, amount, vm_passIdx++);
+	if(vm_passIdx >= n)
+		vm_passSrc = 0xFF;
 }
 //---------------------------------------------------
 void voiceMorph_paramEdited(const uint16_t par)

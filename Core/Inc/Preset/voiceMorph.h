@@ -25,6 +25,9 @@ uint8_t voiceMorph_decode(const uint8_t pair, uint8_t* src, uint8_t* dst);
 //values if the morph is off); call when pair or amount change
 void voiceMorph_apply(void);
 
+//sends the pending values in small steps; call from the main loop
+void voiceMorph_tick(void);
+
 //a sound parameter was edited: if it belongs to the source or target voice of
 //an active morph, the morph is applied again
 void voiceMorph_paramEdited(const uint16_t par);

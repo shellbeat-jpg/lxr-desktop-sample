@@ -500,6 +500,7 @@ const char shortNames[][4]  =
 	{"vmo"},
 	{"ips"},
 	{"mrv"},
+	{"vsw"},
 
 };
 //-----------------------------------------------------------------
@@ -642,6 +643,7 @@ const char longNames[][16] =
 	{" Voices"},	//after the category: "V.Morph  Voices"
 	{" Amount"},
 	{"Instant"},	//"Pattern Instant"
+	{" Switch"},	//"V.Morph  Switch"
 };
 
 

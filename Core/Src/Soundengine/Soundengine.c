@@ -14,6 +14,7 @@
 #include "Soundengine/Soundengine.h"
 #include "Soundengine/AudioCodecManager.h"
 #include "Preset/PresetManager.h"
+#include "Preset/voiceMorph.h"
 #include <string.h>
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/MIDI/Uart.h"
@@ -121,6 +122,7 @@ void soundengine_process()
 
 
 	preset_morph_tick();
+	voiceMorph_tick();	//MOD: voice morph, in small steps
 	//preset_morph_tick();
 	//preset_morph_tick();
 

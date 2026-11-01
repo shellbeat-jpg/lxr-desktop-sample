@@ -140,10 +140,12 @@ but between two voices. Performance page, after `res` of the DJ filter (scroll o
 |---|---|
 | `vmv` | the voice pair: `off`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
 | `vmo` | amount 0..127: 0 = the source as set, 127 = the target's values |
+| `vsw` | switch point 1..127 (default 64): from this `vmo` value on, switch-like values are the target's |
 
 - Every sound parameter of the source voice moves towards the same parameter of the target voice
-  (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform, filter type,
-  on/off) change at half the amount.
+  (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform/sample, filter
+  type, on/off) change at `vsw` (default 64); level jumps there come from the sample or filter type
+  changing at once.
 - Engine specific parameters only morph if both voices run the same engine; the audio output
   routing never morphs.
 - The settings of the voices stay as set: `vmo` = 0 or `vmv` = off gives the source its own sound

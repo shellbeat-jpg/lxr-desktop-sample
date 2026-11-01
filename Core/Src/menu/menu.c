@@ -273,6 +273,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_VMORPH_AMT, CAT_VMORPH, LONG_VMORPH_AMT},/*TEXT_VMORPH_AMT*/
 		{SHORT_INSTANT_PAT, CAT_PATTERN, LONG_INSTANT_PAT},/*TEXT_INSTANT_PAT*/
 		{SHORT_MORPH_VOICES, CAT_KMORPH, LONG_VMORPH_PAIR},/*TEXT_MORPH_VOICES*/
+		{SHORT_VMORPH_SWITCH, CAT_VMORPH, LONG_VMORPH_SWITCH},/*TEXT_VMORPH_SWITCH*/
 
 
 };
@@ -2011,6 +2012,10 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
+			else if(parNr == PAR_VMORPH_SWITCH)
+			{
+				numtostrpu(&editDisplayBuffer[1][13], (uint8_t)(curParmVal ? curParmVal : 64), ' ');	//MOD
+			}
 			else if(parNr == PAR_MORPH_VOICES)
 			{
 				//MOD: the morphed voices on the left, on/off for the active voice
@@ -2187,6 +2192,8 @@ void menu_repaintGeneric()
 				uint8_t s, d;
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
+			} else if(parNr == PAR_VMORPH_SWITCH) {
+				numtostrpu(valueAsText, (uint8_t)(curParmVal ? curParmVal : 64), ' ');	//MOD
 			} else if(parNr == PAR_MORPH_VOICES) {
 				//MOD: is the active voice morphed
 				memcpy(valueAsText, (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
@@ -3462,6 +3469,14 @@ static void menu_encoderChangeParameter(int8_t inc)
 		int16_t v = (int16_t)activeParameters[paramNr] + inc;
 		activeParameters[paramNr] = (uint8_t)(v < 0 ? 0 : v > VMORPH_NUM_PAIRS ? VMORPH_NUM_PAIRS : v);
 		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
+		return;
+	}
+	//MOD: voice morph switch point 1..127 (0 = the default 64)
+	if(paramNr == PAR_VMORPH_SWITCH)
+	{
+		int16_t v = (int16_t)(activeParameters[paramNr] ? activeParameters[paramNr] : 64) + inc;
+		activeParameters[paramNr] = (uint8_t)(v < 1 ? 1 : v > 127 ? 127 : v);
+		voiceMorph_apply();
 		return;
 	}
 	//MOD: kit morph on/off for the active voice (the bit means: left out)

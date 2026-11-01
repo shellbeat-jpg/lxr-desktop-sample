@@ -283,6 +283,7 @@ enum NamesEnum
 	TEXT_VMORPH_AMT,	//MOD: voice morph amount
 	TEXT_INSTANT_PAT,	//MOD: instant pattern switching
 	TEXT_MORPH_VOICES,	//MOD: voices of the kit morph
+	TEXT_VMORPH_SWITCH,	//MOD: voice morph switch point
 
 
 	NUM_NAMES
@@ -401,7 +402,8 @@ enum shortNamesEnum
 	SHORT_VMORPH_PAIR,
 	SHORT_VMORPH_AMT,
 	SHORT_INSTANT_PAT,
-	SHORT_MORPH_VOICES
+	SHORT_MORPH_VOICES,
+	SHORT_VMORPH_SWITCH
 
 	
 };
@@ -542,7 +544,8 @@ enum longNamesEnum
 	LONG_CHOKE,
 	LONG_VMORPH_PAIR,
 	LONG_VMORPH_AMT,
-	LONG_INSTANT_PAT
+	LONG_INSTANT_PAT,
+	LONG_VMORPH_SWITCH
 	
 };
 

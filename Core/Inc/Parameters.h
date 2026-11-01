@@ -446,6 +446,7 @@ extern uint8_t parameterOrder[END_OF_SOUND_PARAMETERS];
 //MOD: voice morph on the performance page (non-sound parameters, not saved)
 #define PAR_VMORPH_PAIR		PAR_UNUSED		//0 = off, 1..30: source and target slot
 #define PAR_VMORPH_AMT		PAR_SOM_FREQ	//0..127
+#define PAR_VMORPH_SWITCH	PAR_TRACK_ROTATION	//switch-like values change at this amount (0 = 64); track rotation is unused
 #define VMORPH_NUM_PAIRS	30				//6 slots x 5 other slots
 
 
