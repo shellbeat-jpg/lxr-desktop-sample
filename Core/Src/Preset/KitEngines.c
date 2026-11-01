@@ -133,6 +133,12 @@ static void kitEngines_slotParams(const uint8_t slot, uint8_t* list)
 	}
 }
 //---------------------------------------------------
+uint8_t kitEngines_getSlotParams(const uint8_t slot, uint8_t* list)
+{
+	kitEngines_slotParams(slot < NUM_VOICE_SLOTS ? slot : NUM_VOICE_SLOTS-1, list);
+	return NUM_SLOT_PARAMS;
+}
+//---------------------------------------------------
 //parameters of a slot that are not in kitEngines_slotParams(), with one entry per slot
 static const uint8_t kitEngines_extraParams[] = { PAR_VEL_DEST_1, PAR_VOICE_LFO1, PAR_TARGET_LFO1 };
 //---------------------------------------------------

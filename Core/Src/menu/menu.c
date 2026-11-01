@@ -32,6 +32,7 @@
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/DSPAudio/DjFilter.h"
 #include "SampleRom/sampleFlash.h"
+#include "Preset/voiceMorph.h"
 #include "buttonHandler.h"
 #include <ctype.h>
 #include <frontPanelParser_ui.h>
@@ -268,6 +269,8 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_SMP_LENGTH, CAT_OSC, LONG_SMP_LENGTH},/*TEXT_SMP_LENGTH*/
 		{SHORT_SMP_START, CAT_OSC, LONG_SMP_START},/*TEXT_SMP_START*/
 		{SHORT_CHOKE, CAT_VELO_EG, LONG_CHOKE},/*TEXT_CHOKE*/
+		{SHORT_VMORPH_PAIR, CAT_VMORPH, LONG_VMORPH_PAIR},/*TEXT_VMORPH_PAIR*/
+		{SHORT_VMORPH_AMT, CAT_VMORPH, LONG_VMORPH_AMT},/*TEXT_VMORPH_AMT*/
 
 
 };
@@ -1915,6 +1918,15 @@ void menu_repaintGeneric()
 			{
 				//MOD: sample start/length in ms
 			}
+			else if(parNr == PAR_VMORPH_PAIR)
+			{
+				//MOD: "Voice 1 > 2" or "off"
+				uint8_t s, d;
+				if(voiceMorph_decode(curParmVal, &s, &d))
+					snprintf(&editDisplayBuffer[1][5], 12, "Voice %u > %u", (unsigned)(s+1u), (unsigned)(d+1u));
+				else
+					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
+			}
 			else if(parNr == PAR_CHOKE_GROUP)
 			{
 				//MOD: on/off for the active voice, the group's tracks on the left
@@ -2077,6 +2089,11 @@ void menu_repaintGeneric()
 			//convert the parameter uint8_t value to a 3 place char
 			if(parNr==PAR_NONE) {
 				memcpy(valueAsText,menuText_blank,3);
+			} else if(parNr == PAR_VMORPH_PAIR) {
+				//MOD: "off" or "1>2"
+				uint8_t s, d;
+				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
+				else memcpy(valueAsText, menuText_off, 3);
 			} else if(parNr == PAR_CHOKE_GROUP) {
 				//MOD: is the active voice in the choke group
 				memcpy(valueAsText, (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
@@ -3335,6 +3352,14 @@ static void menu_encoderChangeParameter(int8_t inc)
 	//uint8_t *paramValue = &mainParameters[paramNr];
 	uint8_t *paramValue;
 
+	//MOD: the voice morph pair has VMORPH_NUM_PAIRS values (0 = off)
+	if(paramNr == PAR_VMORPH_PAIR)
+	{
+		int16_t v = (int16_t)activeParameters[paramNr] + inc;
+		activeParameters[paramNr] = (uint8_t)(v < 0 ? 0 : v > VMORPH_NUM_PAIRS ? VMORPH_NUM_PAIRS : v);
+		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
+		return;
+	}
 	//MOD: the choke group shows/sets the bit of the active voice (on/off)
 	if(paramNr == PAR_CHOKE_GROUP)
 	{
@@ -3533,6 +3558,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 		frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),*paramValue);
 	else // non sound parameters (ie current step data, etc)
 		menu_parseGlobalParam(paramNr,activeParameters[paramNr]);
+	if(paramNr < END_OF_SOUND_PARAMETERS)
+		voiceMorph_paramEdited(paramNr);	//MOD: keep an active voice morph
 
 	//frontPanel_sendData(0xb0,paramNr,*paramValue);
 }
@@ -3560,7 +3587,7 @@ checkvalid:
 		if(activeParameter == 4) { // move to 2nd section of sub-page
 
 		} else if(activeParameter == 8) { // moved past end of 2nd sub-page
-			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE)){ // in global menu, we can move to next sub-page
+			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE)){ // in global menu (MOD: and performance page), we can move to next sub-page
 
 				activeParameter=0; // set to par 0 of next sub page
 				activePage++; // and change page
@@ -3573,7 +3600,7 @@ checkvalid:
 		if(activeParameter == 3) { // move to first section of sub-page
 
 		} else if(activeParameter==-1) { // if we went past 0
-			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE)) { // in global menu, we can move to previous sub-page
+			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE)) { // in global menu (MOD: and performance page), we can move to previous sub-page
 
 				activeParameter=7; // put us on the last param of the previous sub-page
 				activePage--; // and change page
@@ -3972,9 +3999,9 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 		djFilter_reso = value;
 		break;
 
-	case PAR_SOM_FREQ:
-		frontPanel_sendData(SEQ_CC,SEQ_SET_ACTIVE_TRACK,menu_getActiveVoice());
-		frontPanel_sendData(SEQ_CC,SEQ_SOM_FREQ,value);
+	case PAR_VMORPH_AMT:	//MOD: voice morph (was the unused PAR_SOM_FREQ)
+	case PAR_VMORPH_PAIR:
+		voiceMorph_apply();
 		break;
 
 	case PAR_TRACK_LENGTH:

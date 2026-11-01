@@ -125,6 +125,13 @@ Recommended settings:
 | **Velocity layers** (soft → loud) | OSC `wav` = the softest sample; modulation page: `dst`/`dsr` = `wav`, `amt` = number of layers − 1. Step velocities (`vel`) or played velocity choose the layer |
 | **Fixed sample per step** | step automation (`p1d`/`p2d`) on `wav` sets the sample directly per step |
 
+### 5a. Voice morph - performance page
+
+- Scroll on after the DJ filter: **`vmv`** selects source and target voice (`1>2` ... `6>5`, `off`),
+  **`vmo`** morphs the source's sound towards the target's (0..127).
+- All sound parameters are blended (switch-like values change at half), engine specific ones only
+  between voices with the same engine. Not saved, not a modulation target.
+
 ### 5. Choke group - AEG page
 
 - **`chk`** = on/off puts the track into the kit's choke group (4th parameter for drum 1-3 and the

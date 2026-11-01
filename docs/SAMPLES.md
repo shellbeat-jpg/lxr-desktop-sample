@@ -130,6 +130,25 @@ triggered (e.g. several hi-hat samples on different voices, an open hat cut by a
 - Stored in the kit (parameter slot of the former 7th MIDI note setting). Kits without it: no
   choke group.
 
+## Voice morph
+
+Morphs the sound of one voice towards another voice of the active kit, like the kit morph (`mrp`)
+but between two voices. Performance page, after `res` of the DJ filter (scroll on with the encoder):
+
+| Display | Function |
+|---|---|
+| `vmv` | the voice pair: `off`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
+| `vmo` | amount 0..127: 0 = the source as set, 127 = the target's values |
+
+- Every sound parameter of the source voice moves towards the same parameter of the target voice
+  (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform, filter type,
+  on/off) change at half the amount.
+- Engine specific parameters only morph if both voices run the same engine; the audio output
+  routing never morphs.
+- The settings of the voices stay as set: `vmo` = 0 or `vmv` = off gives the source its own sound
+  back. Editing a parameter of either voice keeps the morph.
+- Not saved; after loading a kit turn `vmo` once to apply the morph again. Not a modulation target.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:

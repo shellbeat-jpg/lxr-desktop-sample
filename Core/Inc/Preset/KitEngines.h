@@ -56,6 +56,11 @@ void kitEngines_initVoice(const uint8_t slot);
 void kitEngines_factoryKit(uint8_t* params, uint8_t* engines);
 void kitEngines_copyVoice(const uint8_t slot, uint8_t* dst, const uint8_t* src);
 
+//MOD: the sound parameters of a slot, entry i has the same function in every
+//slot (list must hold KITENGINES_MAX_SLOT_PARAMS); returns their number
+#define KITENGINES_MAX_SLOT_PARAMS	40
+uint8_t kitEngines_getSlotParams(const uint8_t slot, uint8_t* list);
+
 //set the sound engine's slots to the active kit's engines (before the kit's
 //parameters are sent)
 void kitEngines_apply(void);

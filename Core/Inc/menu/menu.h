@@ -279,6 +279,8 @@ enum NamesEnum
 	TEXT_SMP_LENGTH,	//MOD: sample length
 	TEXT_SMP_START,		//MOD: the PWM label while a sample is selected
 	TEXT_CHOKE,			//MOD: the active voice is in the kit's choke group
+	TEXT_VMORPH_PAIR,	//MOD: voice morph source > target
+	TEXT_VMORPH_AMT,	//MOD: voice morph amount
 
 
 	NUM_NAMES
@@ -393,7 +395,9 @@ enum shortNamesEnum
 	SHORT_DJ_FILTER,
 	SHORT_SMP_LENGTH,
 	SHORT_SMP_START,
-	SHORT_CHOKE
+	SHORT_CHOKE,
+	SHORT_VMORPH_PAIR,
+	SHORT_VMORPH_AMT
 
 	
 };
@@ -430,7 +434,8 @@ enum catNamesEnum
 	CAT_MIDI,
 	CAT_CLOCK,
 	CAT_FX,
-	CAT_DJ_FILTER
+	CAT_DJ_FILTER,
+	CAT_VMORPH
 };
 //-----------------------------------------------------------------
 // these must correspond with longNames in MenuText.h
@@ -529,7 +534,9 @@ enum longNamesEnum
 	LONG_DJ_RESO,
 	LONG_SMP_LENGTH,
 	LONG_SMP_START,
-	LONG_CHOKE
+	LONG_CHOKE,
+	LONG_VMORPH_PAIR,
+	LONG_VMORPH_AMT
 	
 };
 

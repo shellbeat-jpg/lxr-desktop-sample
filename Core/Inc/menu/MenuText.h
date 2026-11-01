@@ -486,6 +486,8 @@ const char shortNames[][4]  =
 	{"len"},
 	{"sta"},
 	{"chk"},
+	{"vmv"},
+	{"vmo"},
 
 };
 //-----------------------------------------------------------------
@@ -523,6 +525,7 @@ const char catNames[][16] =
 	{"Clock"},
 	{"Fx"},
 	{"DJ Filt."},
+	{"V.Morph"},
 };
 //-----------------------------------------------------------------
 // these must correspond to longNamesEnum
@@ -623,6 +626,8 @@ const char longNames[][16] =
 	{"Length"},
 	{"Start"},
 	{"Choke"},
+	{" Voices"},	//after the category: "V.Morph  Voices"
+	{" Amount"},
 };
 
 
