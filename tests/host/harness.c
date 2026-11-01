@@ -12,19 +12,15 @@ void* dw_open(const char*); const char* dw_next(void*); void dw_close(void*);
 #include <stdio.h>
 static char root[512];
 int eraseCalls=0, badErase=0, badProg=0, progCount=0, failAfter=-1, locked=1;
-int bigOk=1, bigErase=0, failUpper=0, maxSector=0;
-uint8_t host_bigAvailable(void){ return (uint8_t)bigOk; }
 HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef* e, uint32_t* err){
   eraseCalls++; if(locked) badErase++;
-  if(e->Sector>=6 && e->Sector<=11) memset((void*)(uintptr_t)(0x08080000+(e->Sector-6)*0x40000),0xFF,0x40000);
+  if(e->Sector==6) memset((void*)0x08080000,0xFF,0x40000);
+  else if(e->Sector==7) memset((void*)0x080C0000,0xFF,0x40000);
   else { badErase++; }
-  if(e->Sector>7) bigErase++;
-  if((int)e->Sector>maxSector) maxSector=(int)e->Sector;
   *err=0xFFFFFFFF; return HAL_OK; }
 HAL_StatusTypeDef HAL_FLASH_Program(uint32_t t, uint32_t a, uint64_t d){
   if(locked) badProg++;
-  if(a<0x08080000||a>=0x08200000||(a&3)) { badProg++; return HAL_ERROR; }
-  if(failUpper && a>=0x08100000) return HAL_ERROR;
+  if(a<0x08080000||a>=0x08100000||(a&3)) { badProg++; return HAL_ERROR; }
   if(failAfter>=0 && progCount>=failAfter) return HAL_ERROR;
   uint32_t* p=(uint32_t*)(uintptr_t)a; if(*p!=0xFFFFFFFF) { badProg++; }
   *p &= (uint32_t)d; progCount++; return HAL_OK; }
@@ -69,10 +65,9 @@ static int expect(const char* name,int ch,int frames,const SampleFlashEntry* e){
   return 1;}
 static const char* rn[]={"UNCHANGED","IMPORTED","NO_FOLDER","ERR_FORMAT","ERR_TOO_BIG","ERR_READ","ERR_FLASH","ERR_VERIFY"};
 #define RUN(label) do{ eraseCalls=0;progCount=0; SampleFlashResult r=sampleFlash_importAtBoot(); printf("%-46s -> %-11s erase=%d LCD=[%s]\n",label,rn[r],eraseCalls,lcdbuf); last=r;}while(0)
-FRESULT f_stat(const char* p, FILINFO* fi){char b[600];mkpath(b,p);struct stat st; if(stat(b,&st)) return FR_NO_FILE; fi->fsize=st.st_size; return FR_OK;}
 int main(){
-  void* m=mmap((void*)0x08080000,0x180000,PROT_READ|PROT_WRITE,MAP_FIXED_NOREPLACE|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-  assert(m==(void*)0x08080000); memset(m,0xFF,0x180000);
+  void* m=mmap((void*)0x08080000,0x80000,PROT_READ|PROT_WRITE,MAP_FIXED_NOREPLACE|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+  assert(m==(void*)0x08080000); memset(m,0xFF,0x80000);
   snprintf(root,sizeof root,"%s","./sd"); system("rm -rf sd; mkdir -p sd"); SampleFlashResult last; int fails=0;
 #define CHECK(c,msg) do{ if(!(c)){printf("   FAIL: %s\n",msg);fails++;} else printf("   ok: %s\n",msg);}while(0)
   RUN("1 kein /SAMPLES-Ordner"); CHECK(last==SF_NO_FOLDER && eraseCalls==0,"Ordner fehlt -> Flash unberuehrt");
@@ -132,23 +127,6 @@ int main(){
   RUN("10 vierzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==31,"max 31 uebernommen");
   RUN("11 erneuter Start"); CHECK(last==SF_OK_UNCHANGED,"Signatur stabil");
   sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 31|Flash: 2048 KB|"),"Statuszeile beim Start mit Chip-Flash-Groesse");
-  CHECK(bigErase==0,"ohne BIGFLASH nie Sektor 8-11 geloescht");
-  /* experimenteller grosser Flash */
-  system("rm -f sd/SAMPLES/*.WAV"); wav("1BIG.WAV",1,16,44100,200000,0); wav("2BIG.WAV",1,16,44100,200000,0);
-  RUN("12 800 KB ohne BIGFLASH"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1 && bigErase==0,"nur 1 passt in 512 KB");
-  system("touch sd/SAMPLES/BIGFLASH"); maxSector=0;
-  RUN("13 800 KB mit BIGFLASH"); { const SampleFlashHeader* hh=sampleFlash_getHeader();
-    CHECK(last==SF_OK_IMPORTED && hh && hh->count==2 && hh->reserved[2]==1,"beide importiert, grosser Flash vermerkt");
-    CHECK(hh && hh->entry[1].offset+hh->entry[1].frames*2 > 0x08100000 && expect("2BIG.WAV",1,200000,&hh->entry[1]),"Daten oberhalb 1 MB korrekt");
-    CHECK(maxSector==9,"nur die noetigen Sektoren 6-9 geloescht"); }
-  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 2|Flash 2048K big|"),"Statuszeile zeigt grossen Flash");
-  RUN("13b Neustart"); CHECK(last==SF_OK_UNCHANGED,"kein erneuter Import");
-  wav("3BIG.WAV",1,16,44100,1000,0); failUpper=1;
-  RUN("14 oberer Bereich defekt (simuliert)"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==2 && sampleFlash_getHeader()->reserved[2]==0,"Rueckfall auf 512 KB, was passt importiert");
-  failUpper=0; system("rm sd/SAMPLES/3BIG.WAV"); bigOk=0;
-  RUN("15 BIGFLASH, Bereich nicht lesbar"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1 && sampleFlash_getHeader()->reserved[2]==0,"nicht nutzbar -> 512 KB");
-  bigOk=1; system("rm sd/SAMPLES/BIGFLASH");
-  RUN("16 BIGFLASH entfernt"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1,"Signatur aendert sich, Import in 512 KB");
-  CHECK(badErase==0,"NIE ein anderer Sektor als 6-11 geloescht, nie ohne Unlock");
+  CHECK(badErase==0,"NIE ein anderer Sektor als 6/7 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}

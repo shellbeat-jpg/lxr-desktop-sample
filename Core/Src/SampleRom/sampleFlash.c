@@ -4,17 +4,11 @@
  * Step 1 of the sample extension: import WAV files from /SAMPLES on the SD
  * card into the internal flash (sectors 6 + 7) and verify them.
  *
- * Safety rules (the bootloader lives in sector 0, the firmware in 1-5):
- *  - Only sectors 6 and 7 can be erased here, 8-11 only in the experimental
- *    big flash mode (hard check in sf_eraseSector()).
+ * Safety rules (the bootloader lives in sector 0):
+ *  - Only FLASH_SECTOR_6 and FLASH_SECTOR_7 can ever be erased here
+ *    (hard check in sf_eraseSector()).
  *  - Every program call checks that the address lies inside
- *    [SF_REGION_START, sf_end).
- *
- * Experimental big flash mode (file /SAMPLES/BIGFLASH): the chip reports 1 MB,
- * but its die usually has 2 MB; sectors 8-11 (0x08100000-0x081FFFFF) are used
- * only if the flash is in single-bank mode and they can be read without a bus
- * fault. ST doesn't guarantee that area: every sample is verified, a failure
- * falls back to the normal 512 KB.
+ *    [SF_REGION_START, SF_REGION_END).
  *  - The header magic is written LAST, so an interrupted import (power
  *    loss) leaves an invalid header and is simply redone on the next boot.
  *  - Nothing is erased if the stored signature already matches /SAMPLES.
@@ -34,14 +28,8 @@
 #define SF_FOLDER       "/SAMPLES"
 #define SF_LOOP_FOLDER  "/SAMPLES/LOOPS"
 #define SF_READ_FRAMES  256u
-#define SF_BIG_FILE     "/SAMPLES/BIGFLASH"
-#define SF_BIG_END      ((uint32_t)0x08200000u)           /* sectors 6-11 */
-#define SF_SECTOR_SIZE  ((uint32_t)0x00040000u)
-
-/* end of the sample region of the current import / of the stored samples */
-static uint32_t sf_end = SF_REGION_END;
-static void sf_capSeconds(char* out);
-#define SF_CAPACITY     (sf_end - SF_DATA_START)          /* bytes for PCM data */
+#define SF_CAPACITY     (SF_REGION_END - SF_DATA_START)   /* bytes for PCM data */
+#define SF_MAX_SECONDS  "5.9"                             /* SF_CAPACITY/2 frames at 44.1 kHz */
 
 /* the header must fit into the reserved header area */
 typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= SF_HEADER_SIZE) ? 1 : -1];
@@ -158,9 +146,8 @@ static SampleFlashResult sf_finish(SampleFlashResult r)
 /*----------------------------------------------------------------------------*/
 static uint8_t sf_eraseSector(uint32_t sector)
 {
-	/* hard guard: never anything but the sample sectors (8-11 only in big mode) */
-	if(sector < FLASH_SECTOR_6) return 0;
-	if(sector > FLASH_SECTOR_7 && !(sf_end == SF_BIG_END && sector <= FLASH_SECTOR_11)) return 0;
+	/* hard guard: never anything but the two sample sectors */
+	if(sector != FLASH_SECTOR_6 && sector != FLASH_SECTOR_7) return 0;
 
 	FLASH_EraseInitTypeDef er;
 	uint32_t sectorError = 0;
@@ -174,7 +161,7 @@ static uint8_t sf_eraseSector(uint32_t sector)
 /*----------------------------------------------------------------------------*/
 static uint8_t sf_programWord(uint32_t addr, uint32_t word)
 {
-	if(addr < SF_REGION_START || addr > (sf_end - 4u) || (addr & 3u)) return 0;
+	if(addr < SF_REGION_START || addr > (SF_REGION_END - 4u) || (addr & 3u)) return 0;
 	if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, (uint64_t)word) != HAL_OK) return 0;
 	return 1;
 }
@@ -419,13 +406,7 @@ static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, 
 		return;
 	case SF_ERR_FORMAT:  sf_lcd("Not 16bit WAV:", name); break;
 	case SF_ERR_TOO_BIG: /* name carries "Too big: x.ys" */
-	{
-		char l2[17], s[8];
-		sf_capSeconds(s);
-		snprintf(l2, sizeof(l2), "max %ss @44.1k", s);
-		sf_lcd(name, l2);
-		break;
-	}
+		sf_lcd(name, "max " SF_MAX_SECONDS "s @44.1k"); break;
 	case SF_ERR_READ:    sf_lcd("SD read error:", name); break;
 	case SF_ERR_FLASH:   sf_lcd("Flash error!", "Samples disabled"); break;
 	case SF_ERR_VERIFY:  sf_lcd("Verify FAILED:", name); break;
@@ -458,64 +439,24 @@ void sampleFlash_showStatus(void)
 	else if(skipped && skipped <= 99u)
 	                                snprintf(l1, sizeof(l1), "Samples:%u skp:%u", (unsigned)h->count, (unsigned)skipped);
 	else                            snprintf(l1, sizeof(l1), "Samples: %u", (unsigned)h->count);
-	if(h && h->reserved[2] == 1u)
-		snprintf(l2, sizeof(l2), "Flash %uK big", (unsigned)sampleFlash_chipKB());
-	else
-		snprintf(l2, sizeof(l2), "Flash: %u KB", (unsigned)sampleFlash_chipKB());
+	snprintf(l2, sizeof(l2), "Flash: %u KB", (unsigned)sampleFlash_chipKB());
 	sf_lcd(l1, l2);
 	HAL_Delay(1500);
 }
 /*----------------------------------------------------------------------------*/
-/* capacity in seconds at 44.1 kHz mono, one decimal ("5.9", "17.8") */
-static void sf_capSeconds(char* out)
+SampleFlashResult sampleFlash_importAtBoot(void)
 {
-	const uint32_t ds = (SF_CAPACITY / 2u) * 10u / 44100u;
-	snprintf(out, 8, "%lu.%lu", (unsigned long)(ds / 10u), (unsigned long)(ds % 10u));
-}
-/*----------------------------------------------------------------------------*/
-/* big flash mode: requested by the file /SAMPLES/BIGFLASH */
-static uint8_t sf_bigRequested(void)
-{
-	FILINFO fno;
-	return f_stat(SF_BIG_FILE, &fno) == FR_OK;
-}
-#ifndef SF_BIG_AVAILABLE
-/* read a word without crashing if the memory doesn't exist: bus faults are
- * ignored while FAULTMASK is set and BFHFNMIGN is on; the BusFault status
- * tells whether it happened. Read through the ITCM alias of the flash (not
- * cached). */
-static uint8_t sf_probeRead(const uint32_t addr)
-{
-	const uint32_t itcm = 0x00200000u + (addr - 0x08000000u);
-	SCB->CFSR = SCB_CFSR_BUSFAULTSR_Msk;		/* write 1 to clear */
-	__disable_fault_irq();
-	SCB->CCR |= SCB_CCR_BFHFNMIGN_Msk;
-	__DSB(); __ISB();
-	volatile uint32_t v = *(volatile const uint32_t*)itcm;
-	(void)v;
-	__DSB();
-	SCB->CCR &= ~SCB_CCR_BFHFNMIGN_Msk;
-	__DSB(); __ISB();
-	__enable_fault_irq();
-	const uint8_t ok = (SCB->CFSR & SCB_CFSR_BUSFAULTSR_Msk) == 0u;
-	SCB->CFSR = SCB_CFSR_BUSFAULTSR_Msk;
-	return ok;
-}
-/* single-bank layout (sectors 8-11 at 0x08100000) and readable */
-static uint8_t sf_bigAvailable(void)
-{
-	if((FLASH->OPTCR & FLASH_OPTCR_nDBANK) == 0u) return 0;
-	for(uint32_t a = SF_REGION_END; a < SF_BIG_END; a += SF_SECTOR_SIZE)
+	uint32_t signature = 0;
+	uint8_t count = sf_scanFolder(&signature);
+	if(count == 0xFF) return sf_finish(SF_NO_FOLDER);   /* feature not used, old samples stay usable */
+	if(count == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
+
+	if(sf_headerValid(sf_flashHeader) && sf_flashHeader->signature == signature)
 	{
-		if(!sf_probeRead(a) || !sf_probeRead(a + SF_SECTOR_SIZE - 4u)) return 0;
+		sf_showResult(SF_OK_UNCHANGED, "", (uint8_t)sf_flashHeader->count, 0);
+		return sf_finish(SF_OK_UNCHANGED);
 	}
-	return 1;
-}
-#define SF_BIG_AVAILABLE() sf_bigAvailable()
-#endif
-/*----------------------------------------------------------------------------*/
-static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
-{
+
 	/* 1. parse all files and check the total size before touching the flash.
 	 *    Files that are no 16-bit PCM WAV are skipped (not fatal), and so are
 	 *    files that no longer fit (in name order: earlier names have priority,
@@ -556,13 +497,7 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		sf_showResult(SF_ERR_TOO_BIG, l1, 0, 0);
 		return sf_finish(SF_ERR_TOO_BIG);   /* nothing fits, flash untouched */
 	}
-	if(full)
-	{
-		char l1[17], s[8];
-		sf_capSeconds(s);
-		snprintf(l1, sizeof(l1), "Full(%ss) skip:", s);
-		sf_showSkipped(l1, full, fullName);
-	}
+	if(full) sf_showSkipped("Full(" SF_MAX_SECONDS "s) skip:", full, fullName);
 	if(kept == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
 	count = kept;
 
@@ -571,9 +506,10 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 	HAL_FLASH_Unlock();
 	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
 	SampleFlashResult res = SF_OK_IMPORTED;
-	for(uint32_t s = 0; res == SF_OK_IMPORTED && SF_REGION_START + s * SF_SECTOR_SIZE < SF_DATA_START + needed; s++)
+	if(!sf_eraseSector(FLASH_SECTOR_6)) res = SF_ERR_FLASH;
+	if(res == SF_OK_IMPORTED && needed + SF_HEADER_SIZE > 0x40000u)   /* data reaches sector 7 */
 	{
-		if(!sf_eraseSector(FLASH_SECTOR_6 + s)) res = SF_ERR_FLASH;
+		if(!sf_eraseSector(FLASH_SECTOR_7)) res = SF_ERR_FLASH;
 	}
 
 	/* 3. program the PCM data */
@@ -619,7 +555,6 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		sf_newHeader.totalFrames = totalFrames;
 		sf_newHeader.reserved[0] = skipped;   /* shown by sampleFlash_showStatus() */
 		sf_newHeader.reserved[1] = full;
-		sf_newHeader.reserved[2] = (sf_end == SF_BIG_END && SF_DATA_START + needed > SF_REGION_END) ? 1u : 0u;   /* big flash used */
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
 		if(!sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))
@@ -633,48 +568,4 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 
 	sf_showResult(res, failName, count, totalFrames);
 	return sf_finish(res);
-}
-/*----------------------------------------------------------------------------*/
-SampleFlashResult sampleFlash_importAtBoot(void)
-{
-	uint32_t signature = 0;
-	uint8_t count = sf_scanFolder(&signature);
-	if(count == 0xFF) return sf_finish(SF_NO_FOLDER);   /* feature not used, old samples stay usable */
-	if(count == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
-
-	/* the big flash request is part of the signature: adding or removing
-	 * BIGFLASH imports again */
-	const uint8_t wantBig = sf_bigRequested();
-	if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLASH", 8);
-
-	if(sf_headerValid(sf_flashHeader) && sf_flashHeader->signature == signature)
-	{
-		sf_showResult(SF_OK_UNCHANGED, "", (uint8_t)sf_flashHeader->count, 0);
-		return sf_finish(SF_OK_UNCHANGED);
-	}
-
-	sf_end = SF_REGION_END;
-	if(wantBig)
-	{
-		if(SF_BIG_AVAILABLE())
-			sf_end = SF_BIG_END;
-		else
-		{
-			sf_lcd("Big flash:", "not usable 512K");
-			HAL_Delay(2500);
-		}
-	}
-	SampleFlashResult res = sf_import(count, signature);
-	if(sf_end == SF_BIG_END && (res == SF_ERR_FLASH || res == SF_ERR_VERIFY))
-	{
-		/* the upper megabyte failed: import again into the normal region */
-		sf_lcd("Big flash failed", "using 512K");
-		HAL_Delay(2500);
-		sf_end = SF_REGION_END;
-		count = sf_scanFolder(&signature);
-		if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLASH", 8);
-		res = sf_import(count, signature);
-	}
-	sf_end = SF_REGION_END;
-	return res;
 }
