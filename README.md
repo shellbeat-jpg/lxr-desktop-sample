@@ -16,8 +16,46 @@ waveforms, and start/length parameters.
 | Sample extension (this fork, `MOD` commits after OpenElixir-02 v1.2) | shellbeat-jpg, written with Claude (Anthropic) |
 
 Everything that isn't listed under "What this fork adds" below is OpenElixir-02 v1.2 as released by its
-author; its features and documentation are in [README_OPENELIXIR.md](README_OPENELIXIR.md) and
-[docs/](docs/). The changes of this fork can be listed with `git log v1.2..HEAD`.
+author: its features are listed in the next section, its full README is
+[README_OPENELIXIR.md](README_OPENELIXIR.md), more details are in [docs/](docs/). The changes of this
+fork can be listed with `git log v1.2..HEAD`.
+
+## Base: features of OpenElixir-02 v1.2
+
+The following is taken unchanged from the
+[OpenElixir-02 README](https://github.com/tunefish777/openelixir-02#features) by Moritz Waser. These
+features are his work, not part of this fork.
+
+**Kit management.** Load full kits and single voices from any project:
+- Hold LOAD and press step button 1-7 (Drum 1 ... OP HH) to load just that voice from any kit of
+  any project into the current kit.
+- "Change Project" below kit 0 in the load and save kit menus loads kits from other projects and
+  saves kits into them.
+
+**Freely assignable voice engines.** Each of the 6 voice slots can run any engine: drum, snare,
+cymbal or hi-hat. Select a voice and press SHIFT + KIT (or send NRPN 98). The engines are saved in
+the kit; kits from the stock firmware load with the stock engines.
+
+Details for both: [docs/ENGINES.md](docs/ENGINES.md).
+
+**Limiter.** Voices and FX are summed in 32 bit, followed by a limiter on each output, so loud kits
+no longer hard-clip. Levels that didn't clip before are unchanged. Config menu "lim" (2nd page)
+switches it off for exactly the stock mix.
+
+**DJ filter.** A filter on the final mix of all outputs, on the performance page: `dj` turned left of
+the center is a low-pass (down to 40 Hz), right of it a high-pass (up to 8 kHz), around the center it
+is off; `res` sets the resonance. It isn't saved and starts off; while off, the sound is unchanged.
+
+**Uninterrupted playback.** Turning knobs, working in the menus, loading and saving kits (also
+from and to other projects on the SD card) and saving projects don't interrupt the audio or the
+sequencer while it plays.
+
+**Under the hood.** About 10 % less CPU load, many stock firmware bugs fixed (MIDI, sequencer, SD
+card, memory corruption; most found in the firmware review by jhw in
+[erica-synths/lxr-desktop-app#3](https://github.com/erica-synths/lxr-desktop-app/issues/3)), and a
+project save that can't lose the saved project. Stock issues that are kept on purpose:
+[docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). The changes of each version are in the
+[release notes](https://github.com/tunefish777/openelixir-02/releases).
 
 ## What this fork adds
 
