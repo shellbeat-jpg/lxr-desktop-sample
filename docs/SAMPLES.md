@@ -162,10 +162,11 @@ relies on the verify after writing.
 
 ## Test status
 
-Tested on the device: sample import and playback, voice INIT, the experimental 1.5 MB mode (`BIGFLASH`, samples above 1 MB play correctly). Start/length, the skipping of files
-that are invalid or don't fit, loops, the order of the names, 31 slots and the modulated sample
-selection are host-tested (`sh tests/host/run.sh`, Linux, gcc), a full test on the device is
-pending.
+Tested on the device: sample import and playback, the skipping of invalid files, start and length
+(`sta`/`len`), loops, the modulated sample selection (`rnd` and `cyc`), the choke group (`chk`),
+the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
+samples above 1 MB play correctly). Host tests (Linux, gcc) for import and playback:
+`sh tests/host/run.sh`.
 
 Under investigation, not yet attributed to this fork or the base: after the first save of a kit and
 a project and switching the unit off and on again, the display stayed dark and there was no sound
