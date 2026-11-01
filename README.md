@@ -1,11 +1,11 @@
 # OpenElixir-02 + Samples
 
-An unofficial fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) v1.2 that adds
-user samples to the Erica Synths LXR-02: WAV import from the SD card, sample playback as oscillator
-waveforms, and start/length parameters.
+A fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) v1.2 that adds user samples
+to the Erica Synths LXR-02: WAV import from the SD card, sample playback as oscillator waveforms, and
+start/length parameters.
 
-> **Not official firmware.** This fork is not affiliated with or approved by Erica Synths or by the
-> author of OpenElixir-02. You install it at your own risk.
+> Not official Erica Synths firmware, not affiliated with or approved by Erica Synths. You install it
+> at your own risk.
 
 ## Who made what
 
