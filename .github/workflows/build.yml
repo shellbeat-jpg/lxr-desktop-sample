@@ -104,5 +104,3 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             build/release/*.img
-            build/release/*.hex
-            build/release/*.elf
