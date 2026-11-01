@@ -474,37 +474,24 @@ static void sf_capSeconds(char* out)
 }
 /*----------------------------------------------------------------------------*/
 /* big flash mode: requested by the file /SAMPLES/BIGFLASH */
-/* any file in /SAMPLES whose name starts with BIGFLASH (BIGFLASH, BIGFLASH.TXT, ...) */
 static uint8_t sf_bigRequested(void)
 {
-	DIR dir;
 	FILINFO fno;
-	uint8_t found = 0;
-	if(f_opendir(&dir, SF_FOLDER) != FR_OK) return 0;
-	while(!found && f_readdir(&dir, &fno) == FR_OK && fno.fname[0])
-	{
-		const char* k = "BIGFLASH";
-		uint8_t i = 0;
-		while(k[i] && (fno.fname[i] == k[i] || fno.fname[i] == k[i] + 32)) i++;
-		found = (k[i] == 0) && !(fno.fattrib & AM_DIR);
-	}
-	f_closedir(&dir);
-	return found;
+	return f_stat(SF_BIG_FILE, &fno) == FR_OK;
 }
-/* why the upper megabyte can't be used (shown on the LCD), "" if it can */
-static char sf_bigReason[17];
 #ifndef SF_BIG_AVAILABLE
 /* read a word without crashing if the memory doesn't exist: bus faults are
  * ignored while FAULTMASK is set and BFHFNMIGN is on; the BusFault status
- * tells whether it happened. The D-cache is off meanwhile, so the read goes
- * to the flash on the AXI address that programming and playback use. */
+ * tells whether it happened. Read through the ITCM alias of the flash (not
+ * cached). */
 static uint8_t sf_probeRead(const uint32_t addr)
 {
+	const uint32_t itcm = 0x00200000u + (addr - 0x08000000u);
 	SCB->CFSR = SCB_CFSR_BUSFAULTSR_Msk;		/* write 1 to clear */
 	__disable_fault_irq();
 	SCB->CCR |= SCB_CCR_BFHFNMIGN_Msk;
 	__DSB(); __ISB();
-	volatile uint32_t v = *(volatile const uint32_t*)addr;
+	volatile uint32_t v = *(volatile const uint32_t*)itcm;
 	(void)v;
 	__DSB();
 	SCB->CCR &= ~SCB_CCR_BFHFNMIGN_Msk;
@@ -517,26 +504,12 @@ static uint8_t sf_probeRead(const uint32_t addr)
 /* single-bank layout (sectors 8-11 at 0x08100000) and readable */
 static uint8_t sf_bigAvailable(void)
 {
-	snprintf(sf_bigReason, sizeof(sf_bigReason), "dual bank");
 	if((FLASH->OPTCR & FLASH_OPTCR_nDBANK) == 0u) return 0;
-	SCB_DisableDCache();
-	uint8_t ok = 1;
-	for(uint32_t a = SF_REGION_END; ok && a < SF_BIG_END; a += SF_SECTOR_SIZE)
+	for(uint32_t a = SF_REGION_END; a < SF_BIG_END; a += SF_SECTOR_SIZE)
 	{
-		if(!sf_probeRead(a))
-		{
-			snprintf(sf_bigReason, sizeof(sf_bigReason), "read err %08lX", (unsigned long)a);
-			ok = 0;
-		}
-		else if(!sf_probeRead(a + SF_SECTOR_SIZE - 4u))
-		{
-			snprintf(sf_bigReason, sizeof(sf_bigReason), "read err %08lX", (unsigned long)(a + SF_SECTOR_SIZE - 4u));
-			ok = 0;
-		}
+		if(!sf_probeRead(a) || !sf_probeRead(a + SF_SECTOR_SIZE - 4u)) return 0;
 	}
-	SCB_EnableDCache();
-	if(ok) sf_bigReason[0] = 0;
-	return ok;
+	return 1;
 }
 #define SF_BIG_AVAILABLE() sf_bigAvailable()
 #endif
@@ -672,7 +645,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	/* the big flash request is part of the signature: adding or removing
 	 * BIGFLASH imports again */
 	const uint8_t wantBig = sf_bigRequested();
-	if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH2", 8);
+	if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLASH", 8);
 
 	if(sf_headerValid(sf_flashHeader) && sf_flashHeader->signature == signature)
 	{
@@ -684,15 +657,11 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	if(wantBig)
 	{
 		if(SF_BIG_AVAILABLE())
-		{
 			sf_end = SF_BIG_END;
-			sf_lcd("Big flash: on", "1.5 MB, testing");
-			HAL_Delay(1200);
-		}
 		else
 		{
-			sf_lcd("Big flash: no", sf_bigReason[0] ? sf_bigReason : "not usable");
-			HAL_Delay(3500);
+			sf_lcd("Big flash:", "not usable 512K");
+			HAL_Delay(2500);
 		}
 	}
 	SampleFlashResult res = sf_import(count, signature);
@@ -703,7 +672,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 		HAL_Delay(2500);
 		sf_end = SF_REGION_END;
 		count = sf_scanFolder(&signature);
-		if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH2", 8);
+		if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLASH", 8);
 		res = sf_import(count, signature);
 	}
 	sf_end = SF_REGION_END;
