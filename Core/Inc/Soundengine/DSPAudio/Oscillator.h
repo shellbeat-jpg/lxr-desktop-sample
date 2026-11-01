@@ -59,6 +59,7 @@ typedef struct OscStruct
 	uint16_t	midiFreq;  //upper 8 bit coarse, lower 8 bit fine -> the sound edit freq offset
 	uint8_t baseNote;		// the last played midi note
 	uint32_t startPhase;		// the OSC is reset to this phase on retrigger
+	uint32_t smpFrac;		// MOD: sample playback - fractional position (17 bit); phase = integer frame
 } OscInfo;
 //-----------------------------------------------------------
 

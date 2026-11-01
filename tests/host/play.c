@@ -1,0 +1,80 @@
+#include "stm32f7xx_hal.h"
+#include "Soundengine/DSPAudio/Oscillator.h"
+#include "Soundengine/MIDI/MidiNoteNumbers.h"
+#include "SampleRom/sampleFlash.h"
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <assert.h>
+int harness_main(void);
+const int16_t sine_table[TABLESIZE+1]; const int16_t sawTable[11][1024]; const int16_t triTable[11][1024]; const int16_t recTable[11][1024];
+uint32_t GetRngValue(void){return 0;}
+#define SEMITONE_UP 1.059463094f
+float midiParser_calcDetune(uint8_t value){return 1+(value/127.f-0.5f)*(SEMITONE_UP-1);}
+void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm);
+void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm);
+void osc_setFreq(OscInfo* osc); void osc_setBaseNote(OscInfo* osc, uint8_t baseNote);
+extern char lcdbuf[]; 
+int fails=0;
+#define CHECK(c,msg) do{ if(!(c)){printf("   FAIL: %s\n",msg);fails++;} else printf("   ok: %s\n",msg);}while(0)
+static void wav16(const char* name,int rate,int frames,int16_t (*f)(int)){
+  char b[256];snprintf(b,256,"sd/SAMPLES/%s",name);FILE* fp=fopen(b,"wb");int data=frames*2,riff=36+data,fl=16,br=rate*2;short fmt=1,c=1,ba=2,bb=16;
+  fwrite("RIFF",1,4,fp);fwrite(&riff,4,1,fp);fwrite("WAVEfmt ",1,8,fp);fwrite(&fl,4,1,fp);fwrite(&fmt,2,1,fp);fwrite(&c,2,1,fp);fwrite(&rate,4,1,fp);fwrite(&br,4,1,fp);fwrite(&ba,2,1,fp);fwrite(&bb,2,1,fp);
+  fwrite("data",1,4,fp);fwrite(&data,4,1,fp);for(int i=0;i<frames;i++){int16_t s=f(i);fwrite(&s,2,1,fp);}fclose(fp);}
+static int16_t ramp(int i){return (int16_t)(i*7-12000);}
+static int16_t sine(int i){return (int16_t)(20000*sin(2*M_PI*i/100.0));}
+static OscInfo mk(uint8_t slot){OscInfo o;memset(&o,0,sizeof o);o.waveform=NUM_OSC_WAVEFORMS+slot;o.pitchMod=1;o.modNodeValue=1;o.fmMod=0;o.midiFreq=(60<<8)|64;return o;}
+static int render(OscInfo* o,int16_t* out,int n,int fm,int16_t modval){int k=0;int16_t buf[32],mod[32];for(int i=0;i<32;i++)mod[i]=modval;
+  while(k<n){osc_setFreq(o); if(fm) calcNextOscSampleFmBlock(o,mod,buf,32,1.f,0); else calcNextOscSampleBlock(o,buf,32,1.f,0); for(int i=0;i<32&&k<n;i++)out[k++]=buf[i];} return k;}
+int main(){
+  void* m=mmap((void*)0x08080000,0x80000,PROT_READ|PROT_WRITE,MAP_FIXED_NOREPLACE|MAP_PRIVATE|MAP_ANONYMOUS,-1,0); assert(m==(void*)0x08080000); memset(m,0xFF,0x80000);
+  system("rm -rf sd; mkdir -p sd/SAMPLES");
+  wav16("01RAMP.WAV",(int)REAL_FS,3000,ramp); wav16("02SINE.WAV",48000,4800,sine);
+  SampleFlashResult r=sampleFlash_importAtBoot(); CHECK(r==SF_OK_IMPORTED,"Import 2 Samples");
+  CHECK(sampleFlash_entry(0)&&sampleFlash_entry(1)&&!sampleFlash_entry(2),"Slots 1-2 belegt, Slot 3 leer");
+  static int16_t out[20000];
+  /* 1: Grundton, Rate = REAL_FS -> bitgenau */
+  OscInfo o=mk(0); osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; osc_setFreq(&o);
+  CHECK(o.phaseInc==(1u<<17),"Grundton C4 -> genau 1 Frame pro Ausgabesample");
+  o=mk(0); osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60];
+  { int k=0; int16_t buf[32]; while(k<3200){ osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0); for(int i=0;i<32;i++) out[k++]=buf[i]; } }
+  int exact=1; for(int i=0;i<3000;i++) if(out[i]!=ramp(i)) {exact=0; printf("   diff at %d: %d vs %d\n",i,out[i],ramp(i)); break;}
+  CHECK(exact,"Wiedergabe in Originalhoehe ist bitgenau");
+  int silent=1; for(int i=3000;i<3200;i++) if(out[i]) silent=0; CHECK(silent,"One-Shot: nach dem Ende Stille");
+  CHECK(o.phase==3000,"Position bleibt am Ende stehen");
+  /* 2: Retrigger */
+  osc_setBaseNote(&o,60); CHECK(o.phase==0&&o.smpFrac==0,"Trigger setzt auf Anfang zurueck");
+  /* 3: Oktave hoeher via Coarse 72 */
+  o=mk(0); o.midiFreq=(72<<8)|64; osc_setBaseNote(&o,60); osc_setFreq(&o);
+  double ratio=o.phaseInc/(double)(1u<<17); CHECK(fabs(ratio-2.0)<0.002,"Coarse +12 -> doppelte Geschwindigkeit");
+  /* 4: Rate-Korrektur 48k */
+  o=mk(1); o.freq=MidiNoteFrequencies[60]; osc_setFreq(&o); ratio=o.phaseInc/(double)(1u<<17);
+  CHECK(fabs(ratio-48000.0/REAL_FS)<0.0005,"48-kHz-Sample: Tempo korrigiert (Faktor 1.0875)");
+  /* sine period check: 100 samples at 48k = 480 Hz; at output FS=44140 -> period 100*44140/48000=91.96 samples */
+  o=mk(1); o.freq=MidiNoteFrequencies[60]; osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60];
+  { int k=0; int16_t buf[32]; while(k<4000){ osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0); for(int i=0;i<32;i++) out[k++]=buf[i]; } }
+  int zc=0,first=-1,last=-1; for(int i=1;i<4000;i++) if(out[i-1]<0&&out[i]>=0){ if(first<0) first=i; last=i; zc++; } double period=(double)(last-first)/(zc-1);
+  printf("      gemessene Periode %.2f Samples (soll %.2f)\n",period,100*REAL_FS/48000.0);
+  CHECK(fabs(period-100*REAL_FS/48000.0)<0.2,"Tonhoehe stimmt nach Ratenkorrektur");
+  /* 5: Interpolation bei halber Geschwindigkeit */
+  o=mk(0); o.midiFreq=(48<<8)|64; osc_setBaseNote(&o,60); 
+  { int k=0; int16_t buf[32]; while(k<64){ osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0); for(int i=0;i<32;i++) out[k++]=buf[i]; } }
+  int interp=1; for(int i=0;i<60;i+=2){ int a=ramp(i/2), b=ramp(i/2+1); if(abs(out[i]-a)>2 || abs(out[i+1]-(a+b)/2)>3) {interp=0; printf("   %d: %d %d exp %d %d\n",i,out[i],out[i+1],a,(a+b)/2); break;} }
+  CHECK(interp,"Coarse -12: halbe Geschwindigkeit, Zwischenwerte interpoliert");
+  /* 6: leerer Slot */
+  o=mk(5); osc_setBaseNote(&o,60); int16_t b2[32]; memset(b2,0x55,sizeof b2); calcNextOscSampleBlock(&o,b2,32,1.f,0);
+  int z=1; for(int i=0;i<32;i++) if(b2[i]) z=0; CHECK(z,"Leerer Slot (z.B. Kit mit s6 bei nur 2 Samples) -> Stille, kein Absturz");
+  o=mk(200); calcNextOscSampleBlock(&o,b2,32,1.f,0); CHECK(b2[0]==0,"Ungueltiger Wellenformwert -> Stille");
+  /* 7: FM ohne Modulation = normal; FM mit Modulation verschiebt Leseposition */
+  o=mk(0); o.freq=MidiNoteFrequencies[60]; osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; o.fmMod=1.f;
+  { int k=0; int16_t buf[32],mod[32]={0}; while(k<256){ osc_calcUserSampleFreq(&o); calcNextOscSampleFmBlock(&o,mod,buf,32,1.f,0); for(int i=0;i<32;i++) out[k++]=buf[i]; } }
+  int same=1; for(int i=0;i<256;i++) if(out[i]!=ramp(i)) same=0; CHECK(same,"FM-Pfad ohne Modulation = identisch");
+  o=mk(0); osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; o.fmMod=1.f;
+  { int16_t buf[32],mod[32]; for(int i=0;i<32;i++) mod[i]=800; osc_calcUserSampleFreq(&o); calcNextOscSampleFmBlock(&o,mod,buf,32,1.f,0); CHECK(buf[0]==ramp(100),"FM verschiebt Leseposition (+800 -> +100 Frames)"); 
+    for(int i=0;i<32;i++) mod[i]=-32768; o.phase=0; calcNextOscSampleFmBlock(&o,mod,buf,32,1.f,0); CHECK(buf[0]==ramp(0),"FM negativ wird am Anfang begrenzt"); }
+  /* 8: Extreme Tonhoehe begrenzt */
+  o=mk(0); o.freq=20000; o.pitchMod=8; osc_setFreq(&o); CHECK(o.phaseInc<=64u*(1u<<17),"Extreme Pitch-Modulation begrenzt (max 64x)");
+  o.freq=NAN; osc_setFreq(&o); CHECK(o.phaseInc==0,"NaN-Frequenz -> kein Unsinn");
+  printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

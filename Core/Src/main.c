@@ -448,6 +448,7 @@ if(sd_card_ok)
 	sampleFlash_importAtBoot();
 	lcd_clear();
 }
+menu_setNumSamples(sampleFlash_getCount()); // MOD: samples appear as waveforms s1..sN
 
 adc_checkPots();
 adc_checkPots();

@@ -50,6 +50,9 @@ static FIL sf_file;
 static const SampleFlashHeader* const sf_flashHeader =
 		(const SampleFlashHeader*)SF_REGION_START;
 
+/* set at the end of sampleFlash_importAtBoot(): valid header or NULL */
+static const SampleFlashHeader* volatile sf_cache = NULL;
+
 /*----------------------------------------------------------------------------*/
 static void sf_lcd(const char* line1, const char* line2)
 {
@@ -84,6 +87,17 @@ const SampleFlashHeader* sampleFlash_getHeader(void)
 uint8_t sampleFlash_getCount(void)
 {
 	return sf_headerValid(sf_flashHeader) ? (uint8_t)sf_flashHeader->count : 0;
+}
+const SampleFlashEntry* sampleFlash_entry(uint8_t slot)
+{
+	const SampleFlashHeader* h = sf_cache;
+	if(h == NULL || slot >= h->count) return NULL;
+	return &h->entry[slot];
+}
+static SampleFlashResult sf_finish(SampleFlashResult r)
+{
+	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
+	return r;
 }
 /*----------------------------------------------------------------------------*/
 /* Flash access - the ONLY functions that touch the flash controller.          */
@@ -323,13 +337,13 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 {
 	uint32_t signature = 0;
 	uint8_t count = sf_scanFolder(&signature);
-	if(count == 0xFF) return SF_NO_FOLDER;          /* feature not used */
-	if(count == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return SF_NO_FOLDER; }
+	if(count == 0xFF) return sf_finish(SF_NO_FOLDER);   /* feature not used, old samples stay usable */
+	if(count == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
 
 	if(sf_headerValid(sf_flashHeader) && sf_flashHeader->signature == signature)
 	{
 		sf_showResult(SF_OK_UNCHANGED, "", (uint8_t)sf_flashHeader->count, 0);
-		return SF_OK_UNCHANGED;
+		return sf_finish(SF_OK_UNCHANGED);
 	}
 
 	/* 1. parse all files and check the total size before touching the flash */
@@ -337,13 +351,13 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	for(uint8_t i = 0; i < count; i++)
 	{
 		SampleFlashResult r = sf_parseWav(&sf_files[i]);
-		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_files[i].name, 0, 0); return r; }
+		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_files[i].name, 0, 0); return sf_finish(r); }
 		needed += (sf_files[i].frames * 2u + 3u) & ~3u;
 	}
 	if(needed > (SF_REGION_END - SF_DATA_START))
 	{
 		sf_showResult(SF_ERR_TOO_BIG, "", 0, 0);
-		return SF_ERR_TOO_BIG;
+		return sf_finish(SF_ERR_TOO_BIG);
 	}
 
 	/* 2. erase - code runs from flash, so the CPU stalls ~1-2 s per sector */
@@ -409,5 +423,5 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	HAL_FLASH_Lock();
 
 	sf_showResult(res, failName, count, totalFrames);
-	return res;
+	return sf_finish(res);
 }

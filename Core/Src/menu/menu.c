@@ -2940,7 +2940,7 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		{
 			//sample number: 2 digits (3 wrote one byte past the 3-character buffer)
 			buf[0]='s';
-			numtostrpu_2Bytes(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0]),' ');
+			numtostrpu_2Bytes(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0] + 1),' '); // MOD: s1 = first file
 			return;
 		}
 		break;
