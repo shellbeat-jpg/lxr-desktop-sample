@@ -400,6 +400,7 @@ enum ParamEnums
 	
 	PAR_SCREENSAVER_ON_OFF,				// bool /*260*/
 	PAR_MIDI_MODE,						// unused now
+#define PAR_MORPH_VOICES PAR_MIDI_MODE	//MOD: voices left out of the kit morph, 1 bit per voice (was the unused PAR_MIDI_MODE, saved with the globals; 0 = all morph)
 	PAR_MIDI_CHAN_7,
 	PAR_MIDI_ROUTING,
 	PAR_MIDI_FILT_TX,

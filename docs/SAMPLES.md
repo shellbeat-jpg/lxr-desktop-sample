@@ -167,6 +167,16 @@ changes it there. Release SHIFT to see and edit the active kit's value again.
   that kit. Saving the active kit into the same slot overwrites it.
 - Not for LFO/velocity/automation targets, the audio outputs, the choke group and engine specific
   parameters of slots whose engine differs in the morph kit.
+- **SHIFT + encoder click** gives the morph kit the active value: the parameter no longer changes
+  with the kit morph (e.g. keep `Coarse` and `Fine` of a voice while everything else morphs).
+
+### Voices of the kit morph
+
+Global settings (SHIFT + step button 12, CONFIG), second page: **`mrv`** = kit morph on/off for the
+active voice; select the voice with its voice button while the page is shown. The edit view shows
+the morphed voices on the left (e.g. `----56`: only snare/cymbal and hi-hats morph). Voices that
+are off keep their own sound at every `mrp` value (also with the mod wheel). Saved with the global
+settings; default: all voices morph.
 
 ### Velocity 0 = automation only
 

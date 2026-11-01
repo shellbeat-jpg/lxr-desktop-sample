@@ -282,6 +282,7 @@ enum NamesEnum
 	TEXT_VMORPH_PAIR,	//MOD: voice morph source > target
 	TEXT_VMORPH_AMT,	//MOD: voice morph amount
 	TEXT_INSTANT_PAT,	//MOD: instant pattern switching
+	TEXT_MORPH_VOICES,	//MOD: voices of the kit morph
 
 
 	NUM_NAMES
@@ -399,7 +400,8 @@ enum shortNamesEnum
 	SHORT_CHOKE,
 	SHORT_VMORPH_PAIR,
 	SHORT_VMORPH_AMT,
-	SHORT_INSTANT_PAT
+	SHORT_INSTANT_PAT,
+	SHORT_MORPH_VOICES
 
 	
 };
@@ -437,7 +439,8 @@ enum catNamesEnum
 	CAT_CLOCK,
 	CAT_FX,
 	CAT_DJ_FILTER,
-	CAT_VMORPH
+	CAT_VMORPH,
+	CAT_KMORPH
 };
 //-----------------------------------------------------------------
 // these must correspond with longNames in MenuText.h

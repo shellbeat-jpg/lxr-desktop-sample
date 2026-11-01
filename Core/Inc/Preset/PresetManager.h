@@ -138,6 +138,7 @@ void preset_morph(uint8_t morph);
 void preset_morph_tick(); //handler for non blocking morph
 uint8_t preset_getMorphValue(uint16_t index, uint8_t morph);
 uint8_t preset_isMorphEngineMismatch(uint16_t par);
+uint8_t preset_isMorphVoiceExcluded(uint16_t par);	//MOD: voice left out of the kit morph (PAR_MORPH_VOICES)
 void preset_sendDrumsetParameters();
 void preset_sendDrumsetParametersImmediate();
 

@@ -161,7 +161,10 @@ Recommended settings:
 
 - **Mod wheel** (CC 1) on the global MIDI channel = kit morph `mrp`.
 - **Morph target quick access:** in the edit view of a sound parameter, hold **SHIFT**: `Morph>`
-  shows and the encoder edits the value of the morph kit.
+  shows and the encoder edits the value of the morph kit; **SHIFT + encoder click** sets it to the
+  active value (the parameter then doesn't morph).
+- **Voices of the kit morph:** global settings page 2, `mrv` on/off per voice (voice button selects
+  the voice).
 - **Velocity 0** on a step = automation only (no trigger, no MIDI note).
 - **Instant pattern switching:** global settings page 2, `ips` on: a pattern selected by hand starts
   on the next step at the same position.

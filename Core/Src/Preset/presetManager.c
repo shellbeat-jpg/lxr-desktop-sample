@@ -168,6 +168,29 @@ uint8_t preset_isMorphEngineMismatch(uint16_t par)
 	const uint8_t slot = kitEngines_rolePar2Slot(par);
 	return slot < NUM_VOICE_SLOTS && kitEngines[slot] != preset_morphEngines()[slot];
 }
+//MOD: voices left out of the kit morph (global PAR_MORPH_VOICES, 1 bit per voice
+//slot). preset_parSlot: the voice slot of each sound parameter (0xFF = none, e.g. FX)
+static uint8_t preset_parSlot[END_OF_SOUND_PARAMETERS];
+static uint8_t preset_parSlotBuilt = 0;
+static void preset_buildParSlots(void)
+{
+	for(uint16_t p=0;p<END_OF_SOUND_PARAMETERS;p++)
+	{
+		const uint8_t s = kitEngines_slotOfParam(p);
+		preset_parSlot[p] = s < NUM_VOICE_SLOTS ? s : 0xFF;
+	}
+	preset_parSlotBuilt = 1;
+}
+uint8_t preset_isMorphVoiceExcluded(uint16_t par)
+{
+	const uint8_t mask = activeParameters[PAR_MORPH_VOICES];
+	if(!mask || par >= END_OF_SOUND_PARAMETERS)
+		return 0;
+	if(!preset_parSlotBuilt)
+		preset_buildParSlots();
+	const uint8_t s = preset_parSlot[par];
+	return s < NUM_VOICE_SLOTS && (mask & (1u << s));
+}
 //write the engine block after the kit parameters
 static FRESULT preset_writeEngines(const uint8_t* engines)
 {
@@ -2171,6 +2194,11 @@ void preset_morph_tick()
 			//always use source kit (morph = 0) for audio routing
 			morph = 0;
 		}
+		else if(preset_isMorphVoiceExcluded(morph_index))
+		{
+			//MOD: voice left out of the kit morph
+			morph = 0;
+		}
 		else if(preset_isMorphEngineMismatch(morph_index))
 		{
 			//engine specific parameter of a slot whose engine differs in the morph
@@ -2276,7 +2304,7 @@ void preset_morph(uint8_t morph)
 //----------------------------------------------------
 uint8_t preset_getMorphValue(uint16_t index, uint8_t morph)
 {
-	if(preset_isMorphEngineMismatch(index))
+	if(preset_isMorphEngineMismatch(index) || preset_isMorphVoiceExcluded(index))
 		return activeParameters[index];
 	return interpolate(activeParameters[index],morphParameters[index],morph);
 };

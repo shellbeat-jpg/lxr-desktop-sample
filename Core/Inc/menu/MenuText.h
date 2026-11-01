@@ -499,6 +499,7 @@ const char shortNames[][4]  =
 	{"vmv"},
 	{"vmo"},
 	{"ips"},
+	{"mrv"},
 
 };
 //-----------------------------------------------------------------
@@ -537,6 +538,7 @@ const char catNames[][16] =
 	{"Fx"},
 	{"DJ Filt."},
 	{"V.Morph"},
+	{"K.Morph"},
 };
 //-----------------------------------------------------------------
 // these must correspond to longNamesEnum

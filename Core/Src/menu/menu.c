@@ -272,6 +272,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_VMORPH_PAIR, CAT_VMORPH, LONG_VMORPH_PAIR},/*TEXT_VMORPH_PAIR*/
 		{SHORT_VMORPH_AMT, CAT_VMORPH, LONG_VMORPH_AMT},/*TEXT_VMORPH_AMT*/
 		{SHORT_INSTANT_PAT, CAT_PATTERN, LONG_INSTANT_PAT},/*TEXT_INSTANT_PAT*/
+		{SHORT_MORPH_VOICES, CAT_KMORPH, LONG_VMORPH_PAIR},/*TEXT_MORPH_VOICES*/
 
 
 };
@@ -568,7 +569,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 	    /*PAR_FOLLOW*/ 			DTYPE_ON_OFF,//DTYPE_MENU | (MENU_FOLLOW<<8),
 	    /*PAR_QUANTISATION*/ 	DTYPE_MENU | (MENU_SEQ_QUANT<<8),
 	    /*PAR_SCREENSAVER_ON_OFF*/ DTYPE_ON_OFF,						//261
-	    /*PAR_MIDI_MODE*/ 		DTYPE_MENU | (MENU_MIDI<<8),			  // This is now unused.
+	    /*PAR_MIDI_MODE*/ 		DTYPE_0B127,	//MOD: PAR_MORPH_VOICES			  // This is now unused.
 	    /*PAR_MIDI_CHAN_7*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_ROUTING*/	DTYPE_MENU | (MENU_MIDI_ROUTING<<8),
 	    /*PAR_MIDI_FILT_TX*/    DTYPE_MENU | (MENU_MIDI_FILTERING<<8),
@@ -938,6 +939,28 @@ static uint8_t menu_morphEditFor(const uint16_t p)
 		break;
 	}
 	return (uint8_t)!preset_isMorphEngineMismatch(p);
+}
+//MOD: the parameter selected on the active page
+static uint16_t menu_currentParamNr(void)
+{
+	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER;
+	const uint8_t activePage		= (menuIndex&MASK_PAGE)>>PAGE_SHIFT;
+	return pgm_read_word(&menu_getPage(menu_activePage,activePage)->bot1 + activeParameter);
+}
+//MOD: voice slot of the active track (the hats share slot 5) for PAR_MORPH_VOICES
+static uint8_t menu_activeSlotBit(void)
+{
+	return (uint8_t)(1u << (menu_activeVoice < 6 ? menu_activeVoice : 5u));
+}
+//MOD: the engine gets the kit-morphed value of a sound parameter
+static void menu_sendMorphed(const uint16_t p)
+{
+	const uint8_t v = preset_getMorphValue(p, activeParameters[PAR_MORPH]);
+	if(p < 128)
+		frontPanel_sendData(MIDI_CC,(uint8_t)p,v);
+	else
+		frontPanel_sendData(CC_2,(uint8_t)(p-128),v);
+	voiceMorph_paramEdited(p);
 }
 void menu_setMorphEdit(uint8_t on)
 {
@@ -1964,6 +1987,13 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
+			else if(parNr == PAR_MORPH_VOICES)
+			{
+				//MOD: the morphed voices on the left, on/off for the active voice
+				for(uint8_t s=0;s<6;s++)
+					editDisplayBuffer[1][s] = (curParmVal & (1u << s)) ? '-' : (char)('1' + s);
+				memcpy(&editDisplayBuffer[1][13], (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
+			}
 			else if(parNr == PAR_CHOKE_GROUP)
 			{
 				//MOD: on/off for the active voice, the group's tracks on the left
@@ -2131,6 +2161,9 @@ void menu_repaintGeneric()
 				uint8_t s, d;
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
+			} else if(parNr == PAR_MORPH_VOICES) {
+				//MOD: is the active voice morphed
+				memcpy(valueAsText, (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
 			} else if(parNr == PAR_CHOKE_GROUP) {
 				//MOD: is the active voice in the choke group
 				memcpy(valueAsText, (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
@@ -3257,6 +3290,14 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				//execute
 				copyClear_executeClear();
 			}
+			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
+			{
+				//MOD: SHIFT + click: the morph kit gets the active value, the
+				//parameter doesn't change with the kit morph any more
+				const uint16_t p = menu_currentParamNr();
+				morphParameters[p] = activeParameters[p];
+				menu_sendMorphed(p);
+			}
 			else
 			{
 			// toggle edit mode
@@ -3397,6 +3438,15 @@ static void menu_encoderChangeParameter(int8_t inc)
 		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
 		return;
 	}
+	//MOD: kit morph on/off for the active voice (the bit means: left out)
+	if(paramNr == PAR_MORPH_VOICES)
+	{
+		if(inc > 0)			activeParameters[paramNr] &= (uint8_t)~menu_activeSlotBit();
+		else if(inc < 0)	activeParameters[paramNr] |= menu_activeSlotBit();
+		activeParameters[paramNr] &= 0x3F;
+		preset_morph(activeParameters[PAR_MORPH]);
+		return;
+	}
 	//MOD: the choke group shows/sets the bit of the active voice (on/off)
 	if(paramNr == PAR_CHOKE_GROUP)
 	{
@@ -3418,12 +3468,7 @@ static void menu_encoderChangeParameter(int8_t inc)
 		menu_morphEditBusy = 0;
 		morphParameters[paramNr] = activeParameters[paramNr];
 		activeParameters[paramNr] = keep;
-		const uint8_t v = preset_getMorphValue(paramNr, activeParameters[PAR_MORPH]);
-		if(paramNr < 128)
-			frontPanel_sendData(MIDI_CC,(uint8_t)paramNr,v);
-		else
-			frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),v);
-		voiceMorph_paramEdited(paramNr);
+		menu_sendMorphed(paramNr);
 		return;
 	}
 
@@ -4892,6 +4937,8 @@ void menu_setActiveVoice(uint8_t voiceNr)
 	// **LFOTARGFIX - save the gap index
 	menu_TargetVoiceGapIndex = getModTargetGapIndex(activeParameters[PAR_TARGET_LFO1+voiceNr]);
 	menu_activeVoice = voiceNr;
+	if(menu_activePage == MENU_MIDI_PAGE)
+		menu_repaint();	//MOD: mrv shows the active voice
 };
 //----------------------------------------------------------------
 uint8_t menu_areMuteLedsShown()
