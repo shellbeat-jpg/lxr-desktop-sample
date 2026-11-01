@@ -458,10 +458,16 @@ void sampleFlash_showStatus(void)
 	else if(skipped && skipped <= 99u)
 	                                snprintf(l1, sizeof(l1), "Samples:%u skp:%u", (unsigned)h->count, (unsigned)skipped);
 	else                            snprintf(l1, sizeof(l1), "Samples: %u", (unsigned)h->count);
-	if(h && h->reserved[2] == 1u)
-		snprintf(l2, sizeof(l2), "Flash %uK big", (unsigned)sampleFlash_chipKB());
-	else
-		snprintf(l2, sizeof(l2), "Flash: %u KB", (unsigned)sampleFlash_chipKB());
+	/* memory used / available in seconds (44.1 kHz mono) */
+	l2[0] = 0;
+	if(h)
+	{
+		const uint32_t cap  = ((h->reserved[2] & 3u) ? SF_BIG_END : SF_REGION_END) - SF_DATA_START;
+		const uint32_t used = (uint32_t)(((uint64_t)h->totalFrames * 10u) / 44100u);
+		const uint32_t avl  = (cap / 2u) * 10u / 44100u;
+		snprintf(l2, sizeof(l2), "Used %lu.%lu/%lu.%lus", (unsigned long)(used / 10u), (unsigned long)(used % 10u),
+		         (unsigned long)(avl / 10u), (unsigned long)(avl % 10u));
+	}
 	sf_lcd(l1, l2);
 	HAL_Delay(1500);
 }
@@ -621,7 +627,9 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		sf_newHeader.totalFrames = totalFrames;
 		sf_newHeader.reserved[0] = skipped;   /* shown by sampleFlash_showStatus() */
 		sf_newHeader.reserved[1] = full;
-		sf_newHeader.reserved[2] = (sf_end == SF_BIG_END && SF_DATA_START + needed > SF_REGION_END) ? 1u : 0u;   /* big flash used */
+		/* bit 0: data above 1 MB, bit 1: big flash mode active */
+		sf_newHeader.reserved[2] = ((sf_end == SF_BIG_END && SF_DATA_START + needed > SF_REGION_END) ? 1u : 0u)
+		                         | (sf_end == SF_BIG_END ? 2u : 0u);
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
 		if(!sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))

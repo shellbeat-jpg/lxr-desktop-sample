@@ -9,8 +9,8 @@ OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.m
    samples go into the subfolder `SAMPLES/LOOPS`.
 2. Switch the LXR-02 on normally (without holding the encoder). If the folder changed since the
    last import, the display shows "Import x/y", then "Import+Verify OK".
-3. The start screen then shows "Samples:" with the number of stored samples and, below, the flash
-   size of the chip ("Flash: 1024 KB" or "Flash: 2048 KB").
+3. The start screen then shows "Samples:" with the number of stored samples and, below, the memory
+   used and available in seconds at 44.1 kHz mono ("Used 4.2/5.9s", with `BIGFLASH` "/17.8s").
 
 The samples stay in the internal flash: they also play without SD card.
 
@@ -34,7 +34,7 @@ The samples stay in the internal flash: they also play without SD card.
 
 ## Experimental: 1.5 MB sample memory
 
-The chip of the LXR-02 reports 1 MB flash (start screen "Flash: 1024 KB"). Its die usually has
+The chip of the LXR-02 (STM32F765VG) reports 1 MB flash in its flash size register. Its die usually has
 2 MB: on the tested unit the area above 1 MB could be erased, written and read (first checked with
 the LXR02Open port, which stores its samples there). ST doesn't guarantee that area (not tested by
 the manufacturer, no specified data retention). Use it at your own risk:
@@ -42,7 +42,7 @@ the manufacturer, no specified data retention). Use it at your own risk:
 - Create a file or a folder named `BIGFLASH` in `SAMPLES` (or in the top folder of the card). The
   name may have an extension (`BIGFLASH.txt`). The next start imports again with up to about
   **17.8 s** (44.1 kHz mono) instead of 5.9 s.
-- The start shows `Big flash: on / 1.5 MB, testing`, after the import `Flash 1024K big`.
+- The start shows `Big flash: on / 1.5 MB, testing`, the status after the import `Used x.x/17.8s`.
 - `Big flash: no / dual bank`: the flash has another sector layout, 512 KB are used.
 - Every sample is verified after writing. If something in the upper area fails: `Big flash
   failed / using 512K`, then the import is repeated into the normal 512 KB.

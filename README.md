@@ -67,7 +67,7 @@ the display (as in the LXR manual). The start screen shows "OE02-Samples" and th
 - Copy WAV files into the folder **`SAMPLES`** in the top folder of the SD card, loop samples into
   **`SAMPLES/LOOPS`**. Switch the LXR-02 on normally (without holding the encoder).
 - If the folder changed, the display shows `Import x/y`, then `Import+Verify OK`. The start screen
-  then shows `Samples: N` and the chip's flash size.
+  then shows `Samples: N` and the memory used/available in seconds (`Used 4.2/5.9s`).
 - Files: 16-bit PCM WAV, mono or stereo (mixed to mono), any sample rate (the pitch is corrected),
   8.3 names such as `01KICK.WAV`. Up to **31** files; slots s1..s31 follow the name order with numbers
   by value (`2KICK` before `10KICK`).
@@ -77,7 +77,7 @@ the display (as in the LXR manual). The start screen shows "OE02-Samples" and th
 - **Experimental: 1.5 MB (about 17.8 s).** A file or folder `BIGFLASH` in `SAMPLES` also uses the
   flash above the 1 MB the chip reports (works on the tested unit, not guaranteed by ST; verified
   after writing, falls back to 512 KB on errors). Start screen: `Big flash: on`, later
-  `Flash 1024K big`.
+  `Used x.x/17.8s`.
 - Changes are detected by file names and sizes: rename a file you replaced with one of the same size.
 - A firmware update erases the samples: keep `SAMPLES` on the card, the next normal start imports
   them again. Remove the `LXR*.img` from the card after an update.
@@ -158,9 +158,9 @@ chip (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 
 ## Installing
 
-Ready-made firmware: the [Releases](https://github.com/shellbeat-jpg/lxr-desktop-app/releases)
+Ready-made firmware: the [Releases](https://github.com/shellbeat-jpg/lxr-desktop-sample/releases)
 page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
-[Actions](https://github.com/shellbeat-jpg/lxr-desktop-app/actions) tab (artifacts, sign-in needed).
+[Actions](https://github.com/shellbeat-jpg/lxr-desktop-sample/actions) tab (artifacts, sign-in needed).
 
 1. Copy `LXR_OE02-Samples_V<version>.img` to the top folder of the SD card and delete any other
    `LXR*.img` files there.
@@ -172,7 +172,7 @@ page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
    imported at the first start. A firmware update erases the samples; keep `SAMPLES` on the card and
    they are imported again.
 5. Optional, experimental: a folder (or file) `BIGFLASH` in `SAMPLES` gives about 17.8 s instead of
-   5.9 s of samples (start: `Big flash: on`, later `Flash 1024K big`). It uses flash above the 1 MB
+   5.9 s of samples (start: `Big flash: on`, later `Used x.x/17.8s`). It uses flash above the 1 MB
    the chip reports, which ST doesn't guarantee; every sample is verified, errors fall back to
    512 KB. If the unit ever hangs at the start screen, remove `BIGFLASH` or start without card.
 

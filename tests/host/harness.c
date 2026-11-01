@@ -131,17 +131,17 @@ int main(){
   system("rm -f sd/SAMPLES/*.WAV"); char nm[16]; for(int i=0;i<40;i++){snprintf(nm,16,"%02d.WAV",i);wav(nm,1,16,44100,100,0);}
   RUN("10 vierzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==31,"max 31 uebernommen");
   RUN("11 erneuter Start"); CHECK(last==SF_OK_UNCHANGED,"Signatur stabil");
-  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 31|Flash: 2048 KB|"),"Statuszeile beim Start mit Chip-Flash-Groesse");
+  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 31|Used 0.0/5.9s|"),"Statuszeile beim Start: Anzahl, Belegung in Sekunden");
   CHECK(bigErase==0,"ohne BIGFLASH nie Sektor 8-11 geloescht");
   /* experimenteller grosser Flash */
   system("rm -f sd/SAMPLES/*.WAV"); wav("1BIG.WAV",1,16,44100,200000,0); wav("2BIG.WAV",1,16,44100,200000,0);
   RUN("12 800 KB ohne BIGFLASH"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1 && bigErase==0,"nur 1 passt in 512 KB");
   system("touch sd/SAMPLES/BIGFLASH"); maxSector=0;
   RUN("13 800 KB mit BIGFLASH"); { const SampleFlashHeader* hh=sampleFlash_getHeader();
-    CHECK(last==SF_OK_IMPORTED && hh && hh->count==2 && hh->reserved[2]==1,"beide importiert, grosser Flash vermerkt");
+    CHECK(last==SF_OK_IMPORTED && hh && hh->count==2 && hh->reserved[2]==3,"beide importiert, grosser Flash vermerkt");
     CHECK(hh && hh->entry[1].offset+hh->entry[1].frames*2 > 0x08100000 && expect("2BIG.WAV",1,200000,&hh->entry[1]),"Daten oberhalb 1 MB korrekt");
     CHECK(maxSector==9,"nur die noetigen Sektoren 6-9 geloescht"); }
-  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 2|Flash 2048K big|"),"Statuszeile zeigt grossen Flash");
+  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 2|Used 9.0/17.8s|"),"Statuszeile zeigt Belegung im grossen Flash");
   RUN("13b Neustart"); CHECK(last==SF_OK_UNCHANGED,"kein erneuter Import");
   wav("3BIG.WAV",1,16,44100,1000,0); failUpper=1;
   RUN("14 oberer Bereich defekt (simuliert)"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==2 && sampleFlash_getHeader()->reserved[2]==0,"Rueckfall auf 512 KB, was passt importiert");
