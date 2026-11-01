@@ -123,5 +123,12 @@ int main(){
     CHECK(sampleFlash_modulatedWave(W, (W+9)/127.f, W)==W+1,"ueber dem letzten Sample begrenzt (nur 2 da)");
     CHECK(sampleFlash_modulatedWave(W+1, 0.f, W)==W,"unter s1 begrenzt, nie eine normale Wellenform");
     CHECK(sampleFlash_modulatedWave(2, 0.5f, W)==3,"normale Wellenform: Verhalten wie bisher");
-    CHECK(sampleFlash_modulatedWave(W, NAN, W)==W,"NaN -> s1"); }
+    CHECK(sampleFlash_modulatedWave(W, NAN, W)==W,"NaN -> s1");
+    /* Bereich: Basis s1, Amount 1/127 -> s1..s2, gleichmaessig quantisiert */
+    CHECK(sampleFlash_modulatedWave(W, sampleFlash_rangeValue(W, 1/127.f, 0.f), W)==W,"Bereich: Wert 0 -> erstes Sample");
+    CHECK(sampleFlash_modulatedWave(W, sampleFlash_rangeValue(W, 1/127.f, 0.49f), W)==W,"Bereich: untere Haelfte -> erstes Sample");
+    CHECK(sampleFlash_modulatedWave(W, sampleFlash_rangeValue(W, 1/127.f, 0.51f), W)==W+1,"Bereich: obere Haelfte -> zweites Sample");
+    CHECK(sampleFlash_modulatedWave(W, sampleFlash_rangeValue(W, 1/127.f, 1.f), W)==W+1,"Bereich: Wert 1 -> letztes Sample des Bereichs");
+    CHECK(fabsf(sampleFlash_rangeValue(W+4, 4/127.f, 0.6f)*127.f-(W+7))<0.01f,"Bereich s5..s9: 0.6 -> s8 (5 gleiche Stufen)");
+    CHECK(fabsf(sampleFlash_rangeValue(W+4, 0.f, 0.9f)*127.f-(W+4))<0.01f,"Amount 0 -> immer das gewaehlte Sample"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

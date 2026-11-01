@@ -69,7 +69,7 @@ User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
     (`2KICK` before `10KICK`).
   - Total length about 5.9 s mono at 44.1 kHz. Files that are not 16 bit or no longer fit are
     skipped and reported; the others are imported.
-  - The start screen shows "Samples in flash" with the count.
+  - The start screen shows the number of samples and the flash size of the chip.
   - A firmware update erases the samples: keep `/SAMPLES` on the card, the next boot imports again.
 - **Playback.** After the 6 standard waveforms the waveform menu lists s1..sN. Coarse 60 plays the
   original pitch, one-shot, linear interpolation, FM from the mod oscillator works as for the other
@@ -78,7 +78,8 @@ User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
 - **Loops.** Files from `/SAMPLES/LOOPS` repeat between start and end (Sta/Len) until the amp
   envelope ends them, with a crossfade at the loop point.
 - **Modulated sample selection.** With a sample as waveform, LFO or velocity modulation of the
-  waveform selects among the neighbouring samples (round robin, velocity layers).
+  waveform selects within a range: the selected sample plus as many following samples as the
+  modulation amount (round robin, velocity layers, e.g. only the hi-hat samples).
 - **Start and length.**
   - Start: while a sample is selected, the PWM knob becomes "Sta" (all 6 slots, modulatable).
   - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").

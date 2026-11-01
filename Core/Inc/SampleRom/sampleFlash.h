@@ -77,9 +77,18 @@ uint8_t sampleFlash_getCount(void);
 const SampleFlashEntry* sampleFlash_entry(uint8_t slot);
 
 /* Modulated waveform of a main oscillator. base = the waveform set in the kit,
- * v = the modulated value [0:1] (base/127 +- modulation). A sample as base:
- * the modulation selects among the stored samples (1/127 = one sample, clamped
- * to s1..sN). A built-in waveform as base: as before (0..numOscWaves-1). */
+ * v = the modulated value [0:1] (value/127). A sample as base: v*127 is the
+ * waveform, clamped to s1..sN. A built-in waveform as base: as before
+ * (0..numOscWaves-1). */
 uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves);
+
+/* Sample range for LFO/velocity modulation of the waveform when base is a
+ * sample: the range is base .. base+span, span = amount*127 (the modulation
+ * amount counts the further samples). val [0:1] (LFO, velocity) is quantized
+ * evenly onto the range. Returns the modulated value for the handler (w/127). */
+float sampleFlash_rangeValue(uint8_t base, float amount, float val);
+
+/* Flash size of the chip in KB (from its flash size register). */
+uint16_t sampleFlash_chipKB(void);
 
 #endif /* SAMPLEFLASH_H_ */

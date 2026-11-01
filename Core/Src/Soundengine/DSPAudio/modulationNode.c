@@ -24,6 +24,7 @@
 #include "Soundengine/MIDI/MidiMessages.h"
 #include "Soundengine/MIDI/MidiParser.h"
 #include "frontPanelParser_ui.h"
+#include "SampleRom/sampleFlash.h"
 
 INDTCMZ ModulationNode velocityModulators[6];
 
@@ -158,6 +159,13 @@ void modNode_setDestination(ModulationNode* vm, uint16_t dest)
 	}
 }
 //-----------------------------------------------------------------------
+//MOD: the waveform parameters of the main oscillators
+static uint8_t modNode_isMainWave(const uint16_t par)
+{
+	return par == PAR_OSC_WAVE_DRUM1 || par == PAR_OSC_WAVE_DRUM2 || par == PAR_OSC_WAVE_DRUM3
+		|| par == PAR_OSC_WAVE_SNARE || par == PAR_WAVE1_CYM || par == PAR_WAVE1_HH;
+}
+//-----------------------------------------------------------------------
 // This is called to actually modulate the value for a modulation node
 void modNode_updateValue(ModulationNode* vm, float val)
 {
@@ -176,6 +184,12 @@ void modNode_updateValue(ModulationNode* vm, float val)
 	//val is [0:1] make [-1:1] for bipolar modulation around original value
 	float newValue = originalValue + vm->amount * (val*2.f-1.f);
 	newValue = newValue < 0.f ? 0 : newValue > 1.f ? 1.f : newValue;
+	//MOD: a sample as main oscillator waveform: the modulation selects within
+	//the range sample .. sample + amount (unipolar, quantized onto the range)
+	if(modNode_isMainWave(vm->destination) && activeParameters[vm->destination] >= NUM_OSC_WAVEFORMS)
+	{
+		newValue = sampleFlash_rangeValue(activeParameters[vm->destination], vm->amount, val);
+	}
 	if(vm->destination < 128)
 	{
 		/* comes from cortex midi handler

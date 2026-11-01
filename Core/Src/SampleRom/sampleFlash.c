@@ -110,6 +110,26 @@ uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves)
 	if(w > last) w = last;
 	return (uint8_t)w;
 }
+float sampleFlash_rangeValue(uint8_t base, float amount, float val)
+{
+	if(!(amount > 0.f)) amount = 0.f;
+	if(amount > 1.f) amount = 1.f;
+	if(!(val > 0.f)) val = 0.f;
+	if(val > 1.f) val = 1.f;
+	const uint32_t span = (uint32_t)(amount * 127.f + 0.5f);
+	uint32_t k = (uint32_t)(val * (float)(span + 1u));
+	if(k > span) k = span;
+	uint32_t w = base + k;
+	if(w > 127u) w = 127u;
+	return (float)w / 127.f;
+}
+#ifndef SF_READ_FLASH_KB
+#define SF_READ_FLASH_KB() (*(const volatile uint16_t*)FLASHSIZE_BASE)
+#endif
+uint16_t sampleFlash_chipKB(void)
+{
+	return SF_READ_FLASH_KB();
+}
 const SampleFlashEntry* sampleFlash_entry(uint8_t slot)
 {
 	const SampleFlashHeader* h = sf_cache;
@@ -411,15 +431,17 @@ static void sf_fmtSeconds(char* out, uint32_t bytes)
 /*----------------------------------------------------------------------------*/
 void sampleFlash_showStatus(void)
 {
-	char l2[17];
+	char l1[17], l2[17];
 	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
 	const SampleFlashHeader* h = sf_cache;
-	if(h == NULL)                   snprintf(l2, sizeof(l2), "none");
-	else if(h->reserved[0] + h->reserved[1] && h->reserved[0] + h->reserved[1] <= 99u)
-	                                snprintf(l2, sizeof(l2), "%u (%u skipped)", (unsigned)h->count, (unsigned)(h->reserved[0] + h->reserved[1]));
-	else                            snprintf(l2, sizeof(l2), "%u", (unsigned)h->count);
-	sf_lcd("Samples in flash", l2);
-	HAL_Delay(1200);
+	const uint32_t skipped = h ? h->reserved[0] + h->reserved[1] : 0u;
+	if(h == NULL)                   snprintf(l1, sizeof(l1), "Samples: none");
+	else if(skipped && skipped <= 99u)
+	                                snprintf(l1, sizeof(l1), "Samples:%u skp:%u", (unsigned)h->count, (unsigned)skipped);
+	else                            snprintf(l1, sizeof(l1), "Samples: %u", (unsigned)h->count);
+	snprintf(l2, sizeof(l2), "Flash: %u KB", (unsigned)sampleFlash_chipKB());
+	sf_lcd(l1, l2);
+	HAL_Delay(1500);
 }
 /*----------------------------------------------------------------------------*/
 SampleFlashResult sampleFlash_importAtBoot(void)

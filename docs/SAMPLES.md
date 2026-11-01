@@ -9,7 +9,8 @@ OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.m
    samples go into the subfolder `SAMPLES/LOOPS`.
 2. Switch the LXR-02 on normally (without holding the encoder). If the folder changed since the
    last import, the display shows "Import x/y", then "Import+Verify OK".
-3. The start screen then shows "Samples in flash" with the number of stored samples.
+3. The start screen then shows "Samples:" with the number of stored samples and, below, the flash
+   size of the chip ("Flash: 1024 KB" or "Flash: 2048 KB").
 
 The samples stay in the internal flash: they also play without SD card.
 
@@ -74,16 +75,17 @@ sound. Drum voices have no gate, so a long decay keeps the loop going.
 ## Modulated sample selection
 
 When the waveform of a voice is a sample, modulating the waveform (LFO or velocity modulation with
-the waveform as target) selects among the stored samples around it instead of switching to the
-built-in waveforms:
+the waveform as target) selects within a range of samples instead of switching to the built-in
+waveforms:
 
-- The modulation amount sets the range: about one sample per step of the amount (1/127).
-  Modulation is bipolar around the selected sample (velocity 0 = below, full velocity = above).
-- The selection stays within s1..sN.
-- Velocity layers: put soft, middle and loud versions of a hit next to each other (e.g. `1SNR_P`,
-  `2SNR_M`, `3SNR_F`), select the middle one and set a small velocity amount.
-- Round robin: an LFO (e.g. random waveform) on the waveform picks a different neighbour on each
-  hit.
+- **The range starts at the selected waveform** and covers **as many further samples as the
+  modulation amount** (amount 4 with s5 selected: s5..s9). Amount 0 = always the selected sample.
+- The LFO or velocity value is quantized evenly onto the range: with 5 samples each fifth of the
+  velocity (or of the LFO swing) selects one sample. The range ends at the last stored sample.
+- Example hi-hats only: name the hat files so they follow each other (`5HAT_A` ... `9HAT_E`), select
+  s5 as waveform and set the amount to 4.
+- Velocity layers: soft to loud versions in a row, the softest selected, amount = number of layers - 1.
+- Round robin: an LFO with the random waveform picks a different sample of the range on each hit.
 - With a built-in waveform as base the modulation works as before.
 
 ## Voice INIT

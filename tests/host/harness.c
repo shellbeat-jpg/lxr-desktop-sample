@@ -126,7 +126,7 @@ int main(){
   system("rm -f sd/SAMPLES/*.WAV"); char nm[16]; for(int i=0;i<40;i++){snprintf(nm,16,"%02d.WAV",i);wav(nm,1,16,44100,100,0);}
   RUN("10 vierzig Dateien"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==31,"max 31 uebernommen");
   RUN("11 erneuter Start"); CHECK(last==SF_OK_UNCHANGED,"Signatur stabil");
-  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples in flash|31|"),"Statuszeile beim Start");
+  sampleFlash_showStatus(); CHECK(!strcmp(lcdbuf,"Samples: 31|Flash: 2048 KB|"),"Statuszeile beim Start mit Chip-Flash-Groesse");
   CHECK(badErase==0,"NIE ein anderer Sektor als 6/7 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}
