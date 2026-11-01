@@ -165,6 +165,8 @@ Recommended settings:
   active value (the parameter then doesn't morph).
 - **Voices of the kit morph:** global settings page 2, `mrv` on/off per voice (voice button selects
   the voice).
+- Global settings (CONFIG pages, e.g. `ips`, `mrv`) apply at once but are only kept after a
+  restart when saved: SAVE, type **Global** (or with a project save, Save → Project).
 - **Velocity 0** on a step = automation only (no trigger, no MIDI note).
 - **LFO range display:** the edit view of `mod` shows the range the target moves in (`21..127`).
 - **Instant pattern switching:** global settings page 2, `ips` on: a pattern selected by hand starts
@@ -200,9 +202,11 @@ page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
    5.9 s of samples (start: `Big flash: on`, later `Used x.x/17.8s`). It uses flash above the 1 MB
    the chip reports, which ST doesn't guarantee; every sample is verified, errors fall back to
    512 KB. If the unit ever hangs at the start screen, remove `BIGFLASH` or start without card.
+6. Switch it off for about 10 seconds before switching it on again: right after switching off,
+   the OLED display can stay dark at the next start (the unit still works; switch off, wait, switch on).
 
 To go back, install the OpenElixir-02 or the Erica Synths image the same way. Kits saved with this
-firmware load there; start, length, the choke group and the `cyc` LFO waveform are ignored, voices
+firmware load there; start, length, the choke group and the new LFO waveforms are ignored, voices
 with a sample as waveform stay silent.
 
 ## Building

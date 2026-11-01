@@ -29,6 +29,7 @@ The samples stay in the internal flash: they also play without SD card.
 - **Files that don't fit** are skipped in name order ("Full(5.9s) skip:", with `BIGFLASH`
   "Full(17.8s) skip:"); a later, smaller file may still fit. If not even one file fits:
   "Too big: x.ys / max 5.9s @44.1k" (or 17.8s), the flash stays unchanged.
+- **Switch it off for about 10 seconds before switching it on again**: right after switching off, the OLED display can stay dark at the next start (the unit still works; switch off, wait, switch on).
 - **A firmware update erases the samples.** Keep `/SAMPLES` on the card: the next normal start
   imports them again. Remove the `LXR*.img` file from the card after the update.
 
@@ -175,8 +176,8 @@ changes it there. Release SHIFT to see and edit the active kit's value again.
 Global settings (SHIFT + step button 12, CONFIG), second page: **`mrv`** = kit morph on/off for the
 active voice; select the voice with its voice button while the page is shown. The edit view shows
 the morphed voices on the left (e.g. `----56`: only snare/cymbal and hi-hats morph). Voices that
-are off keep their own sound at every `mrp` value (also with the mod wheel). Saved with the global
-settings; default: all voices morph.
+are off keep their own sound at every `mrp` value (also with the mod wheel). Kept after a restart
+when the global settings are saved (SAVE → Global); default: all voices morph.
 
 ### Velocity 0 = automation only
 
@@ -194,7 +195,7 @@ e.g. `-12..12`). To modulate between *a* and *b*, set the target parameter to (a
 ### Instant pattern switching
 
 Global settings (SHIFT + step button 12, CONFIG), second page: **`ips`** (Pattern Instant)
-on/off, saved with the global settings. On: a pattern selected by hand starts on the **next step at
+on/off, kept after a restart when the global settings are saved (SAVE → Global). On: a pattern selected by hand starts on the **next step at
 the same position** instead of at the end of the playing pattern. Automatic changes (pattern chains,
 songs) still happen at the end of the pattern. Tracks shorter in the new pattern wrap at their length.
 
@@ -252,6 +253,7 @@ relies on the verify after writing.
 Tested on the device: sample import and playback, the skipping of invalid files, start and length
 (`sta`/`len`), loops, the modulated sample selection (`rnd` and `cyc`), the choke group (`chk`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
-samples above 1 MB play correctly). The additions of 1.2.4 (mod wheel, morph target access, velocity 0, instant pattern switching, the
-new LFO waveforms) are not tested on the device yet. Host tests (Linux, gcc) for import and playback:
+samples above 1 MB play correctly). Of the additions of 1.2.4, the morph target access (SHIFT) and `mrv` are tried on the device; the
+mod wheel, SHIFT + click, velocity 0, instant pattern switching, the LFO range display and the new
+LFO waveforms are not tested on the device yet. Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.
