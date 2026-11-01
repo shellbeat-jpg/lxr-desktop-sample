@@ -26,6 +26,10 @@
 #define SMP_ROOT_NOTE   60
 #define SMP_FRAC_BITS   17
 #define SMP_FRAC_MASK   ((1u << SMP_FRAC_BITS) - 1u)
+#define SMP_PENDING     0xFFFFFFFFu   /* phase after a trigger: start not yet applied */
+#define SMP_MIN_LEN     64u           /* frames, shortest length */
+#define SMP_FADE_IN     32u           /* frames, only if start > 0 */
+#define SMP_FADE_OUT    64u           /* frames, only if the length cuts the sample */
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
@@ -285,7 +289,7 @@ IN_ITCM_RAM void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int1
 			break;
 
 		default:
-			calcUserSampleOscFmBlock(osc,modBuffer,buf,size,gain);
+			calcUserSampleOscFmBlock(osc,modBuffer,buf,size,gain,pwm);
 			break;
 
 		}
@@ -409,7 +413,7 @@ IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_
 			break;
 
 		default://sample playback (MOD)
-			calcUserSampleOscBlock(osc,buf,size, gain);
+			calcUserSampleOscBlock(osc,buf,size, gain, pwm);
 			break;
 		}
 }
@@ -558,87 +562,96 @@ int16_t calcSampleOscFm(OscInfo* osc, OscInfo* modOsc)
 };
 */
 //------------------------------------------------------------------
-void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain)
+/* MOD: start/end of a sample voice, evaluated on the first block after a
+ * trigger (osc_setBaseNote marks it with SMP_PENDING). Start comes from the
+ * PWM value (incl. its modulation), the length from osc->smpLen; both 0..127
+ * on a quadratic scale (fine steps at the beginning). smpLen 0 = to the end. */
+static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
 {
-	/* MOD: one-shot sample with phase modulation from the mod oscillator.
-	 * The modulator shifts the read position by up to +/-4096 frames
-	 * (same scaling as the original Sonic Potions sample FM). */
+	const uint32_t n = e->frames;
+	if(!(pwm > 0.f)) pwm = 0.f;          /* also NaN */
+	if(pwm > 1.f) pwm = 1.f;
+	uint32_t start = (uint32_t)(pwm * pwm * (float)n);
+	if(start >= n) start = n - 1u;
+	uint32_t end = n;
+	if(osc->smpLen)
+	{
+		const float l = (osc->smpLen > 127u ? 127u : osc->smpLen) * (1.f / 127.f);
+		uint32_t len = (uint32_t)(l * l * (float)n);
+		if(len < SMP_MIN_LEN) len = SMP_MIN_LEN;
+		if(start + len < end) end = start + len;
+	}
+	osc->smpStart = start;
+	osc->smpEnd   = end;
+	osc->phase    = start;
+	osc->smpFrac  = 0;
+}
+//------------------------------------------------------------------
+/* one-shot playback core: linear interpolation, phase = integer frame position,
+ * smpFrac = 17 bit fraction. Short fades where the sample is cut (start > 0,
+ * end before the last frame) avoid clicks. modBuffer != NULL: phase modulation
+ * from the mod oscillator shifts the read position by up to +/-4096 frames
+ * (same scaling as the original Sonic Potions sample FM). */
+static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, const uint8_t size, const float gain, const float pwm)
+{
 	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
-	if(e == NULL)
+	if(e == NULL || e->frames == 0)
 	{
 		memset(buf, 0, size * sizeof(int16_t));
 		osc->output = 0;
 		return;
 	}
+	if(osc->phase == SMP_PENDING) smp_begin(osc, e, pwm);
+
 	const int16_t* data = (const int16_t*)e->offset;
-	const uint32_t n = e->frames;
-	uint32_t pos = osc->phase;
+	const uint32_t n     = e->frames;
+	const uint32_t start = osc->smpStart < n ? osc->smpStart : 0u;
+	const uint32_t end   = osc->smpEnd   < n ? osc->smpEnd   : n;   /* also a stale end of another sample */
+	const uint8_t fadeIn  = start > 0u;
+	const uint8_t fadeOut = end < n;
+	uint32_t pos  = osc->phase;
 	uint32_t frac = osc->smpFrac;
 	int16_t out = 0;
-	uint8_t i;
-	for(i=0;i<size;i++)
+	for(uint8_t i=0;i<size;i++)
 	{
-		if(pos >= n)
+		if(pos >= end)
 		{
 			out = 0;
 		}
 		else
 		{
-			int32_t rp = (int32_t)pos + (((int32_t)(modBuffer[i]*osc->fmMod)) >> 3);
-			if(rp < 0) rp = 0;
-			if(rp >= (int32_t)n) rp = (int32_t)n - 1;
+			int32_t rp = (int32_t)pos;
+			if(modBuffer)
+			{
+				rp += ((int32_t)(modBuffer[i]*osc->fmMod)) >> 3;
+				if(rp < 0) rp = 0;
+				if(rp >= (int32_t)n) rp = (int32_t)n - 1;
+			}
 			const int32_t s0 = data[rp];
 			const int32_t s1 = ((uint32_t)rp + 1u < n) ? data[rp + 1] : 0;
-			out = (int16_t)(s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15));
+			int32_t s = s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15);
+			if(fadeOut && end - pos < SMP_FADE_OUT) s = (s * (int32_t)(end - pos)) / (int32_t)SMP_FADE_OUT;
+			if(fadeIn  && pos - start < SMP_FADE_IN) s = (s * (int32_t)(pos - start + 1u)) / (int32_t)SMP_FADE_IN;
+			out = (int16_t)s;
 			frac += osc->phaseInc;
 			pos  += frac >> SMP_FRAC_BITS;
 			frac &= SMP_FRAC_MASK;
 		}
 		buf[i] = out * gain;
 	}
-	osc->phase = pos > n ? n : pos;
+	osc->phase = pos > end ? end : pos;
 	osc->smpFrac = frac;
 	osc->output = out;
 }
-//---------------------------------------------------------------
-void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain)
+//------------------------------------------------------------------
+void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
 {
-	/* MOD: one-shot playback of a flash sample with linear interpolation.
-	 * phase = integer frame position, smpFrac = 17 bit fraction. After the
-	 * last frame the oscillator outputs silence until the next trigger. */
-	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(osc->waveform - NUM_OSC_WAVEFORMS));
-	if(e == NULL)
-	{
-		memset(buf, 0, size * sizeof(int16_t));
-		osc->output = 0;
-		return;
-	}
-	const int16_t* data = (const int16_t*)e->offset;
-	const uint32_t n = e->frames;
-	uint32_t pos = osc->phase;
-	uint32_t frac = osc->smpFrac;
-	int16_t out = 0;
-	uint8_t i;
-	for(i=0;i<size;i++)
-	{
-		if(pos >= n)
-		{
-			out = 0;
-		}
-		else
-		{
-			const int32_t s0 = data[pos];
-			const int32_t s1 = (pos + 1u < n) ? data[pos + 1u] : 0;
-			out = (int16_t)(s0 + (((s1 - s0) * (int32_t)(frac >> 2)) >> 15));
-			frac += osc->phaseInc;
-			pos  += frac >> SMP_FRAC_BITS;
-			frac &= SMP_FRAC_MASK;
-		}
-		buf[i] = out * gain;
-	}
-	osc->phase = pos > n ? n : pos;
-	osc->smpFrac = frac;
-	osc->output = out;
+	smp_render(osc, modBuffer, buf, size, gain, pwm);
+}
+//---------------------------------------------------------------
+void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain, const float pwm)
+{
+	smp_render(osc, NULL, buf, size, gain, pwm);
 }
 //---------------------------------------------------------------
 /*
@@ -822,10 +835,11 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	 osc->freq = MidiNoteFrequencies[note]*cent;
 	 osc->baseNote = baseNote;
 
-	 /* MOD: called on every voice trigger - samples always restart at frame 0 */
+	 /* MOD: called on every voice trigger - start position and length are
+	  * applied on the next block (smp_begin), with the current PWM/start value */
 	 if(osc->waveform >= NUM_OSC_WAVEFORMS)
 	 {
-		 osc->phase = 0;
+		 osc->phase = SMP_PENDING;
 		 osc->smpFrac = 0;
 	 }
  };

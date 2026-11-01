@@ -433,5 +433,11 @@ enum ParamEnums
 
 extern uint8_t parameterOrder[END_OF_SOUND_PARAMETERS];
 
+//MOD: sample length of drum 1-3 (0 = to the end of the sample), stored in kits.
+//Free slots of the former MIDI note parameters (OpenElixir uses 3, 4 and 6).
+#define PAR_SMP_LEN_1	PAR_UNUSED_1
+#define PAR_SMP_LEN_2	PAR_UNUSED_2
+#define PAR_SMP_LEN_3	PAR_UNUSED_5
+
 
 #endif /* PARAMETERS_H_ */

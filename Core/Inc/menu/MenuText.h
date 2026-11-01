@@ -482,6 +482,8 @@ const char shortNames[][4]  =
 	{"shf"},
 	{"lim"},
 	{"dj"},
+	{"len"},
+	{"sta"},
 
 };
 //-----------------------------------------------------------------
@@ -616,6 +618,8 @@ const char longNames[][16] =
 	{"Limiter"},
 	{" Cutoff"},	//after the 8 characters of the category: "DJ Filt. Cutoff"
 	{" Reso"},
+	{"Length"},
+	{"Start"},
 };
 
 

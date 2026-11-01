@@ -239,6 +239,14 @@ static void kitEngines_turnOffRoleModulation(const uint8_t slot)
 	}
 }
 //---------------------------------------------------
+//MOD: sample length parameter of drum 1-3 (not in kitEngines_slotParams, which is
+//part of the kit format); PAR_NONE for the other slots
+static uint16_t kitEngines_smpLenPar(const uint8_t slot)
+{
+	static const uint8_t par[3] = { PAR_SMP_LEN_1, PAR_SMP_LEN_2, PAR_SMP_LEN_3 };
+	return slot < 3 ? par[slot] : PAR_NONE;
+}
+//---------------------------------------------------
 //the slot's parameters in activeParameters are set: send them to the sound engine
 static void kitEngines_sendSlot(const uint8_t slot, const uint8_t* list)
 {
@@ -252,6 +260,10 @@ static void kitEngines_sendSlot(const uint8_t slot, const uint8_t* list)
 	if(slot == NUM_VOICE_SLOTS-1)
 	{
 		kitEngines_sendPar(PAR_VELOD6_OPEN);
+	}
+	if(kitEngines_smpLenPar(slot) != PAR_NONE)
+	{
+		kitEngines_sendPar((uint8_t)kitEngines_smpLenPar(slot));	//MOD: the voice was re-initialized
 	}
 	menu_repaint();
 }
@@ -279,6 +291,10 @@ void kitEngines_assign(const uint8_t slot, const uint8_t engine)
 	{
 		//decay B: the hi-hat's own, otherwise the same as decay A
 		activeParameters[PAR_VELOD6_OPEN] = kitEngines_initValue(stockSlot == slot ? PAR_VELOD6_OPEN : PAR_VELOD1 + 2*stockSlot);
+	}
+	if(kitEngines_smpLenPar(slot) != PAR_NONE)
+	{
+		activeParameters[kitEngines_smpLenPar(slot)] = 0;	//MOD: sample length "all"
 	}
 
 	//the slot's own LFO and velocity modulation start off (copied targets would
@@ -313,6 +329,10 @@ void kitEngines_loadVoice(const uint8_t slot, const uint8_t engine, const uint8_
 	if(slot == NUM_VOICE_SLOTS-1)
 	{
 		activeParameters[PAR_VELOD6_OPEN] = kit[PAR_VELOD6_OPEN];
+	}
+	if(kitEngines_smpLenPar(slot) != PAR_NONE)
+	{
+		activeParameters[kitEngines_smpLenPar(slot)] = kit[kitEngines_smpLenPar(slot)];	//MOD
 	}
 
 	//velocity modulation always targets the voice itself; the LFO only if it

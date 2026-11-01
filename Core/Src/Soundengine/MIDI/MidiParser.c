@@ -1211,6 +1211,16 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 			case CC2_FX_DELAY_TYPE:
 				fxBus.delay.delayType = value.itg;
 			break;
+			case PAR_SMP_LEN_1-128:	//MOD: sample length drum 1-3
+				voiceSlots[0].u.c.osc.smpLen = value.itg;
+				break;
+			case PAR_SMP_LEN_2-128:
+				voiceSlots[1].u.c.osc.smpLen = value.itg;
+				break;
+			case PAR_SMP_LEN_3-128:
+				voiceSlots[2].u.c.osc.smpLen = value.itg;
+				break;
+
 			case PAR_SLOT_ENGINE-128:
 				//command, not a sound parameter: value = slot*4 + engine. Only from
 				//a received NRPN (midiParser_nrpnHandler): kit loads send this byte

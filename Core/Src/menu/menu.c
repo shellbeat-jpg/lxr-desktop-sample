@@ -31,6 +31,7 @@
 #include "menu/projectBrowse.h"
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/DSPAudio/DjFilter.h"
+#include "SampleRom/sampleFlash.h"
 #include "buttonHandler.h"
 #include <ctype.h>
 #include <frontPanelParser_ui.h>
@@ -264,6 +265,8 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_LIMITER, CAT_GLOBAL, LONG_LIMITER},/*TEXT_MIXER_LIMITER*/
 		{SHORT_DJ_FILTER, CAT_DJ_FILTER, LONG_DJ_FILTER},/*TEXT_DJ_FILTER*/
 		{SHORT_FIL_RESO, CAT_DJ_FILTER, LONG_DJ_RESO},/*TEXT_DJ_RESO*/
+		{SHORT_SMP_LENGTH, CAT_OSC, LONG_SMP_LENGTH},/*TEXT_SMP_LENGTH*/
+		{SHORT_SMP_START, CAT_OSC, LONG_SMP_START},/*TEXT_SMP_START*/
 
 
 };
@@ -493,11 +496,11 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 	    /*PAR_AUDIO_OUT5*/ 		DTYPE_MENU | (MENU_AUDIO_OUT<<8),
 	    /*PAR_AUDIO_OUT6*/ 		DTYPE_MENU | (MENU_AUDIO_OUT<<8),		//220
 	    // these 7
-	    /*PAR_UNUSED1*/		DTYPE_NOTE_NAME,
-	    /*PAR_UNUSED2*/		DTYPE_NOTE_NAME,
+	    /*PAR_SMP_LEN_1*/	DTYPE_0B127,
+	    /*PAR_SMP_LEN_2*/	DTYPE_0B127,
 	    /*PAR_UNUSED3*/		DTYPE_NOTE_NAME,
 	    /*PAR_UNUSED4*/		DTYPE_NOTE_NAME,
-	    /*PAR_UNUSED5*/		DTYPE_NOTE_NAME,
+	    /*PAR_SMP_LEN_3*/	DTYPE_0B127,
 	    /*PAR_UNUSED6*/		DTYPE_NOTE_NAME,
 	    /*PAR_UNUSED7*/		DTYPE_NOTE_NAME,
 
@@ -583,6 +586,84 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_MIXER_LIMITER*/	DTYPE_ON_OFF,
 };
 //---------------------------------------------------------------
+//MOD: sample start (PWM) and length parameters. Returns the sample the voice
+//of the parameter plays, NULL if it is no such parameter or no sample is selected.
+static const SampleFlashEntry* menu_sampleOfParam(const uint16_t parNr, uint8_t* isLen)
+{
+	static const uint8_t oscWave[6] = { PAR_OSC_WAVE_DRUM1, PAR_OSC_WAVE_DRUM2, PAR_OSC_WAVE_DRUM3, PAR_OSC_WAVE_SNARE, PAR_WAVE1_CYM, PAR_WAVE1_HH };
+	uint8_t slot;
+	*isLen = 1;
+	if(parNr >= PAR_PWM_1 && parNr <= PAR_PWM_6)	{ slot = (uint8_t)(parNr - PAR_PWM_1); *isLen = 0; }
+	else if(parNr == PAR_SMP_LEN_1)					slot = 0;
+	else if(parNr == PAR_SMP_LEN_2)					slot = 1;
+	else if(parNr == PAR_SMP_LEN_3)					slot = 2;
+	else return NULL;
+	const uint8_t wave = activeParameters[oscWave[slot]];
+	if(wave < waveformNames[0][0]) return NULL;
+	const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(wave - waveformNames[0][0]));
+	return (e && e->rate && e->frames) ? e : NULL;
+}
+//quadratic scale as in the oscillator (smp_begin): frames of value 0..127
+static uint32_t menu_sampleFrames(const SampleFlashEntry* e, const uint8_t v)
+{
+	const float f = (v > 127 ? 127 : v) * (1.f/127.f);
+	return (uint32_t)(f * f * (float)e->frames);
+}
+//ms of a start or length value; 0xFFFFFFFF = length "all" (value 0)
+static uint32_t menu_sampleMs(const uint16_t parNr, const uint8_t val, uint8_t* isLenOut, const SampleFlashEntry** eOut)
+{
+	uint8_t isLen;
+	const SampleFlashEntry* e = menu_sampleOfParam(parNr, &isLen);
+	*eOut = e;
+	*isLenOut = isLen;
+	if(!e) return 0;
+	uint32_t frames;
+	if(!isLen)
+		frames = menu_sampleFrames(e, val);
+	else
+	{
+		if(val == 0) return 0xFFFFFFFFu;
+		//effective length: limited by the end of the sample after the start
+		const uint8_t slot = parNr == PAR_SMP_LEN_1 ? 0 : (parNr == PAR_SMP_LEN_2 ? 1 : 2);
+		const uint32_t start = menu_sampleFrames(e, activeParameters[PAR_PWM_1 + slot]);
+		frames = menu_sampleFrames(e, val);
+		if(frames < 64) frames = 64;
+		if(start + frames > e->frames) frames = e->frames - start;
+	}
+	return (uint32_t)(((uint64_t)frames * 1000u) / e->rate);
+}
+//3 characters for the 4-parameter view: "230", "1.2" (s), "12s"
+static uint8_t menu_sampleValueText(const uint16_t parNr, const uint8_t val, char* out3)
+{
+	uint8_t isLen;
+	const SampleFlashEntry* e;
+	const uint32_t ms = menu_sampleMs(parNr, val, &isLen, &e);
+	if(!e) return 0;
+	char t[8];
+	if(ms == 0xFFFFFFFFu)	memcpy(t, "all", 4);
+	else if(ms < 1000)		snprintf(t, sizeof(t), "%3lu", (unsigned long)ms);
+	else if(ms < 10000)		snprintf(t, sizeof(t), "%lu.%lu", (unsigned long)(ms/1000), (unsigned long)((ms%1000)/100));
+	else					snprintf(t, sizeof(t), "%2lus", (unsigned long)(ms/1000 > 99 ? 99 : ms/1000));
+	memcpy(out3, t, 3);
+	return 1;
+}
+extern char editDisplayBuffer[2][17];
+//edit view: long name "Start"/"Length" and the value "1234 ms" / "all"
+static uint8_t menu_sampleEditText(const uint16_t parNr, const uint8_t val)
+{
+	uint8_t isLen;
+	const SampleFlashEntry* e;
+	const uint32_t ms = menu_sampleMs(parNr, val, &isLen, &e);
+	if(!e) return 0;
+	memset(&editDisplayBuffer[0][8], ' ', 8);
+	memcpy(&editDisplayBuffer[0][8], isLen ? "Length" : "Start", isLen ? 6 : 5);
+	if(ms == 0xFFFFFFFFu)
+		memcpy(&editDisplayBuffer[1][13], "all", 3);
+	else
+		snprintf(&editDisplayBuffer[1][8], 9, "%5lu ms", (unsigned long)(ms > 99999 ? 99999 : ms));
+	return 1;
+}
+//---------------------------------------------------------------
 //Voice pages of slots that run a non-stock engine: built from the engine's stock
 //page, every parameter moved to the slot's parameter with the same function
 static Page menu_voicePages[VOICE7_PAGE-VOICE1_PAGE+1][NUM_SUB_PAGES];
@@ -620,6 +701,12 @@ void menu_updateVoicePages()
 			{
 				par[i] = menu_trackPar(par[i], stockSlot, page);
 				par[i] = kitEngines_mapParam(par[i], stockSlot, slot);
+				//MOD: only drum 1-3 have a sample length parameter
+				if(par[i] == PAR_SMP_LEN_1)
+				{
+					par[i] = PAR_NONE;
+					text[i] = TEXT_EMPTY;
+				}
 				if(page == VOICE7_PAGE && par[i] == PAR_VELOD6_CLOSED)
 					par[i] = PAR_VELOD6_OPEN;	//decay B
 
@@ -1788,7 +1875,11 @@ void menu_repaintGeneric()
 				(const char PROGMEM *)(&longNames[pgm_read_byte(&valueNames[parName].longName)]));
 
 			//Bottom row -> parameter value (set below)
-			if(parNr == PAR_DJ_FILTER)
+			if(menu_sampleEditText(parNr, curParmVal))
+			{
+				//MOD: sample start/length in ms
+			}
+			else if(parNr == PAR_DJ_FILTER)
 			{
 				//"Off" around the center, "LP -xx" below it, "HP xx" above
 				const int8_t offset = (int8_t)(curParmVal - DJ_FILTER_OFF);
@@ -1911,6 +2002,14 @@ void menu_repaintGeneric()
 		memcpy(&editDisplayBuffer[0][12],
 			&shortNames[pgm_read_byte(&valueNames[pgm_read_byte(&ap->top4+is2ndPage)].shortName)],3);
 
+		//MOD: the PWM knob is the sample start while a sample is selected
+		for(uint8_t i=0;i<4;i++)
+		{
+			uint8_t isLen;
+			if(menu_sampleOfParam(pgm_read_word(&ap->bot1 + i + is2ndPage), &isLen) && !isLen)
+				memcpy(&editDisplayBuffer[0][i*4], &shortNames[SHORT_SMP_START], 3);
+		}
+
 		// capitalize selected item
 		upr_three(&editDisplayBuffer[0][(activeParameter%4)*4]);
 
@@ -1931,6 +2030,8 @@ void menu_repaintGeneric()
 			//convert the parameter uint8_t value to a 3 place char
 			if(parNr==PAR_NONE) {
 				memcpy(valueAsText,menuText_blank,3);
+			} else if(menu_sampleValueText(parNr, curParmVal, valueAsText)) {
+				//MOD: sample start/length in ms
 			} else { //not if(parNr==PAR_NONE)
 
 				switch(menu_paramDtype(parNr) & 0xFF) {

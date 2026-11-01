@@ -276,6 +276,8 @@ enum NamesEnum
 	TEXT_MIXER_LIMITER,
 	TEXT_DJ_FILTER,
 	TEXT_DJ_RESO,
+	TEXT_SMP_LENGTH,	//MOD: sample length
+	TEXT_SMP_START,		//MOD: the PWM label while a sample is selected
 
 
 	NUM_NAMES
@@ -387,7 +389,9 @@ enum shortNamesEnum
 	SHORT_FLAM,
 	SHORT_SHIFT,
 	SHORT_LIMITER,
-	SHORT_DJ_FILTER
+	SHORT_DJ_FILTER,
+	SHORT_SMP_LENGTH,
+	SHORT_SMP_START
 
 	
 };
@@ -520,7 +524,9 @@ enum longNamesEnum
 	LONG_SHIFT,
 	LONG_LIMITER,
 	LONG_DJ_FILTER,
-	LONG_DJ_RESO
+	LONG_DJ_RESO,
+	LONG_SMP_LENGTH,
+	LONG_SMP_START
 	
 };
 

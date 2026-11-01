@@ -45,7 +45,7 @@ int main(){
   int silent=1; for(int i=3000;i<3200;i++) if(out[i]) silent=0; CHECK(silent,"One-Shot: nach dem Ende Stille");
   CHECK(o.phase==3000,"Position bleibt am Ende stehen");
   /* 2: Retrigger */
-  osc_setBaseNote(&o,60); CHECK(o.phase==0&&o.smpFrac==0,"Trigger setzt auf Anfang zurueck");
+  osc_setBaseNote(&o,60); { int16_t buf[32]; calcNextOscSampleBlock(&o,buf,32,1.f,0); CHECK(buf[0]==ramp(0)&&buf[31]==ramp(31),"Trigger setzt auf Anfang zurueck"); }
   /* 3: Oktave hoeher via Coarse 72 */
   o=mk(0); o.midiFreq=(72<<8)|64; osc_setBaseNote(&o,60); osc_setFreq(&o);
   double ratio=o.phaseInc/(double)(1u<<17); CHECK(fabs(ratio-2.0)<0.002,"Coarse +12 -> doppelte Geschwindigkeit");
@@ -77,4 +77,27 @@ int main(){
   /* 8: Extreme Tonhoehe begrenzt */
   o=mk(0); o.freq=20000; o.pitchMod=8; osc_setFreq(&o); CHECK(o.phaseInc<=64u*(1u<<17),"Extreme Pitch-Modulation begrenzt (max 64x)");
   o.freq=NAN; osc_setFreq(&o); CHECK(o.phaseInc==0,"NaN-Frequenz -> kein Unsinn");
+  /* 9: Start (PWM) und Laenge (Schritt 5) */
+  #define PLAY(pwm,len,N) do{ o=mk(0); o.freq=MidiNoteFrequencies[60]; o.smpLen=(len); osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; \
+     int k=0; int16_t buf[32]; while(k<(N)){ osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,(pwm)); for(int i=0;i<32;i++) out[k++]=buf[i]; } }while(0)
+  PLAY(0.5f,0,3200);  /* start = 0.5^2 * 3000 = 750 */
+  CHECK(abs(out[0]) <= abs(ramp(750))/32+1,"Start 50%: Einblenden beginnt leise");
+  CHECK(out[40]==ramp(790),"Start 50% (quadratisch) -> ab Frame 750");
+  CHECK(out[2249]==ramp(2999) && out[2250]==0,"ohne Laenge bis zum Ende, ohne Ausblenden");
+  PLAY(0.f,64,1000);  /* len = (64/127)^2 * 3000 = 761 */
+  CHECK(out[690]==ramp(690),"Laenge: vor dem Ausblenden unveraendert");
+  CHECK(out[740]==(int16_t)((ramp(740)*21)/64),"Laenge: Ausblenden ueber 64 Frames vor dem Ende");
+  { int s=1; for(int i=761;i<1000;i++) if(out[i]) s=0; CHECK(s,"Laenge 64 -> Ende bei Frame 761, danach Stille"); }
+  PLAY(0.9f,127,3200); /* start 2430, len = ganzes Sample -> Ende = Sampleende */
+  { int st=(int)(0.9f*0.9f*3000.f); CHECK(out[100]==ramp(st+100) && out[3000-st-1]==ramp(2999) && out[3000-st]==0,"Start+Laenge ueber das Ende -> Ende des Samples"); }
+  PLAY(1.f,0,64); CHECK(out[1]==0,"Start 100% -> letzter Frame, kein Lesen hinter dem Sample");
+  PLAY(NAN,0,64); CHECK(out[40]==ramp(40),"PWM NaN -> Start 0");
+  PLAY(2.5f,0,64); CHECK(out[1]==0,"PWM > 1 (Modulation) begrenzt");
+  o=mk(0); o.smpLen=1; o.freq=MidiNoteFrequencies[60]; osc_setBaseNote(&o,60); { int16_t buf[32]; int k=0; while(k<128){ osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0); for(int i=0;i<32;i++) out[k++]=buf[i];} }
+  CHECK(out[63]!=0 || out[62]!=0,"Mindestlaenge 64 Frames"); CHECK(out[64]==0,"... und dann Ende");
+  /* FM-Pfad: gleicher Start */
+  o=mk(0); o.freq=MidiNoteFrequencies[60]; osc_setBaseNote(&o,60); o.fmMod=1.f;
+  { int16_t buf[32],mod[32]={0}; for(int b=0;b<2;b++){ osc_calcUserSampleFreq(&o); calcNextOscSampleFmBlock(&o,mod,buf,32,1.f,0.5f);} CHECK(buf[31]==ramp(750+63),"FM-Pfad: Start 50% ebenso"); }
+  /* Wellenform-Wechsel waehrend Wiedergabe: Ende eines anderen Samples */
+  o=mk(1); o.smpLen=0; osc_setBaseNote(&o,60); o.freq=MidiNoteFrequencies[60]; { int16_t buf[32]; osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0.f); o.waveform=NUM_OSC_WAVEFORMS; o.smpEnd=999999; calcNextOscSampleBlock(&o,buf,32,1.f,0.f); CHECK(1,"veraltetes Ende wird begrenzt (kein Absturz)"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

@@ -707,6 +707,14 @@ void parameterArray_init()
 	parameterArray[PAR_PWM_6].ptr 			= &voiceSlots[5].u.hat.pwm;
 	parameterArray[PAR_PWM_6].type 			= TYPE_FLT;
 
+	//MOD: sample length (the PWM value is the sample start)
+	parameterArray[PAR_SMP_LEN_1].ptr 		= &voiceSlots[0].u.c.osc.smpLen;
+	parameterArray[PAR_SMP_LEN_1].type 		= TYPE_UINT8;
+	parameterArray[PAR_SMP_LEN_2].ptr 		= &voiceSlots[1].u.c.osc.smpLen;
+	parameterArray[PAR_SMP_LEN_2].type 		= TYPE_UINT8;
+	parameterArray[PAR_SMP_LEN_3].ptr 		= &voiceSlots[2].u.c.osc.smpLen;
+	parameterArray[PAR_SMP_LEN_3].type 		= TYPE_UINT8;
+
 	parameterArray[PAR_FX_TYPE].ptr 		= &fxBus.fxType;
 	parameterArray[PAR_FX_TYPE].type 		= TYPE_UINT8;
 	parameterArray[PAR_FX_ROUTING].ptr 		= &fxBus.audioRouting;

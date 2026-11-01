@@ -60,6 +60,9 @@ typedef struct OscStruct
 	uint8_t baseNote;		// the last played midi note
 	uint32_t startPhase;		// the OSC is reset to this phase on retrigger
 	uint32_t smpFrac;		// MOD: sample playback - fractional position (17 bit); phase = integer frame
+	uint32_t smpStart;		// MOD: first frame of the current playback (start parameter = PWM)
+	uint32_t smpEnd;		// MOD: frame after the last one (length parameter)
+	uint8_t  smpLen;		// MOD: length parameter 0..127, 0 = to the end of the sample
 } OscInfo;
 //-----------------------------------------------------------
 
@@ -110,9 +113,9 @@ void calcPwmBlock(OscInfo* osc, int16_t* buf, uint8_t size ,const float gain, co
 //-----------------------------------------------------------
 //void calcSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain);
 //-----------------------------------------------------------
-void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain);
+void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm);
 //-----------------------------------------------------------
-void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain);
+void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain, const float pwm);
 //-----------------------------------------------------------
 //int16_t calcSampleOsc(OscInfo* osc);
 //-----------------------------------------------------------
