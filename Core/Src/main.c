@@ -355,7 +355,7 @@ int main(void)
 #else
 	//print boot up message
 lcd_clear();
-lcd_string("OE+Samples s11"); // modified OpenElixir-02, not official
+lcd_string("OE+Samples s15"); // modified OpenElixir-02, not official
 //goto 2nd line
 lcd_setcursor(0,2);
 lcd_string("Version");

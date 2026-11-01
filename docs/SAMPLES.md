@@ -135,6 +135,13 @@ from. One step further is "Change Project" as before. Click the INIT row for its
 - Files: `INIT.SND` in the project folder (`/projNN/INIT.SND`) and in the top folder of the card
   (global). They are kit files; the kit lists ignore them.
 
+## Why only 512 KB
+
+The chip reports 1 MB flash (start screen "Flash: 1024 KB"). The LXR02Open port uses sectors 8-11
+(above 1 MB) for samples. An experimental mode tried that here: on the tested LXR-02 a read above
+1 MB stopped the firmware (display dark after the start screen), so the area is not usable on this
+unit and the mode was removed again.
+
 ## Test status
 
 Tested on the device: sample import and playback, voice INIT. Start/length, the skipping of files
