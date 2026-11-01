@@ -474,22 +474,28 @@ static void sf_capSeconds(char* out)
 }
 /*----------------------------------------------------------------------------*/
 /* big flash mode: requested by the file /SAMPLES/BIGFLASH */
-/* any file in /SAMPLES whose name starts with BIGFLASH (BIGFLASH, BIGFLASH.TXT, ...) */
-static uint8_t sf_bigRequested(void)
+/* a file or folder whose name starts with BIGFLAS (BIGFLASH, BIGFLASH.TXT,
+ * the short name BIGFLA~1 of a longer name, ...) in /SAMPLES or in the top
+ * folder of the card */
+static uint8_t sf_bigInDir(const char* folder)
 {
 	DIR dir;
 	FILINFO fno;
 	uint8_t found = 0;
-	if(f_opendir(&dir, SF_FOLDER) != FR_OK) return 0;
+	if(f_opendir(&dir, folder) != FR_OK) return 0;
 	while(!found && f_readdir(&dir, &fno) == FR_OK && fno.fname[0])
 	{
-		const char* k = "BIGFLASH";
+		const char* k = "BIGFLA";
 		uint8_t i = 0;
 		while(k[i] && (fno.fname[i] == k[i] || fno.fname[i] == k[i] + 32)) i++;
-		found = (k[i] == 0) && !(fno.fattrib & AM_DIR);
+		found = (k[i] == 0);
 	}
 	f_closedir(&dir);
 	return found;
+}
+static uint8_t sf_bigRequested(void)
+{
+	return sf_bigInDir(SF_FOLDER) || sf_bigInDir("/");
 }
 /* why the upper megabyte can't be used (shown on the LCD), "" if it can */
 static char sf_bigReason[17];
