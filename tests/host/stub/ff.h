@@ -15,4 +15,5 @@ FRESULT f_open(FIL*, const char*, BYTE); FRESULT f_close(FIL*);
 FRESULT f_read(FIL*, void*, UINT, UINT*); FRESULT f_lseek(FIL*, FSIZE_t);
 FSIZE_t f_tell_impl(FIL*);
 #define f_tell(fp) f_tell_impl(fp)
+FRESULT f_stat(const char*, FILINFO*);
 FRESULT f_opendir(DIR*, const char*); FRESULT f_readdir(DIR*, FILINFO*); FRESULT f_closedir(DIR*);
