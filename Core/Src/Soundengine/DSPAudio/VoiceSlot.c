@@ -92,11 +92,47 @@ void slot_setEngine(const uint8_t slot, const uint8_t engine)
 	__set_PRIMASK(primask);
 }
 //---------------------------------------------------
+//---------------------------------------------------
+//MOD: choke group
+#define SLOT_CHOKE_FADE		96		//samples (~2 ms)
+#define SLOT_CHOKE_OFF		(-1)	//not choked
+uint8_t slot_chokeGroup = 0;
+static int16_t slot_choke[NUM_VOICE_SLOTS] = { SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF };
+
+void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size)
+{
+	int16_t c = slot_choke[slot];
+	if(c == SLOT_CHOKE_OFF)
+		return;
+	for(uint8_t i=0;i<size;i++)
+	{
+		buf[i] = (int16_t)(((int32_t)buf[i] * c) / SLOT_CHOKE_FADE);
+		if(c > 0) c--;
+	}
+	slot_choke[slot] = c;
+}
+static void slot_chokeOthers(const uint8_t track, const uint8_t slot)
+{
+	slot_choke[slot] = SLOT_CHOKE_OFF;		//the triggered slot plays again
+	if(!(slot_chokeGroup & (1u << track)))
+		return;
+	for(uint8_t t=0;t<7;t++)
+	{
+		const uint8_t other = t < NUM_VOICE_SLOTS ? t : NUM_VOICE_SLOTS-1;
+		if(t == track || other == slot || !(slot_chokeGroup & (1u << t)))
+			continue;		//tracks 6/7 share a slot: they cut each other anyway
+		if(slot_choke[other] == SLOT_CHOKE_OFF)
+			slot_choke[other] = SLOT_CHOKE_FADE;
+	}
+}
+//---------------------------------------------------
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 {
 	const uint8_t slot = track < NUM_VOICE_SLOTS ? track : NUM_VOICE_SLOTS-1;
 	const uint8_t second = track >= NUM_VOICE_SLOTS;	//track 7
 	VoiceSlot* s = &voiceSlots[slot];
+
+	slot_chokeOthers(track, slot);	//MOD
 
 	switch(s->engine)
 	{

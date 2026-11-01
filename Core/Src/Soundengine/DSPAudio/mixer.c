@@ -639,6 +639,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		meterStart = DWT->CYCCNT;
 #endif
 		mixer_calcVoiceSyncBlock(&voiceSlots[v], sampleData);
+		slot_applyChoke(v, sampleData, OUTPUT_DMA_SIZE);	//MOD: choke group
 #if CPU_METER
 		cpuMeter_section(CPU_SECTION_VOICE1+v, meterStart);
 #endif

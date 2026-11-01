@@ -267,6 +267,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FIL_RESO, CAT_DJ_FILTER, LONG_DJ_RESO},/*TEXT_DJ_RESO*/
 		{SHORT_SMP_LENGTH, CAT_OSC, LONG_SMP_LENGTH},/*TEXT_SMP_LENGTH*/
 		{SHORT_SMP_START, CAT_OSC, LONG_SMP_START},/*TEXT_SMP_START*/
+		{SHORT_CHOKE, CAT_VELO_EG, LONG_CHOKE},/*TEXT_CHOKE*/
 
 
 };
@@ -502,7 +503,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 	    /*PAR_UNUSED4*/		DTYPE_NOTE_NAME,
 	    /*PAR_SMP_LEN_3*/	DTYPE_0B127,
 	    /*PAR_UNUSED6*/		DTYPE_NOTE_NAME,
-	    /*PAR_UNUSED7*/		DTYPE_NOTE_NAME,
+	    /*PAR_CHOKE_GROUP*/	DTYPE_0B127,
 
 		/*PAR_PWM_1,*/			DTYPE_0B127,
 		/*PAR_PWM_2,*/			DTYPE_0B127,
@@ -1914,6 +1915,13 @@ void menu_repaintGeneric()
 			{
 				//MOD: sample start/length in ms
 			}
+			else if(parNr == PAR_CHOKE_GROUP)
+			{
+				//MOD: on/off for the active voice, the group's tracks on the left
+				for(uint8_t t=0;t<7;t++)
+					editDisplayBuffer[1][t] = (curParmVal & (1u << t)) ? (char)('1' + t) : '-';
+				memcpy(&editDisplayBuffer[1][13], (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
+			}
 			else if(menu_sampleWaveEditText(parNr, curParmVal))
 			{
 				//MOD: file name of the selected sample
@@ -2069,6 +2077,9 @@ void menu_repaintGeneric()
 			//convert the parameter uint8_t value to a 3 place char
 			if(parNr==PAR_NONE) {
 				memcpy(valueAsText,menuText_blank,3);
+			} else if(parNr == PAR_CHOKE_GROUP) {
+				//MOD: is the active voice in the choke group
+				memcpy(valueAsText, (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
 			} else if(menu_sampleValueText(parNr, curParmVal, valueAsText)) {
 				//MOD: sample start/length in ms
 			} else { //not if(parNr==PAR_NONE)
@@ -3323,6 +3334,17 @@ static void menu_encoderChangeParameter(int8_t inc)
 	uint16_t paramNr		= pgm_read_word(&menu_getPage(menu_activePage,activePage)->bot1 + activeParameter);
 	//uint8_t *paramValue = &mainParameters[paramNr];
 	uint8_t *paramValue;
+
+	//MOD: the choke group shows/sets the bit of the active voice (on/off)
+	if(paramNr == PAR_CHOKE_GROUP)
+	{
+		const uint8_t bit = (uint8_t)(1u << (menu_activeVoice % 7u));
+		if(inc > 0)			activeParameters[paramNr] |= bit;
+		else if(inc < 0)	activeParameters[paramNr] &= (uint8_t)~bit;
+		activeParameters[paramNr] &= 0x7F;
+		frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),activeParameters[paramNr]);
+		return;
+	}
 
 	paramValue = &activeParameters[paramNr];
 

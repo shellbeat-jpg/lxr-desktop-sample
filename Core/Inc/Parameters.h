@@ -438,6 +438,9 @@ extern uint8_t parameterOrder[END_OF_SOUND_PARAMETERS];
 #define PAR_SMP_LEN_1	PAR_UNUSED_1
 #define PAR_SMP_LEN_2	PAR_UNUSED_2
 #define PAR_SMP_LEN_3	PAR_UNUSED_5
+//MOD: choke group of the kit, bit n = track n+1 (7 tracks). A track in the
+//group cuts the other tracks of the group when it is triggered.
+#define PAR_CHOKE_GROUP	PAR_UNUSED_7
 
 
 #endif /* PARAMETERS_H_ */

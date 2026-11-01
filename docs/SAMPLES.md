@@ -99,6 +99,18 @@ waveforms:
 - A retrigger cuts the sample that still plays with a short fade (about 1 ms) instead of a click.
 - With a built-in waveform as base the modulation works as before.
 
+## Choke groups
+
+One choke group per kit: a track in the group cuts the other tracks of the group when it is
+triggered (e.g. several hi-hat samples on different voices, an open hat cut by a closed one).
+
+- AEG page of each voice: **`chk` on/off** puts this track into the group or takes it out. The edit
+  view shows all tracks of the group on the left (e.g. `1--4-6-`).
+- The cut is a fade of about 2 ms; a choked track stays silent until it is triggered again.
+- Tracks 6 and 7 (CL HH / OP HH) share one voice and cut each other anyway.
+- Stored in the kit (parameter slot of the former 7th MIDI note setting). Kits without it: no
+  choke group.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:

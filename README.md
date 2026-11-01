@@ -85,6 +85,7 @@ User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
   - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").
   - Both are shown in ms, use a quadratic scale and are stored in kits. Short fades avoid clicks
     when the start or the length cuts the sample.
+- **Choke group.** AEG page `chk`: the tracks in the group cut each other when triggered.
 - **Voice INIT templates.** In the voice load menu (hold LOAD + step button 1-7) an "INIT" row sits
   between "Change Project" and kit 0. Clicking it opens: Load INIT, Save to Project, Save to Global,
   Del Project INIT, Del Global INIT.

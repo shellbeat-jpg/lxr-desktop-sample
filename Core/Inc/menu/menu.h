@@ -278,6 +278,7 @@ enum NamesEnum
 	TEXT_DJ_RESO,
 	TEXT_SMP_LENGTH,	//MOD: sample length
 	TEXT_SMP_START,		//MOD: the PWM label while a sample is selected
+	TEXT_CHOKE,			//MOD: the active voice is in the kit's choke group
 
 
 	NUM_NAMES
@@ -391,7 +392,8 @@ enum shortNamesEnum
 	SHORT_LIMITER,
 	SHORT_DJ_FILTER,
 	SHORT_SMP_LENGTH,
-	SHORT_SMP_START
+	SHORT_SMP_START,
+	SHORT_CHOKE
 
 	
 };
@@ -526,7 +528,8 @@ enum longNamesEnum
 	LONG_DJ_FILTER,
 	LONG_DJ_RESO,
 	LONG_SMP_LENGTH,
-	LONG_SMP_START
+	LONG_SMP_START,
+	LONG_CHOKE
 	
 };
 

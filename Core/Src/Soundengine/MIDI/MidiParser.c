@@ -1222,6 +1222,11 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 				voiceSlots[2].u.c.osc.smpLen = value.itg;
 				break;
 
+			case PAR_CHOKE_GROUP-128:	//MOD: choke group of the kit
+				if(!isFloatModulator)
+					slot_chokeGroup = value.itg & 0x7F;
+				break;
+
 			case PAR_SLOT_ENGINE-128:
 				//command, not a sound parameter: value = slot*4 + engine. Only from
 				//a received NRPN (midiParser_nrpnHandler): kit loads send this byte

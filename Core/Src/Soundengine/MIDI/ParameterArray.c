@@ -714,6 +714,8 @@ void parameterArray_init()
 	parameterArray[PAR_SMP_LEN_2].type 		= TYPE_UINT8;
 	parameterArray[PAR_SMP_LEN_3].ptr 		= &voiceSlots[2].u.c.osc.smpLen;
 	parameterArray[PAR_SMP_LEN_3].type 		= TYPE_UINT8;
+	//MOD: choke group (a bit mask, not modulated)
+	parameterArray[PAR_CHOKE_GROUP].ptr 	= NULL;
 
 	parameterArray[PAR_FX_TYPE].ptr 		= &fxBus.fxType;
 	parameterArray[PAR_FX_TYPE].type 		= TYPE_UINT8;

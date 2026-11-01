@@ -74,6 +74,12 @@ void slot_init(void);
 //smoothing are kept); its sound parameters have to be sent again afterwards.
 void slot_setEngine(const uint8_t slot, const uint8_t engine);
 
+//MOD: choke group (PAR_CHOKE_GROUP): bit n = track n. A triggered track of the
+//group fades out the slots of the other tracks of the group (~2 ms) and keeps
+//them silent until they are triggered again.
+extern uint8_t slot_chokeGroup;
+void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size);
+
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);
 
