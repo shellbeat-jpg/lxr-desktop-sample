@@ -18,7 +18,7 @@ The samples stay in the internal flash: they also play without SD card.
 |---|---|
 | Format | WAV, 16-bit PCM, mono or stereo (stereo is mixed to mono), any sample rate |
 | File names | 8.3 format, e.g. `01KICK.WAV` (long names are not recognized) |
-| Number | up to 31 (both folders together); slots s1..s31 follow the order of the names, numbers by value (`2KICK` before `10KICK`), letters without case |
+| Number | up to 31 (both folders together); slots S1..S31 follow the order of the names, numbers by value (`2KICK` before `10KICK`), letters without case |
 | Total length | 511 KB in flash = about 5.9 s mono at 44.1 kHz (11.9 s at 22.05 kHz); with the 1.5 MB mode (`BIGFLASH`, see below) about 17.8 s (35.6 s at 22.05 kHz); a stereo file counts half its size |
 | Ignored | names starting with `.` or `_` (e.g. the `._` files of macOS) |
 
@@ -53,13 +53,13 @@ the manufacturer, no specified data retention). Use it at your own risk:
 
 ## Playing samples
 
-On the OSC page of a voice, turn **Waveform** past Sin, Tri, Saw, Rec, Noi and PWM: s1..sN follow.
+On the OSC page of a voice, turn **Waveform** past Sin, Tri, Saw, Rec, Noi and PWM: S1..SN follow.
 
 - **Coarse 60** plays the sample at its original pitch (the sample rate is taken into account).
 - One-shot: the sample plays once per trigger; the AEG decay can end it earlier.
 - FM from the mod oscillator works as for the other waveforms.
 - Clicking into the waveform parameter (edit view) shows the file name, `L` for a loop and the
-  slot, e.g. `KICK01        s3`.
+  slot, e.g. `KICK01        S3`.
 - Works in every voice whose engine has a main oscillator. For snare, cymbal or hi-hat tracks give
   the voice the drum engine first (SHIFT + KIT, see [ENGINES.md](ENGINES.md)) if needed.
 
@@ -98,24 +98,24 @@ When the waveform of a voice is a sample, modulating the waveform (LFO or veloci
 the waveform as target) selects within a range of samples instead of switching to the built-in
 waveforms:
 
-- **Target:** `wav` = the waveform of the main oscillator (OSC page). The other waveform targets
-  are shown as `fwv` (FM/mod oscillator) and `cwv` (transient/click) and don't select samples.
-- **The range starts at the selected waveform** (OSC page `wav`) and covers **as many further
-  samples as the modulation amount**: LFO page `mod`, velocity modulation `amt` (amount 4 with s5
-  selected: s5..s9). Amount 0 = always the selected sample. The range starts at the waveform of the
-  target voice (LFO `voi`).
+- **Target:** `WAV` = the waveform of the main oscillator (OSC page). The other waveform targets
+  are shown as `FWV` (FM/mod oscillator) and `CWV` (transient/click) and don't select samples.
+- **The range starts at the selected waveform** (OSC page `WAV`) and covers **as many further
+  samples as the modulation amount**: LFO page `MOD`, velocity modulation `AMT` (amount 4 with S5
+  selected: S5..S9). Amount 0 = always the selected sample. The range starts at the waveform of the
+  target voice (LFO `VOI`).
 - The LFO or velocity value is quantized evenly onto the range: with 5 samples each fifth of the
   velocity (or of the LFO swing) selects one sample. The range ends at the last stored sample.
 - Example hi-hats only: name the hat files so they follow each other (`5HAT_A` ... `9HAT_E`), select
-  s5 as waveform and set the amount to 4.
+  S5 as waveform and set the amount to 4.
 - Velocity layers: soft to loud versions in a row, the softest selected, amount = number of layers - 1.
 - **The sample is chosen at the trigger** and kept until the next trigger: modulation in between
   doesn't switch samples in the middle of a hit.
-- **Round robin in order:** LFO waveform `cyc` (cycle) steps through the range, one sample per
-  trigger (s5, s6, ... s9, s5, ...). It counts the triggers of the voice set with `rtg`, with
-  `rtg` off those of the LFO's own voice. Rate and sync don't matter for `cyc`.
-- Random round robin: LFO waveform `rnd`; with `rtg` on the voice the value stays the same for
-  every hit (the LFO restarts), so leave `rtg` off and use a rate faster than the hits.
+- **Round robin in order:** LFO waveform `CYC` (cycle) steps through the range, one sample per
+  trigger (S5, S6, ... S9, S5, ...). It counts the triggers of the voice set with `RTG`, with
+  `RTG` off those of the LFO's own voice. Rate and sync don't matter for `CYC`.
+- Random round robin: LFO waveform `RND`; with `RTG` on the voice the value stays the same for
+  every hit (the LFO restarts), so leave `RTG` off and use a rate faster than the hits.
 - A retrigger cuts the sample that still plays with a short fade (about 1 ms) instead of a click.
 - With a built-in waveform as base the modulation works as before.
 
@@ -124,7 +124,7 @@ waveforms:
 One choke group per kit: a track in the group cuts the other tracks of the group when it is
 triggered (e.g. several hi-hat samples on different voices, an open hat cut by a closed one).
 
-- AEG page of each voice: **`chk` on/off** puts this track into the group or takes it out. The edit
+- AEG page of each voice: **`CHK` on/off** puts this track into the group or takes it out. The edit
   view shows all tracks of the group on the left (e.g. `1--4-6-`).
 - The cut is a fade of about 2 ms; a choked track stays silent until it is triggered again.
 - Tracks 6 and 7 (CL HH / OP HH) share one voice and cut each other anyway.
@@ -133,41 +133,41 @@ triggered (e.g. several hi-hat samples on different voices, an open hat cut by a
 
 ## Voice morph
 
-Morphs the sound of one voice towards another voice of the active kit, like the kit morph (`mrp`)
-but between two voices. Performance page, after `res` of the DJ filter (scroll on with the encoder):
+Morphs the sound of one voice towards another voice of the active kit, like the kit morph (`MRP`)
+but between two voices. Performance page, after `RES` of the DJ filter (scroll on with the encoder):
 
 | Display | Function |
 |---|---|
-| `vmv` | the voice pair: `off`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
-| `vmo` | amount 0..127: 0 = the source as set, 127 = the target's values |
-| `vsw` | switch point of the source voice, 1..127 (default 64): from this `vmo` value on, switch-like values are the target's; one value per voice (edit view `Voice 1   64`) |
+| `VMV` | the voice pair: `OFF`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
+| `VMO` | amount 0..127: 0 = the source as set, 127 = the target's values |
+| `VSW` | switch point of the source voice, 1..127 (default 64): from this `VMO` value on, switch-like values are the target's; one value per voice (edit view `Voice 1   64`) |
 
 - Every sound parameter of the source voice moves towards the same parameter of the target voice
   (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform/sample, filter
-  type, on/off) change at `vsw` (default 64); level jumps there come from the sample or filter type
+  type, on/off) change at `VSW` (default 64); level jumps there come from the sample or filter type
   changing at once.
 - Engine specific parameters only morph if both voices run the same engine; the audio output
   routing never morphs.
-- The settings of the voices stay as set: `vmo` = 0 or `vmv` = off gives the source its own sound
+- The settings of the voices stay as set: `VMO` = 0 or `VMV` = off gives the source its own sound
   back. Editing a parameter of either voice keeps the morph.
-- `vmv` and `vmo` are not saved; after loading a kit turn `vmo` once to apply the morph again. Not a
-  modulation target. The six `vsw` values are kept with the global settings (SAVE → Global or a
+- `VMV` and `VMO` are not saved; after loading a kit turn `VMO` once to apply the morph again. Not a
+  modulation target. The six `VSW` values are kept with the global settings (SAVE → Global or a
   project save).
 
 ## Performance and sequencer additions (1.2.4, in test)
 
 ### Mod wheel → kit morph
 
-The mod wheel (MIDI CC 1) on the **global MIDI channel** sets the kit morph (`mrp` on the
+The mod wheel (MIDI CC 1) on the **global MIDI channel** sets the kit morph (`MRP` on the
 performance page): 0 = the active kit, 127 = the morph kit. CC 1 had no function before.
 
 ### Morph target quick access
 
 In the edit view of a sound parameter (click the encoder), **hold SHIFT**: the top row shows
-`Morph>` and the value is the one of the **morph kit** (the target of `mrp`); turning the encoder
+`Morph>` and the value is the one of the **morph kit** (the target of `MRP`); turning the encoder
 changes it there. Release SHIFT to see and edit the active kit's value again.
 
-- With `mrp` above 0 the sound follows the change right away.
+- With `MRP` above 0 the sound follows the change right away.
 - The change is in the morph kit's copy in memory: a project save (Save → Project / All) stores it in
   that kit. Saving the active kit into the same slot overwrites it.
 - Not for LFO/velocity/automation targets, the audio outputs, the choke group and engine specific
@@ -177,48 +177,48 @@ changes it there. Release SHIFT to see and edit the active kit's value again.
 
 ### Voices of the kit morph
 
-Global settings (SHIFT + step button 12, CONFIG), second page: **`mrv`** = kit morph on/off for the
+Global settings (SHIFT + step button 12, CONFIG), second page: **`MRV`** = kit morph on/off for the
 active voice; select the voice with its voice button while the page is shown. The edit view shows
 the morphed voices on the left (e.g. `----56`: only snare/cymbal and hi-hats morph). Voices that
-are off keep their own sound at every `mrp` value (also with the mod wheel). Kept after a restart
+are off keep their own sound at every `MRP` value (also with the mod wheel). Kept after a restart
 when the global settings are saved (SAVE → Global); default: all voices morph.
 
 ### Velocity 0 = automation only
 
 A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its step automation
-(`p1`/`p2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
+(`P1`/`P2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
 sound no longer do.
 
 ### LFO range display
 
-The edit view of an LFO's `mod` shows on the left the range its target moves in, e.g. `21..127`:
-the target parameter's value ± `mod`, limited to 0..127 (pitch-like values in their own units,
-e.g. `-12..12`). To modulate between *a* and *b*, set the target parameter to (a+b)/2 and `mod` to
+The edit view of an LFO's `MOD` shows on the left the range its target moves in, e.g. `21..127`:
+the target parameter's value ± `MOD`, limited to 0..127 (pitch-like values in their own units,
+e.g. `-12..12`). To modulate between *a* and *b*, set the target parameter to (a+b)/2 and `MOD` to
 (b−a)/2. No range for targets without a number scale (waveform, filter type ...).
 
 ### Instant pattern switching
 
-Global settings (SHIFT + step button 12, CONFIG), second page: **`ips`** (Pattern Instant)
+Global settings (SHIFT + step button 12, CONFIG), second page: **`IPS`** (Pattern Instant)
 on/off, kept after a restart when the global settings are saved (SAVE → Global). On: a pattern selected by hand starts on the **next step at
 the same position** instead of at the end of the playing pattern. Automatic changes (pattern chains,
 songs) still happen at the end of the pattern. Tracks shorter in the new pattern wrap at their length.
 
 ### LFO waveforms
 
-New after `cyc`:
+New after `CYC`:
 
 | Display | Waveform |
 |---|---|
-| `xtr` | exponential triangle (free-running) |
-| `si1` `tr1` `su1` `sd1` `sq1` `xu1` `xd1` `xt1` | one-shot sine, triangle, saw up, saw down, square, exp. up, exp. down, exp. triangle |
-| `rn1` | one-shot random: a new random value at every trigger, held until the next one |
+| `XTR` | exponential triangle (free-running) |
+| `SI1` `TR1` `SU1` `SD1` `SQ1` `XU1` `XD1` `XT1` | one-shot sine, triangle, saw up, saw down, square, exp. up, exp. down, exp. triangle |
+| `RN1` | one-shot random: a new random value at every trigger, held until the next one |
 
 - One-shots run **one cycle per trigger** and then hold their end value. They start with a trigger of
-  the voice set with `rtg`; with `rtg` off with a trigger of the LFO's own voice.
-- **`ofs` is the delay** before the cycle starts (a fraction of one cycle: 64 ≈ half a cycle). The
+  the voice set with `RTG`; with `RTG` off with a trigger of the LFO's own voice.
+- **`OFS` is the delay** before the cycle starts (a fraction of one cycle: 64 ≈ half a cycle). The
   value stays at the start during the delay.
-- `frq`/`snc` set the length of the cycle.
-- `sq1` is 1 (high) in the first half of the cycle and 0 in the second half, before the start and
+- `FRQ`/`SNC` set the length of the cycle.
+- `SQ1` is 1 (high) in the first half of the cycle and 0 in the second half, before the start and
   after the end: a gate after each trigger.
 
 ## Voice INIT
@@ -255,9 +255,9 @@ relies on the verify after writing.
 ## Test status
 
 Tested on the device: sample import and playback, the skipping of invalid files, start and length
-(`sta`/`len`), loops, the modulated sample selection (`rnd` and `cyc`), the choke group (`chk`),
+(`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
-samples above 1 MB play correctly). Of the additions of 1.2.4, the morph target access (SHIFT) and `mrv` are tried on the device; the
+samples above 1 MB play correctly). Of the additions of 1.2.4, the morph target access (SHIFT) and `MRV` are tried on the device; the
 mod wheel, SHIFT + click, velocity 0, instant pattern switching, the LFO range display and the new
 LFO waveforms are not tested on the device yet. Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.

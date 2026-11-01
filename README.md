@@ -42,9 +42,9 @@ Details for both: [docs/ENGINES.md](docs/ENGINES.md).
 no longer hard-clip. Levels that didn't clip before are unchanged. Config menu "lim" (2nd page)
 switches it off for exactly the stock mix.
 
-**DJ filter.** A filter on the final mix of all outputs, on the performance page: `dj` turned left of
+**DJ filter.** A filter on the final mix of all outputs, on the performance page: `DJ` turned left of
 the center is a low-pass (down to 40 Hz), right of it a high-pass (up to 8 kHz), around the center it
-is off; `res` sets the resonance. It isn't saved and starts off; while off, the sound is unchanged.
+is off; `RES` sets the resonance. It isn't saved and starts off; while off, the sound is unchanged.
 
 **Uninterrupted playback.** Turning knobs, working in the menus, loading and saving kits (also
 from and to other projects on the SD card) and saving projects don't interrupt the audio or the
@@ -69,7 +69,7 @@ the display (as in the LXR manual). The start screen shows "OE02-Samples" and th
 - If the folder changed, the display shows `Import x/y`, then `Import+Verify OK`. The start screen
   then shows `Samples: N` and the memory used/available in seconds (`Used 4.2/5.9s`).
 - Files: 16-bit PCM WAV, mono or stereo (mixed to mono), any sample rate (the pitch is corrected),
-  8.3 names such as `01KICK.WAV`. Up to **31** files; slots s1..s31 follow the name order with numbers
+  8.3 names such as `01KICK.WAV`. Up to **31** files; slots S1..S31 follow the name order with numbers
   by value (`2KICK` before `10KICK`).
 - Total length about **5.9 s** mono at 44.1 kHz (11.9 s at 22.05 kHz), with the 1.5 MB mode below
   about **17.8 s** (35.6 s at 22.05 kHz). Files that are not 16 bit (`Not 16bit, skip:`) or no longer
@@ -86,33 +86,33 @@ the display (as in the LXR manual). The start screen shows "OE02-Samples" and th
 
 | Display | Function |
 |---|---|
-| `wav` | waveform: after `sin tri saw rec noi pwm` come **s1..sN**. Click into it: file name, `L` for a loop, slot number |
-| `coa` | coarse tune: **60 = original pitch**, ±12 = one octave |
-| `sta` | **start** (the `pwm` knob while a sample is selected), shown in ms, all voices |
-| `len` | **length**, 5th parameter (second half of the page), drum 1-3, `all` = to the end |
+| `WAV` | waveform: after `SIN TRI SAW REC NOI PWM` come **S1..SN**. Click into it: file name, `L` for a loop, slot number |
+| `COA` | coarse tune: **60 = original pitch**, ±12 = one octave |
+| `STA` | **start** (the `PWM` knob while a sample is selected), shown in ms, all voices |
+| `LEN` | **length**, 5th parameter (second half of the page), drum 1-3, `ALL` = to the end |
 
-- Samples play one-shot; the AEG `dec` ends them earlier. Use a long decay for long samples.
-- `sta` and `len` use a quadratic scale (fine steps at the beginning) and are stored in the kit.
+- Samples play one-shot; the AEG `DEC` ends them earlier. Use a long decay for long samples.
+- `STA` and `LEN` use a quadratic scale (fine steps at the beginning) and are stored in the kit.
   Short fades avoid clicks where start or length cut the sample.
-- Every voice whose engine has a main oscillator can play samples (`len` only on the tracks drum
+- Every voice whose engine has a main oscillator can play samples (`LEN` only on the tracks drum
   1-3). The drum engine (SHIFT + KIT) also adds FM on other tracks.
 
 ### 3. Loops
 
-- Files from `SAMPLES/LOOPS` (display `L`) repeat between `sta` and the end of `len` until the AEG
-  `dec` ends the sound; `sta`/`len` are the loop points.
-- The loop point is crossfaded with the audio just before `sta`; with `sta` = 0 a short dip avoids
-  the click. Drum voices have no gate: a long `dec` keeps the loop going.
+- Files from `SAMPLES/LOOPS` (display `L`) repeat between `STA` and the end of `LEN` until the AEG
+  `DEC` ends the sound; `STA`/`LEN` are the loop points.
+- The loop point is crossfaded with the audio just before `STA`; with `STA` = 0 a short dip avoids
+  the click. Drum voices have no gate: a long `DEC` keeps the loop going.
 
 ### 4. Modulated sample selection (round robin, velocity layers)
 
-With a sample as waveform, modulating **`wav`** selects within a range of samples:
+With a sample as waveform, modulating **`WAV`** selects within a range of samples:
 
-- **Range start** = OSC `wav` of the target voice. **Range size** = the modulation amount (LFO `mod`,
-  velocity `amt`) = number of **further** samples. Example: `wav` = s5, `mod` = 4 → s5..s9.
+- **Range start** = OSC `WAV` of the target voice. **Range size** = the modulation amount (LFO `MOD`,
+  velocity `AMT`) = number of **further** samples. Example: `WAV` = S5, `MOD` = 4 → S5..S9.
 - The modulation value is spread evenly over the range; the sample is chosen at the trigger and kept
   until the next one.
-- As target choose **`wav`** (main oscillator). `fwv` (FM oscillator) and `cwv` (transient/click)
+- As target choose **`WAV`** (main oscillator). `FWV` (FM oscillator) and `CWV` (transient/click)
   don't select samples.
 - Name the files of a group so they follow each other (`5HAT_A` ... `9HAT_E`) to use only them.
 
@@ -120,23 +120,23 @@ Recommended settings:
 
 | Goal | Settings |
 |---|---|
-| **Round robin in order** (s5, s6, ... s9, s5, ...) | LFO page: `wav` = **`cyc`**, `mod` = number of samples − 1, `voi` = the voice, `dst` = `wav`, `rtg` = **off** (counts the voice's own triggers) or the voice whose triggers should count. `frq`/`snc` don't matter |
-| **Random sample per hit** | LFO page: `wav` = `rnd`, `mod` = number of samples − 1, `voi`/`dst` as above, **`rtg` = off**, `frq` faster than the hits (with `rtg` on the voice every hit gets the same value) |
-| **Velocity layers** (soft → loud) | OSC `wav` = the softest sample; modulation page: `dst`/`dsr` = `wav`, `amt` = number of layers − 1. Step velocities (`vel`) or played velocity choose the layer |
-| **Fixed sample per step** | step automation (`p1d`/`p2d`) on `wav` sets the sample directly per step |
+| **Round robin in order** (S5, S6, ... S9, S5, ...) | LFO page: `WAV` = **`CYC`**, `MOD` = number of samples − 1, `VOI` = the voice, `DST` = `WAV`, `RTG` = **off** (counts the voice's own triggers) or the voice whose triggers should count. `FRQ`/`SNC` don't matter |
+| **Random sample per hit** | LFO page: `WAV` = `RND`, `MOD` = number of samples − 1, `VOI`/`DST` as above, **`RTG` = off**, `FRQ` faster than the hits (with `RTG` on the voice every hit gets the same value) |
+| **Velocity layers** (soft → loud) | OSC `WAV` = the softest sample; modulation page: `DST` = `WAV`, `AMT` = number of layers − 1. Step velocities (`VEL`) or played velocity choose the layer |
+| **Fixed sample per step** | step automation (`P1D`/`P2D`) on `WAV` sets the sample directly per step |
 
 ### 5a. Voice morph - performance page
 
-- Scroll on after the DJ filter: **`vmv`** selects source and target voice (`1>2` ... `6>5`, `off`),
-  **`vmo`** morphs the source's sound towards the target's (0..127).
-- **`vsw`** sets, per source voice, the amount at which switch-like values (sample, filter type ...)
+- Scroll on after the DJ filter: **`VMV`** selects source and target voice (`1>2` ... `6>5`, `OFF`),
+  **`VMO`** morphs the source's sound towards the target's (0..127).
+- **`VSW`** sets, per source voice, the amount at which switch-like values (sample, filter type ...)
   change (default 64); kept with the global settings (SAVE → Global).
 - All sound parameters are blended (switch-like values change at half), engine specific ones only
   between voices with the same engine. Not saved, not a modulation target.
 
 ### 5. Choke group - AEG page
 
-- **`chk`** = on/off puts the track into the kit's choke group (4th parameter for drum 1-3 and the
+- **`CHK`** = on/off puts the track into the kit's choke group (4th parameter for drum 1-3 and the
   hats, 5th for snare and cymbal). Click into it to see all tracks of the group (e.g. `--3-5--`).
 - A track of the group fades the other tracks of the group out (about 2 ms) when it is triggered;
   they stay silent until their next trigger. CL HH/OP HH cut each other anyway.
@@ -161,27 +161,27 @@ Recommended settings:
 
 ### 7. Performance and sequencer additions (1.2.4, in test)
 
-- **Mod wheel** (CC 1) on the global MIDI channel = kit morph `mrp`.
+- **Mod wheel** (CC 1) on the global MIDI channel = kit morph `MRP`.
 - **Morph target quick access:** in the edit view of a sound parameter, hold **SHIFT**: `Morph>`
   shows and the encoder edits the value of the morph kit; **SHIFT + encoder click** sets it to the
   active value (the parameter then doesn't morph).
-- **Voices of the kit morph:** global settings page 2, `mrv` on/off per voice (voice button selects
+- **Voices of the kit morph:** global settings page 2, `MRV` on/off per voice (voice button selects
   the voice).
-- Global settings (CONFIG pages, e.g. `ips`, `mrv`) apply at once but are only kept after a
+- Global settings (CONFIG pages, e.g. `IPS`, `MRV`) apply at once but are only kept after a
   restart when saved: SAVE, type **Global** (or with a project save, Save → Project).
 - **Velocity 0** on a step = automation only (no trigger, no MIDI note).
-- **LFO range display:** the edit view of `mod` shows the range the target moves in (`21..127`).
-- **Instant pattern switching:** global settings page 2, `ips` on: a pattern selected by hand starts
+- **LFO range display:** the edit view of `MOD` shows the range the target moves in (`21..127`).
+- **Instant pattern switching:** global settings page 2, `IPS` on: a pattern selected by hand starts
   on the next step at the same position.
-- **LFO waveforms:** `xtr` (exp. triangle) and one-shots `si1` `tr1` `su1` `sd1` `sq1` `rn1` `xu1`
-  `xd1` `xt1`: one cycle per trigger, then hold; `ofs` = delay before the start; `rn1` = a new random
-  value per trigger; `sq1` = a gate after each trigger.
+- **LFO waveforms:** `XTR` (exp. triangle) and one-shots `SI1` `TR1` `SU1` `SD1` `SQ1` `RN1` `XU1`
+  `XD1` `XT1`: one cycle per trigger, then hold; `OFS` = delay before the start; `RN1` = a new random
+  value per trigger; `SQ1` = a gate after each trigger.
 
 Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-124-in-test).
 
 ### Compatibility
 
-Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `all`, no choke
+Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `ALL`, no choke
 group). The 1.5 MB mode is opt-in (`BIGFLASH`) because ST doesn't guarantee the flash above 1 MB on this
 chip (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 

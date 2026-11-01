@@ -687,7 +687,7 @@ static uint8_t menu_sampleWaveEditText(const uint16_t parNr, const uint8_t val)
 	if(e)
 		while(k < 8 && e->name[k] && e->name[k] != '.') { name[k] = e->name[k]; k++; }
 	name[k] = 0;
-	snprintf(&editDisplayBuffer[1][0], 17, "%-8s  %c  s%-2u", e ? name : "(empty)", (e && (e->flags & SF_FLAG_LOOP)) ? 'L' : ' ', (unsigned)((slot + 1u) % 100u));
+	snprintf(&editDisplayBuffer[1][0], 17, "%-8s  %c  S%-2u", e ? name : "(empty)", (e && (e->flags & SF_FLAG_LOOP)) ? 'L' : ' ', (unsigned)((slot + 1u) % 100u));
 	return 1;
 }
 //---------------------------------------------------------------
@@ -3223,8 +3223,8 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		else
 		{
 			//sample number: 2 digits (3 wrote one byte past the 3-character buffer)
-			buf[0]='s';
-			numtostrpu_2Bytes(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0] + 1),' '); // MOD: s1 = first file
+			buf[0]='S';
+			numtostrpu_2Bytes(&buf[1],(uint8_t)(curParmVal - waveformNames[0][0] + 1),' '); // MOD: S1 = first file
 			return;
 		}
 		break;
