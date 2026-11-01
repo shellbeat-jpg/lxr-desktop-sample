@@ -140,7 +140,7 @@ but between two voices. Performance page, after `res` of the DJ filter (scroll o
 |---|---|
 | `vmv` | the voice pair: `off`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
 | `vmo` | amount 0..127: 0 = the source as set, 127 = the target's values |
-| `vsw` | switch point 1..127 (default 64): from this `vmo` value on, switch-like values are the target's |
+| `vsw` | switch point of the source voice, 1..127 (default 64): from this `vmo` value on, switch-like values are the target's; one value per voice (edit view `Voice 1   64`) |
 
 - Every sound parameter of the source voice moves towards the same parameter of the target voice
   (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform/sample, filter
@@ -150,7 +150,9 @@ but between two voices. Performance page, after `res` of the DJ filter (scroll o
   routing never morphs.
 - The settings of the voices stay as set: `vmo` = 0 or `vmv` = off gives the source its own sound
   back. Editing a parameter of either voice keeps the morph.
-- Not saved; after loading a kit turn `vmo` once to apply the morph again. Not a modulation target.
+- `vmv` and `vmo` are not saved; after loading a kit turn `vmo` once to apply the morph again. Not a
+  modulation target. The six `vsw` values are kept with the global settings (SAVE → Global or a
+  project save).
 
 ## Performance and sequencer additions (1.2.4, in test)
 

@@ -25,6 +25,10 @@ uint8_t voiceMorph_decode(const uint8_t pair, uint8_t* src, uint8_t* dst);
 //values if the morph is off); call when pair or amount change
 void voiceMorph_apply(void);
 
+//switch point (1..127) of a source slot: from this amount on, switch-like values
+//are the target's (global settings PAR_VMORPH_SW1..6, default 64)
+uint8_t voiceMorph_switchPoint(const uint8_t srcSlot);
+
 //sends the pending values in small steps; call from the main loop
 void voiceMorph_tick(void);
 

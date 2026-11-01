@@ -430,6 +430,15 @@ enum ParamEnums
 
 	PAR_MIXER_LIMITER,					// OpenElixir-02: 1 = 32-bit mix with output limiter, 0 = stock mix (clipping)
 
+	//MOD: voice morph switch point per source voice (1..127; 0 or >127 = the
+	//default 64: older settings/project files have no or padding bytes here)
+	PAR_VMORPH_SW1,
+	PAR_VMORPH_SW2,
+	PAR_VMORPH_SW3,
+	PAR_VMORPH_SW4,
+	PAR_VMORPH_SW5,
+	PAR_VMORPH_SW6,
+
 	NUM_PARAMS	
 };
 
@@ -446,7 +455,7 @@ extern uint8_t parameterOrder[END_OF_SOUND_PARAMETERS];
 //MOD: voice morph on the performance page (non-sound parameters, not saved)
 #define PAR_VMORPH_PAIR		PAR_UNUSED		//0 = off, 1..30: source and target slot
 #define PAR_VMORPH_AMT		PAR_SOM_FREQ	//0..127
-#define PAR_VMORPH_SWITCH	PAR_TRACK_ROTATION	//switch-like values change at this amount (0 = 64); track rotation is unused
+#define PAR_VMORPH_SWITCH	PAR_TRACK_ROTATION	//menu entry `vsw`: shows/edits PAR_VMORPH_SW1+source voice (track rotation is unused)
 #define VMORPH_NUM_PAIRS	30				//6 slots x 5 other slots
 
 

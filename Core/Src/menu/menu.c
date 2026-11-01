@@ -591,6 +591,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 	    /*PAR_MIDI_NOTE7*/		DTYPE_NOTE_NAME,
 		/*PAR_PATTERN_MODE*/ DTYPE_MENU | (MENU_PAT_MODE<<8),
 		/*PAR_MIXER_LIMITER*/	DTYPE_ON_OFF,
+		/*PAR_VMORPH_SW1-6*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -2014,7 +2015,16 @@ void menu_repaintGeneric()
 			}
 			else if(parNr == PAR_VMORPH_SWITCH)
 			{
-				numtostrpu(&editDisplayBuffer[1][13], (uint8_t)(curParmVal ? curParmVal : 64), ' ');	//MOD
+				//MOD: "Voice 1    64" (switch point of the source voice)
+				uint8_t s, d;
+				if(voiceMorph_decode(activeParameters[PAR_VMORPH_PAIR], &s, &d))
+				{
+					snprintf(&editDisplayBuffer[1][0], 9, "Voice %u", (unsigned)(s+1u));
+					editDisplayBuffer[1][7] = ' ';
+					numtostrpu(&editDisplayBuffer[1][13], voiceMorph_switchPoint(s), ' ');
+				}
+				else
+					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
 			else if(parNr == PAR_MORPH_VOICES)
 			{
@@ -2193,7 +2203,10 @@ void menu_repaintGeneric()
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
 			} else if(parNr == PAR_VMORPH_SWITCH) {
-				numtostrpu(valueAsText, (uint8_t)(curParmVal ? curParmVal : 64), ' ');	//MOD
+				//MOD: switch point of the source voice ("---" while the voice morph is off)
+				uint8_t s, d;
+				if(voiceMorph_decode(activeParameters[PAR_VMORPH_PAIR], &s, &d)) numtostrpu(valueAsText, voiceMorph_switchPoint(s), ' ');
+				else memcpy(valueAsText, "---", 3);
 			} else if(parNr == PAR_MORPH_VOICES) {
 				//MOD: is the active voice morphed
 				memcpy(valueAsText, (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
@@ -3471,12 +3484,16 @@ static void menu_encoderChangeParameter(int8_t inc)
 		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
 		return;
 	}
-	//MOD: voice morph switch point 1..127 (0 = the default 64)
+	//MOD: voice morph switch point of the source voice, 1..127
 	if(paramNr == PAR_VMORPH_SWITCH)
 	{
-		int16_t v = (int16_t)(activeParameters[paramNr] ? activeParameters[paramNr] : 64) + inc;
-		activeParameters[paramNr] = (uint8_t)(v < 1 ? 1 : v > 127 ? 127 : v);
-		voiceMorph_apply();
+		uint8_t s, d;
+		if(voiceMorph_decode(activeParameters[PAR_VMORPH_PAIR], &s, &d))
+		{
+			const int16_t v = (int16_t)voiceMorph_switchPoint(s) + inc;
+			activeParameters[PAR_VMORPH_SW1 + s] = (uint8_t)(v < 1 ? 1 : v > 127 ? 127 : v);
+			voiceMorph_apply();
+		}
 		return;
 	}
 	//MOD: kit morph on/off for the active voice (the bit means: left out)

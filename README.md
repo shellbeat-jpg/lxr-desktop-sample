@@ -129,7 +129,8 @@ Recommended settings:
 
 - Scroll on after the DJ filter: **`vmv`** selects source and target voice (`1>2` ... `6>5`, `off`),
   **`vmo`** morphs the source's sound towards the target's (0..127).
-- **`vsw`** sets the amount at which switch-like values (sample, filter type ...) change (default 64).
+- **`vsw`** sets, per source voice, the amount at which switch-like values (sample, filter type ...)
+  change (default 64); kept with the global settings (SAVE → Global).
 - All sound parameters are blended (switch-like values change at half), engine specific ones only
   between voices with the same engine. Not saved, not a modulation target.
 

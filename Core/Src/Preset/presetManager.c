@@ -1053,7 +1053,9 @@ static uint8_t preset_readGlobalData()
 	uint8_t data[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS];
 	if(f_read((FIL*)&SDFile,data,numGlobals,&bytesRead) != FR_OK || bytesRead < numStockGlobals) return 0;
 	memcpy(&activeParameters[PAR_BEGINNING_OF_GLOBALS],data,bytesRead);
-	if(bytesRead < numGlobals)
+	//(MOD: only files that end before the limiter setting; files with it but
+	//without the later settings keep their limiter value)
+	if(bytesRead <= (UINT)(PAR_MIXER_LIMITER - PAR_BEGINNING_OF_GLOBALS))
 	{
 		activeParameters[PAR_MIXER_LIMITER] = 1;
 	}

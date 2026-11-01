@@ -59,12 +59,11 @@ static uint8_t vm_isSwitch(const uint16_t par)
 	return dtype == DTYPE_MENU || dtype == DTYPE_ON_OFF || dtype == DTYPE_0b1;
 }
 //---------------------------------------------------
-//switch-like values change to the target's at this amount (PAR_VMORPH_SWITCH,
-//0 = the default 64)
-static uint8_t vm_switchPoint(void)
+//switch-like values of a source voice change to the target's at this amount
+uint8_t voiceMorph_switchPoint(const uint8_t srcSlot)
 {
-	const uint8_t s = activeParameters[PAR_VMORPH_SWITCH];
-	return s == 0 ? 64u : s > 127u ? 127u : s;
+	const uint8_t s = srcSlot < 6 ? activeParameters[PAR_VMORPH_SW1 + srcSlot] : 0;
+	return (s == 0 || s > 127u) ? 64u : s;
 }
 //---------------------------------------------------
 //entry i of the slot parameter lists: the source's value morphed towards the target's
@@ -82,7 +81,7 @@ static void vm_send_one(const uint8_t src, const uint8_t dst, const uint8_t amou
 	{
 		const uint8_t b = activeParameters[ld[i]];
 		if(vm_isSwitch(p))
-			v = amount >= vm_switchPoint() ? b : a;
+			v = amount >= voiceMorph_switchPoint(src) ? b : a;
 		else
 			v = (uint8_t)(a + (((int16_t)b - (int16_t)a) * (int16_t)amount) / 127);
 	}
