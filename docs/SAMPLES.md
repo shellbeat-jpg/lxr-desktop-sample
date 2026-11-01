@@ -162,7 +162,7 @@ relies on the verify after writing.
 
 ## Test status
 
-Tested on the device: sample import and playback, voice INIT. Start/length, the skipping of files
+Tested on the device: sample import and playback, voice INIT, the experimental 1.5 MB mode (`BIGFLASH`, samples above 1 MB play correctly). Start/length, the skipping of files
 that are invalid or don't fit, loops, the order of the names, 31 slots and the modulated sample
 selection are host-tested (`sh tests/host/run.sh`, Linux, gcc), a full test on the device is
 pending.
