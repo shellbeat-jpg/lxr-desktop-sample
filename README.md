@@ -1,75 +1,63 @@
-# OpenElixir-02
+# OpenElixir-02 + Samples
 
-[![Build](https://github.com/tunefish777/openelixir-02/actions/workflows/build.yml/badge.svg)](https://github.com/tunefish777/openelixir-02/actions/workflows/build.yml)
+An unofficial fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) v1.2 that adds
+user samples to the Erica Synths LXR-02: WAV import from the SD card, sample playback as oscillator
+waveforms, and start/length parameters.
 
-Custom firmware for the Erica Synths LXR-02 drum machine. It is based on the open-source
-[LXR V2 firmware](https://github.com/erica-synths/lxr-desktop-app) by Erica Synths.
+> **Not official firmware.** This fork is not affiliated with or approved by Erica Synths or by the
+> author of OpenElixir-02. You install it at your own risk.
 
-> OpenElixir-02 is not official Erica Synths firmware and is not affiliated with or approved by
-> Erica Synths. You install it at your own risk.
+## Who made what
 
-## Goals
+| Part | Author |
+|---|---|
+| LXR V2 firmware, bootloader, build system | [Erica Synths](https://github.com/erica-synths/lxr-desktop-app) (open-sourced 2026), originally based on the Sonic Potions LXR |
+| OpenElixir-02: voice engines, kit management, uninterrupted audio, limiter, DJ filter, bug fixes | Moritz Waser ([tunefish777/openelixir-02](https://github.com/tunefish777/openelixir-02)) |
+| Sample extension (this fork, `MOD` commits after OpenElixir-02 v1.2) | shellbeat-jpg, written with Claude (Anthropic) |
 
-- **Sound and timing come first.** Nothing has a higher priority than uninterrupted audio and a
-  steady sequencer: menus, the display, the SD card and MIDI all wait for them.
-- **More functionality, fully backwards compatible.** OpenElixir-02 extends what is already there.
-  Kits, patterns and projects from the stock firmware load and play as before, the MIDI
-  implementation is unchanged, and the update works with the stock bootloader.
-- **The stock sound stays available.** Every change to the core sound of the unit comes with a
-  switch in the config menu, so the stock sound is always one setting away.
+Everything that isn't listed under "What this fork adds" below is OpenElixir-02 v1.2 as released by its
+author; its features and documentation are in [README_OPENELIXIR.md](README_OPENELIXIR.md) and
+[docs/](docs/). The changes of this fork can be listed with `git log v1.2..HEAD`.
 
-## Features
+## What this fork adds
 
-**Kit management.** Load full kits and single voices from any project:
-- Hold LOAD and press step button 1-7 (Drum 1 ... OP HH) to load just that voice from any kit of
-  any project into the current kit.
-- "Change Project" below kit 0 in the load and save kit menus loads kits from other projects and
-  saves kits into them.
+- **Sample import at boot.** Up to 16 WAV files from the folder `/SAMPLES` on the SD card are copied
+  into the internal flash (sectors 6 and 7, 512 KB) and verified. The import runs only when the folder
+  content changed (file names and sizes).
+  - 16-bit PCM, mono or stereo (mixed to mono), any sample rate (pitch is corrected).
+  - 8.3 file names (e.g. `01KICK.WAV`); slots s1..s16 follow the alphabetical order.
+  - Total length about 5.9 s mono at 44.1 kHz. Files that are not 16 bit or no longer fit are
+    skipped and reported; the others are imported.
+  - The start screen shows "Samples in flash" with the count.
+  - A firmware update erases the samples: keep `/SAMPLES` on the card, the next boot imports again.
+- **Playback.** After the 6 standard waveforms the waveform menu lists s1..sN. Coarse 60 plays the
+  original pitch, one-shot, linear interpolation, FM from the mod oscillator works as for the other
+  waveforms. Works in every slot that runs an engine with a main oscillator.
+- **Start and length.**
+  - Start: while a sample is selected, the PWM knob becomes "Sta" (all 6 slots, modulatable).
+  - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").
+  - Both are shown in ms, use a quadratic scale and are stored in kits. Short fades avoid clicks
+    when the start or the length cuts the sample.
 
-**Freely assignable voice engines.** Each of the 6 voice slots can run any engine: drum, snare,
-cymbal or hi-hat. Select a voice and press SHIFT + KIT (or send NRPN 98). The engines are saved in
-the kit; kits from the stock firmware load with the stock engines.
-
-Details for both: [docs/ENGINES.md](docs/ENGINES.md).
-
-**Limiter.** Voices and FX are summed in 32 bit, followed by a limiter on each output, so loud kits
-no longer hard-clip. Levels that didn't clip before are unchanged. Config menu "lim" (2nd page)
-switches it off for exactly the stock mix.
-
-**DJ filter.** A filter on the final mix of all outputs, on the performance page: `dj` turned left of
-the center is a low-pass (down to 40 Hz), right of it a high-pass (up to 8 kHz), around the center it
-is off; `res` sets the resonance. It isn't saved and starts off; while off, the sound is unchanged.
-
-**Uninterrupted playback.** Turning knobs, working in the menus, loading and saving kits (also
-from and to other projects on the SD card) and saving projects don't interrupt the audio or the
-sequencer while it plays.
-
-**Under the hood.** About 10 % less CPU load, many stock firmware bugs fixed (MIDI, sequencer, SD
-card, memory corruption; most found in the firmware review by jhw in
-[erica-synths/lxr-desktop-app#3](https://github.com/erica-synths/lxr-desktop-app/issues/3)), and a
-project save that can't lose the saved project. Stock issues that are kept on purpose:
-[docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). The changes of each version are in the
-[release notes](https://github.com/tunefish777/openelixir-02/releases).
+Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length "all").
 
 ## Building and installing
 
+As for OpenElixir-02 (see [README_OPENELIXIR.md](README_OPENELIXIR.md)):
+
 ```sh
-cmake --preset release      # add -DARM_TOOLCHAIN_DIR=<toolchain>/bin if arm-none-eabi-gcc isn't on PATH
+cmake --preset release
 cmake --build --preset release
 ```
 
-This creates `build/release/LXR_OpenElixir-02_V<version>.img`. Copy it to the SD card and install it
-with the LXR-02's built-in updater (hold the encoder while switching on). The `LXR` prefix in the file
-name is required by the updater.
+Copy `build/release/LXR_OpenElixir-02_V<version>.img` to the SD card and install it with the
+LXR-02's updater (hold the encoder while switching on). Host tests of the sample code:
+`sh tests/host/run.sh` (Linux, gcc).
 
-Every push is also built on GitHub Actions: the firmware files are attached to each run in the
-[Actions tab](https://github.com/tunefish777/openelixir-02/actions/workflows/build.yml), and the run
-summary shows the memory usage compared with the stock firmware.
-
-Requirements, build options, the memory map, troubleshooting and development details are in the
-original firmware's README: **[README_LXR.md](README_LXR.md)**.
+To go back, install the official OpenElixir-02 or Erica Synths image the same way.
 
 ## Licence
 
 GPL-3.0-only, with the additional terms in [NOTICE.md](NOTICE.md); see [LICENSE](LICENSE). "Erica
 Synths", "LXR" and "LXR-02" are trademarks of Erica Synths, and the LXR hardware is their property.
+The copyrights of Erica Synths and of the OpenElixir-02 author in their files are unchanged.
