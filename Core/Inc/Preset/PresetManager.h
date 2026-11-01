@@ -103,6 +103,16 @@ FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engin
 FRESULT preset_readProjectKit(uint8_t projectNr, uint8_t kitNr, uint8_t* params, uint8_t* engines);
 //save a kit into an existing project folder (replaces the kit's old file)
 FRESULT preset_saveProjectKit(uint8_t projectNr, uint8_t kitNr, char* name, const uint8_t* params, const uint8_t* engines);
+//MOD: voice INIT templates (kit files): INIT.SND in a project folder, or in the
+//root of the card for PRESET_INIT_GLOBAL. Writing into a project needs its folder
+//(a saved project); a project save keeps the loaded project's template.
+#define PRESET_INIT_GLOBAL	0xFF
+#define PRESET_INIT_FILE	"INIT.SND"
+//mask: bit n = the template defines the voice of slot n (0 = no template)
+uint8_t preset_initTemplateMask(uint8_t projectNr);
+FRESULT preset_readInitTemplate(uint8_t projectNr, uint8_t* params, uint8_t* engines);
+FRESULT preset_writeInitTemplate(uint8_t projectNr, const uint8_t* params, const uint8_t* engines, uint8_t mask);
+FRESULT preset_deleteInitTemplate(uint8_t projectNr);
 //the active kit becomes these parameters and engines (a kit from another
 //project); nothing is written (no RAM kit, no autosave) until the user saves it
 void preset_loadKitData(const uint8_t* params, const uint8_t* engines, const char* name);

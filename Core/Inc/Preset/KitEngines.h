@@ -48,6 +48,14 @@ void kitEngines_assign(const uint8_t slot, const uint8_t engine);
 //into the same slot of the active kit, with its engine
 void kitEngines_loadVoice(const uint8_t slot, const uint8_t engine, const uint8_t* kit);
 
+//MOD voice INIT: reset a slot of the active kit to its engine's defaults (the
+//engine stays); the factory kit (init kit values, stock engines); copy the
+//sound parameters of a slot (incl. LFO/velocity targets, decay B, sample
+//length) from one parameter set to another
+void kitEngines_initVoice(const uint8_t slot);
+void kitEngines_factoryKit(uint8_t* params, uint8_t* engines);
+void kitEngines_copyVoice(const uint8_t slot, uint8_t* dst, const uint8_t* src);
+
 //set the sound engine's slots to the active kit's engines (before the kit's
 //parameters are sent)
 void kitEngines_apply(void);

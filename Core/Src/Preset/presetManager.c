@@ -79,6 +79,7 @@ static void preset_makeFileNameOld(char *buf, uint8_t num, uint8_t type);
 //load uses wildcard to find a name of the pattern 00-*.ext
 static FRESULT preset_makeFileNameLoad(char *buf, uint8_t num, uint8_t type);
 static FRESULT preset_removeOtherFiles(uint8_t num, uint8_t type, const char *keep);
+static FRESULT preset_copyInitTemplate(const uint8_t fromProject, const char* toFolder);	//MOD
 static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion);
 //save uses the kit name to create a filename eg 00-NAME.ext
 static void preset_makeFileNameSave(char *buf, uint8_t num, uint8_t type, char *name);
@@ -2434,6 +2435,11 @@ FRESULT preset_saveProject(uint8_t presetNr)
 			goto saveFailed;
 	}
 
+	//MOD: the voice INIT template of the project being saved
+	res = preset_copyInitTemplate(menu_loadedPresetNr[CURRENT_PROJECT], newFolder);
+	if(res != FR_OK)
+		goto saveFailed;
+
 	preset_writingNewFolder = 0;
 
 	//complete: replace the project folder (power off in between: preset_projectFolderName() finishes it)
@@ -2727,15 +2733,10 @@ FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engin
 	return FR_OK;
 }
 //----------------------------------------------------
-FRESULT preset_readProjectKit(uint8_t projectNr, uint8_t kitNr, uint8_t* params, uint8_t* engines)
+//read the parameters and engines of a kit file
+static FRESULT preset_readKitFile(const char* path, uint8_t* params, uint8_t* engines)
 {
-	char folder[12];
-	char path[32];
-	preset_projectFolderName(folder, projectNr);
-	FRESULT res = preset_findProjectKit(folder, kitNr, path);
-	if(res != FR_OK)
-		return res;
-	res = f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ);
+	FRESULT res = f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ);
 	if(res != FR_OK)
 		return res;
 
@@ -2759,6 +2760,105 @@ FRESULT preset_readProjectKit(uint8_t projectNr, uint8_t kitNr, uint8_t* params,
 	}
 	f_close((FIL*)&SDFile);
 	return res;
+}
+//----------------------------------------------------
+FRESULT preset_readProjectKit(uint8_t projectNr, uint8_t kitNr, uint8_t* params, uint8_t* engines)
+{
+	char folder[12];
+	char path[32];
+	preset_projectFolderName(folder, projectNr);
+	FRESULT res = preset_findProjectKit(folder, kitNr, path);
+	if(res != FR_OK)
+		return res;
+	return preset_readKitFile(path, params, engines);
+}
+//----------------------------------------------------
+//MOD: voice INIT templates - kit files INIT.SND in a project folder or in the
+//root of the card (global). The file name has no kit number, so the kit lists
+//and the kit saves of a project ignore it.
+static void preset_initTemplatePath(char* path, const uint8_t projectNr)
+{
+	if(projectNr == PRESET_INIT_GLOBAL)
+		strcpy(path, "/" PRESET_INIT_FILE);
+	else
+		sprintf(path, "/proj%02d/" PRESET_INIT_FILE, projectNr);
+}
+//the name field holds "INIT", 0, 'M', the mask of the voices (slots) it defines
+uint8_t preset_initTemplateMask(uint8_t projectNr)
+{
+	char path[24];
+	uint8_t name[8];
+	UINT n = 0;
+	preset_initTemplatePath(path, projectNr);
+	if(f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ) != FR_OK)
+		return 0;
+	const FRESULT res = f_read((FIL*)&SDFile, name, 8, &n);
+	f_close((FIL*)&SDFile);
+	if(res != FR_OK || n != 8 || memcmp(name, "INIT", 4) != 0 || name[5] != 'M')
+		return 0;
+	return name[6] & ((1u << NUM_VOICE_SLOTS) - 1u);
+}
+FRESULT preset_readInitTemplate(uint8_t projectNr, uint8_t* params, uint8_t* engines)
+{
+	char path[24];
+	preset_initTemplatePath(path, projectNr);
+	return preset_readKitFile(path, params, engines);
+}
+FRESULT preset_writeInitTemplate(uint8_t projectNr, const uint8_t* params, const uint8_t* engines, uint8_t mask)
+{
+	char path[24];
+	FILINFO fno;
+	UINT bytesWritten;
+	if(projectNr != PRESET_INIT_GLOBAL)
+	{
+		char folder[12];
+		sprintf(folder, "/proj%02d", projectNr);
+		const FRESULT st = f_stat(folder, &fno);
+		if(st != FR_OK)
+			return st;		//the project was never saved
+	}
+	preset_initTemplatePath(path, projectNr);
+	FRESULT res = preset_fopenWrite(path);
+	if(res != FR_OK)
+		return res;
+	const uint8_t name[8] = { 'I', 'N', 'I', 'T', 0, 'M', mask, 0 };
+	res = preset_fwrite((FIL*)&SDFile, name, 8, &bytesWritten);
+	if(res == FR_OK)
+		res = preset_fwrite((FIL*)&SDFile, params, END_OF_SOUND_PARAMETERS, &bytesWritten);
+	if(res == FR_OK)
+		res = preset_writeEngines(engines);
+	return preset_fcloseWrite();
+}
+FRESULT preset_deleteInitTemplate(uint8_t projectNr)
+{
+	char path[24];
+	preset_initTemplatePath(path, projectNr);
+	const FRESULT res = f_unlink(path);
+	return res == FR_NO_FILE ? FR_OK : res;
+}
+//a project save writes a new folder: take the project's template along. FatFs
+//has one open file at a time, so the file goes through RAM (it is ~270 bytes).
+static FRESULT preset_copyInitTemplate(const uint8_t fromProject, const char* toFolder)
+{
+	static uint8_t buf[8 + END_OF_SOUND_PARAMETERS + 64];
+	char path[32];
+	UINT n = 0, bw;
+	sprintf(path, "/proj%02d/" PRESET_INIT_FILE, fromProject);
+	FRESULT res = f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ);
+	if(res == FR_NO_FILE || res == FR_NO_PATH)
+		return FR_OK;		//no template
+	if(res != FR_OK)
+		return res;
+	res = f_read((FIL*)&SDFile, buf, sizeof(buf), &n);
+	f_close((FIL*)&SDFile);
+	if(res != FR_OK)
+		return res;
+	snprintf(path, sizeof(path), "%s/" PRESET_INIT_FILE, toFolder);
+	res = preset_fopenWrite(path);
+	if(res != FR_OK)
+		return res;
+	preset_fwrite((FIL*)&SDFile, buf, n, &bw);
+	return preset_fcloseWrite();
 }
 //----------------------------------------------------
 FRESULT preset_saveProjectKit(uint8_t projectNr, uint8_t kitNr, char* name, const uint8_t* params, const uint8_t* engines)

@@ -268,11 +268,48 @@ static void kitEngines_sendSlot(const uint8_t slot, const uint8_t* list)
 	menu_repaint();
 }
 //---------------------------------------------------
+static void kitEngines_reset(const uint8_t slot, const uint8_t engine);
 void kitEngines_assign(const uint8_t slot, const uint8_t engine)
 {
 	if(slot >= NUM_VOICE_SLOTS || engine >= NUM_ENGINES || kitEngines[slot] == engine)
 		return;
-
+	kitEngines_reset(slot, engine);
+}
+//---------------------------------------------------
+//MOD: factory INIT of a voice - its engine's defaults, the engine is kept
+void kitEngines_initVoice(const uint8_t slot)
+{
+	if(slot >= NUM_VOICE_SLOTS)
+		return;
+	kitEngines_reset(slot, kitEngines[slot] % NUM_ENGINES);
+}
+//---------------------------------------------------
+void kitEngines_factoryKit(uint8_t* params, uint8_t* engines)
+{
+	for(uint16_t par=0;par<END_OF_SOUND_PARAMETERS;par++)
+		params[par] = kitEngines_initValue((uint8_t)par);
+	kitEngines_setStock(engines);
+}
+//---------------------------------------------------
+void kitEngines_copyVoice(const uint8_t slot, uint8_t* dst, const uint8_t* src)
+{
+	if(slot >= NUM_VOICE_SLOTS)
+		return;
+	uint8_t list[NUM_SLOT_PARAMS];
+	kitEngines_slotParams(slot, list);
+	for(uint8_t i=0;i<NUM_SLOT_PARAMS;i++)
+		dst[list[i]] = src[list[i]];
+	for(uint8_t i=0;i<sizeof(kitEngines_extraParams);i++)
+		dst[kitEngines_extraParams[i] + slot] = src[kitEngines_extraParams[i] + slot];
+	if(slot == NUM_VOICE_SLOTS-1)
+		dst[PAR_VELOD6_OPEN] = src[PAR_VELOD6_OPEN];
+	if(kitEngines_smpLenPar(slot) != PAR_NONE)
+		dst[kitEngines_smpLenPar(slot)] = src[kitEngines_smpLenPar(slot)];
+}
+//---------------------------------------------------
+static void kitEngines_reset(const uint8_t slot, const uint8_t engine)
+{
+	const uint8_t engineChanged = kitEngines[slot] != engine;
 	kitEngines[slot] = engine;
 	slot_setEngine(slot, engine);
 	menu_updateVoicePages();
@@ -303,7 +340,8 @@ void kitEngines_assign(const uint8_t slot, const uint8_t engine)
 	kitEngines_setTarget(PAR_TARGET_LFO1+slot, CC_LFO_TARGET, slot, 0);
 	kitEngines_setTarget(PAR_VEL_DEST_1+slot, CC_VELO_TARGET, slot, 0);
 
-	kitEngines_turnOffRoleModulation(slot);
+	if(engineChanged)	//MOD: a voice INIT keeps the step automation
+		kitEngines_turnOffRoleModulation(slot);
 
 	//the voice was re-initialized: send all its parameters
 	kitEngines_sendSlot(slot, list);

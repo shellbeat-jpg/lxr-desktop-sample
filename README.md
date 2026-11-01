@@ -76,6 +76,15 @@ project save that can't lose the saved project. Stock issues that are kept on pu
   - Length: new parameter "Len" on the oscillator page of drum 1-3 (0 = "all").
   - Both are shown in ms, use a quadratic scale and are stored in kits. Short fades avoid clicks
     when the start or the length cuts the sample.
+- **Voice INIT templates.** In the voice load menu (hold LOAD + step button 1-7) an "INIT" row sits
+  between "Change Project" and kit 0. Clicking it opens: Load INIT, Save to Project, Save to Global,
+  Del Project INIT, Del Global INIT.
+  - Load INIT takes the voice from the project template, else from the global template, else the
+    factory values of its engine (the engine and the step automation stay).
+  - Saving stores only this voice (incl. engine, sample, start/length) in the template; the other
+    voices of the template stay. Deleting removes only this voice.
+  - Project template: `INIT.SND` in the project folder (needs a saved project; a project save keeps
+    it). Global template: `/INIT.SND`.
 
 Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length "all").
 
