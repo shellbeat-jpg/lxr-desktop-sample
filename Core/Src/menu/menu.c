@@ -940,6 +940,30 @@ static uint8_t menu_morphEditFor(const uint16_t p)
 	}
 	return (uint8_t)!preset_isMorphEngineMismatch(p);
 }
+//MOD: edit view of an LFO's mod amount: the range the target moves in, on the left
+//(target value +- amount, limited to 0..127, shown in the target's own units)
+static void menu_lfoRangeText(const uint16_t parNr, const uint8_t amount)
+{
+	const uint8_t lfo = (uint8_t)(parNr - PAR_AMOUNT_LFO1);
+	const uint16_t target = pgm_read_word(&modTargets[activeParameters[PAR_TARGET_LFO1 + lfo]].param);
+	if(target == PAR_NONE || target >= END_OF_SOUND_PARAMETERS)
+		return;
+	const uint8_t dt = menu_paramDtype(target) & 0xFF;
+	if(dt == DTYPE_MENU || dt == DTYPE_ON_OFF || dt == DTYPE_0b1)
+		return;	//waveforms, filter types ... (and sample selection): no number range
+	const int16_t base = activeParameters[target];
+	int16_t lo = base - amount, hi = base + amount;
+	if(lo < 0) lo = 0;
+	if(hi > 127) hi = 127;
+	if((menu_paramDtype(target) & 0xFF) == DTYPE_PM63)
+	{
+		const int16_t c = menu_isTuningParam(target) ? 60 : 63;
+		lo -= c; hi -= c;
+	}
+	char buf[12];
+	snprintf(buf, sizeof(buf), "%d..%d", lo, hi);
+	memcpy(&editDisplayBuffer[1][0], buf, strlen(buf));
+}
 //MOD: the parameter selected on the active page
 static uint16_t menu_currentParamNr(void)
 {
@@ -2103,6 +2127,8 @@ void menu_repaintGeneric()
 				else
 				{
 					numtostrpu(&editDisplayBuffer[1][13],(uint8_t)(curParmVal),' ');
+					if(parNr >= PAR_AMOUNT_LFO1 && parNr <= PAR_AMOUNT_LFO6)
+						menu_lfoRangeText(parNr, curParmVal);	//MOD
 				}
 				break;
 

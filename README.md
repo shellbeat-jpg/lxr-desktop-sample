@@ -166,6 +166,7 @@ Recommended settings:
 - **Voices of the kit morph:** global settings page 2, `mrv` on/off per voice (voice button selects
   the voice).
 - **Velocity 0** on a step = automation only (no trigger, no MIDI note).
+- **LFO range display:** the edit view of `mod` shows the range the target moves in (`21..127`).
 - **Instant pattern switching:** global settings page 2, `ips` on: a pattern selected by hand starts
   on the next step at the same position.
 - **LFO waveforms:** `xtr` (exp. triangle) and one-shots `si1` `tr1` `su1` `sd1` `sq1` `rn1` `xu1`

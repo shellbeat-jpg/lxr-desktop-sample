@@ -184,6 +184,13 @@ A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its ste
 (`p1`/`p2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
 sound no longer do.
 
+### LFO range display
+
+The edit view of an LFO's `mod` shows on the left the range its target moves in, e.g. `21..127`:
+the target parameter's value ± `mod`, limited to 0..127 (pitch-like values in their own units,
+e.g. `-12..12`). To modulate between *a* and *b*, set the target parameter to (a+b)/2 and `mod` to
+(b−a)/2. No range for targets without a number scale (waveform, filter type ...).
+
 ### Instant pattern switching
 
 Global settings (SHIFT + step button 12, CONFIG), second page: **`ips`** (Pattern Instant)
