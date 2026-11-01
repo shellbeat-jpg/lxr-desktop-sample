@@ -59,6 +59,8 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 
 ## What this fork adds
 
+User guide: [docs/SAMPLES.md](docs/SAMPLES.md).
+
 - **Sample import at boot.** Up to 16 WAV files from the folder `/SAMPLES` on the SD card are copied
   into the internal flash (sectors 6 and 7, 512 KB) and verified. The import runs only when the folder
   content changed (file names and sizes).
