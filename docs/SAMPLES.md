@@ -33,18 +33,21 @@ The samples stay in the internal flash: they also play without SD card.
 
 ## Experimental: 1.5 MB sample memory
 
-The chip of the LXR-02 reports 1 MB flash (shown at the start as "Flash: 1024 KB"). Its die
-usually has 2 MB; the upper megabyte is not guaranteed by ST (not tested by the manufacturer,
-no specified data retention). Use it at your own risk:
+The chip of the LXR-02 reports 1 MB flash (start screen "Flash: 1024 KB"). Its die usually has
+2 MB: on the tested unit the area above 1 MB could be erased, written and read (first checked with
+the LXR02Open port, which stores its samples there). ST doesn't guarantee that area (not tested by
+the manufacturer, no specified data retention). Use it at your own risk:
 
-- Put an empty file named `BIGFLASH` (no extension) into `/SAMPLES`. The next start imports again
-  with up to about 17.8 s (44.1 kHz mono) instead of 5.9 s.
-- Before that the firmware checks that the flash is in single-bank mode and that sectors 8-11 can
-  be read; otherwise it shows "Big flash: not usable" and uses 512 KB.
-- Every sample is verified after writing. If something in the upper area fails: "Big flash
-  failed / using 512K", then the import is repeated into the normal 512 KB.
-- The start screen shows "Flash 1024K big" while samples are stored above 1 MB.
+- Create a file or a folder named `BIGFLASH` in `SAMPLES` (or in the top folder of the card). The
+  name may have an extension (`BIGFLASH.txt`). The next start imports again with up to about
+  **17.8 s** (44.1 kHz mono) instead of 5.9 s.
+- The start shows `Big flash: on / 1.5 MB, testing`, after the import `Flash 1024K big`.
+- `Big flash: no / dual bank`: the flash has another sector layout, 512 KB are used.
+- Every sample is verified after writing. If something in the upper area fails: `Big flash
+  failed / using 512K`, then the import is repeated into the normal 512 KB.
 - Removing `BIGFLASH` imports again into the normal 512 KB.
+- If the unit ever hangs at the start screen with `BIGFLASH` on the card: remove `BIGFLASH` (or
+  start without card) - the firmware and the bootloader are not affected.
 
 ## Playing samples
 
@@ -150,12 +153,12 @@ from. One step further is "Change Project" as before. Click the INIT row for its
 - Files: `INIT.SND` in the project folder (`/projNN/INIT.SND`) and in the top folder of the card
   (global). They are kit files; the kit lists ignore them.
 
-## Why only 512 KB
+## History of the 1.5 MB mode
 
-The chip reports 1 MB flash (start screen "Flash: 1024 KB"). The LXR02Open port uses sectors 8-11
-(above 1 MB) for samples. An experimental mode tried that here: on the tested LXR-02 a read above
-1 MB stopped the firmware (display dark after the start screen), so the area is not usable on this
-unit and the mode was removed again.
+A first version checked the upper area with a fault-catching read before using it; on the tested
+unit that check itself hung the start. The LXR02Open port then showed that plain reads and writes
+above 1 MB work on the same unit, so the current version uses plain accesses like that port and
+relies on the verify after writing.
 
 ## Test status
 

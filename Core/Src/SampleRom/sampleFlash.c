@@ -12,9 +12,9 @@
  *
  * Experimental big flash mode (file /SAMPLES/BIGFLASH): the chip reports 1 MB,
  * but its die usually has 2 MB; sectors 8-11 (0x08100000-0x081FFFFF) are used
- * only if the flash is in single-bank mode and they can be read without a bus
- * fault. ST doesn't guarantee that area: every sample is verified, a failure
- * falls back to the normal 512 KB.
+ * only if the flash is in single-bank mode (tested on an LXR-02 whose chip
+ * reports 1 MB). ST doesn't guarantee that area: every sample is verified, a
+ * failure falls back to the normal 512 KB.
  *  - The header magic is written LAST, so an interrupted import (power
  *    loss) leaves an invalid header and is simply redone on the next boot.
  *  - Nothing is erased if the stored signature already matches /SAMPLES.
@@ -500,49 +500,18 @@ static uint8_t sf_bigRequested(void)
 /* why the upper megabyte can't be used (shown on the LCD), "" if it can */
 static char sf_bigReason[17];
 #ifndef SF_BIG_AVAILABLE
-/* read a word without crashing if the memory doesn't exist: bus faults are
- * ignored while FAULTMASK is set and BFHFNMIGN is on; the BusFault status
- * tells whether it happened. The D-cache is off meanwhile, so the read goes
- * to the flash on the AXI address that programming and playback use. */
-static uint8_t sf_probeRead(const uint32_t addr)
-{
-	SCB->CFSR = SCB_CFSR_BUSFAULTSR_Msk;		/* write 1 to clear */
-	__disable_fault_irq();
-	SCB->CCR |= SCB_CCR_BFHFNMIGN_Msk;
-	__DSB(); __ISB();
-	volatile uint32_t v = *(volatile const uint32_t*)addr;
-	(void)v;
-	__DSB();
-	SCB->CCR &= ~SCB_CCR_BFHFNMIGN_Msk;
-	__DSB(); __ISB();
-	__enable_fault_irq();
-	const uint8_t ok = (SCB->CFSR & SCB_CFSR_BUSFAULTSR_Msk) == 0u;
-	SCB->CFSR = SCB_CFSR_BUSFAULTSR_Msk;
-	return ok;
-}
-/* single-bank layout (sectors 8-11 at 0x08100000) and readable */
+/* single-bank layout (sectors 8-11 at 0x08100000). No read probe: plain reads
+ * of that area work on the tested unit (as in the LXR02Open port), a fault
+ * catching probe hung it. Writing is checked by the verify after the import. */
 static uint8_t sf_bigAvailable(void)
 {
-	snprintf(sf_bigReason, sizeof(sf_bigReason), "dual bank");
-	if((FLASH->OPTCR & FLASH_OPTCR_nDBANK) == 0u) return 0;
-	SCB_DisableDCache();
-	uint8_t ok = 1;
-	for(uint32_t a = SF_REGION_END; ok && a < SF_BIG_END; a += SF_SECTOR_SIZE)
+	if((FLASH->OPTCR & FLASH_OPTCR_nDBANK) == 0u)
 	{
-		if(!sf_probeRead(a))
-		{
-			snprintf(sf_bigReason, sizeof(sf_bigReason), "read err %08lX", (unsigned long)a);
-			ok = 0;
-		}
-		else if(!sf_probeRead(a + SF_SECTOR_SIZE - 4u))
-		{
-			snprintf(sf_bigReason, sizeof(sf_bigReason), "read err %08lX", (unsigned long)(a + SF_SECTOR_SIZE - 4u));
-			ok = 0;
-		}
+		snprintf(sf_bigReason, sizeof(sf_bigReason), "dual bank");
+		return 0;
 	}
-	SCB_EnableDCache();
-	if(ok) sf_bigReason[0] = 0;
-	return ok;
+	sf_bigReason[0] = 0;
+	return 1;
 }
 #define SF_BIG_AVAILABLE() sf_bigAvailable()
 #endif
@@ -678,7 +647,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	/* the big flash request is part of the signature: adding or removing
 	 * BIGFLASH imports again */
 	const uint8_t wantBig = sf_bigRequested();
-	if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH2", 8);
+	if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH3", 8);
 
 	if(sf_headerValid(sf_flashHeader) && sf_flashHeader->signature == signature)
 	{
@@ -709,7 +678,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 		HAL_Delay(2500);
 		sf_end = SF_REGION_END;
 		count = sf_scanFolder(&signature);
-		if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH2", 8);
+		if(wantBig) signature = sf_fnv(signature, (const uint8_t*)"BIGFLSH3", 8);
 		res = sf_import(count, signature);
 	}
 	sf_end = SF_REGION_END;

@@ -73,6 +73,10 @@ the display (as in the LXR manual). The start screen shows "OE+Samples" and the 
   by value (`2KICK` before `10KICK`).
 - Total length about **5.9 s** mono at 44.1 kHz (11.9 s at 22.05 kHz). Files that are not 16 bit
   (`Not 16bit, skip:`) or no longer fit (`Full(5.9s) skip:`) are skipped, the others are imported.
+- **Experimental: 1.5 MB (about 17.8 s).** A file or folder `BIGFLASH` in `SAMPLES` also uses the
+  flash above the 1 MB the chip reports (works on the tested unit, not guaranteed by ST; verified
+  after writing, falls back to 512 KB on errors). Start screen: `Big flash: on`, later
+  `Flash 1024K big`.
 - Changes are detected by file names and sizes: rename a file you replaced with one of the same size.
 - A firmware update erases the samples: keep `SAMPLES` on the card, the next normal start imports
   them again. Remove the `LXR*.img` from the card after an update.
@@ -148,8 +152,8 @@ Recommended settings:
 ### Compatibility
 
 Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `all`, no choke
-group). The sample memory stays at 512 KB: the area above 1 MB that the LXR02Open port uses is not
-readable on the tested unit (see [docs/SAMPLES.md](docs/SAMPLES.md)).
+group). The 1.5 MB mode is opt-in (`BIGFLASH`) because ST doesn't guarantee the flash above 1 MB on this
+chip (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 
 ## Building and installing
 
