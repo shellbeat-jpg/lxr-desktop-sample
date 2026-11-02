@@ -67,7 +67,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 |---|---|---|---|---|
 | Limiter [OE] | 32-bit mix with a limiter on each output. | CONFIG (`LIM`) | Global | – |
 | DJ filter [OE] | LP/HP filter | PERF (`DJ`, `RES`) | not saved | – |
-| Second FX slot | FX2 = project FX. Order `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
+| Second FX slot | FX2 = project FX. FX routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
 | Routing and sends | `OUT` = `FX` / `FXB`: 100 % into slot A / B. `SNA` / `SNB` = send into A / B besides the output, both at once if wanted. Meant for `OUT` = `St1` … `R2`; with `FX` / `FXB` they raise the level in the same slot or also feed the other one. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT`) |
 | Delay tempo sync | `1/4` … `1/32T`, dotted, triplets and the track grids | FX (setup `SYA` / `SYB`) | Global | – |
 
