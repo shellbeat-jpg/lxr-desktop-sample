@@ -1,8 +1,8 @@
 # Samples and voice INIT
 
 User guide for the additions of this fork (OpenElixir-02 + Samples). The base features of
-OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.md](../README_OPENELIXIR.md)
-and were taken from the original source at https://github.com/tunefish777/openelixir-02/blob/main/README.md
+OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.md](../README_OPENELIXIR.md),
+both taken unchanged from [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/tree/v1.2).
 
 ## Importing samples
 
