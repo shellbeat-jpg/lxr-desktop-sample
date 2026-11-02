@@ -69,6 +69,8 @@ typedef struct LfoStruct
 	uint32_t	cycleCount;	//MOD: triggers counted by LFO_CYCLE
 	uint32_t	osDelay;	//MOD: one-shot: remaining start delay (phase units)
 	uint8_t		osDone;		//MOD: one-shot: the cycle has ended
+	uint8_t		starts;		//MOD: counts the starts of the waveform (LFO -> track)
+	uint8_t		startCause;	//MOD: voice slot whose trigger caused the last start (0xff = the LFO itself)
 } Lfo;
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo);
@@ -77,5 +79,8 @@ void lfo_setFreq(Lfo *lfo, float f);
 void lfo_setSync(Lfo* lfo, uint8_t sync);
 void lfo_recalcSync();
 void lfo_retrigger(uint8_t voiceNr);
+//MOD: number of waveform starts of the LFO of a voice slot (wraps) and the voice
+//slot whose trigger caused the last one (0xff: the LFO's own cycle)
+uint8_t lfo_getStarts(uint8_t slot, uint8_t* cause);
 
 #endif /* LFO_H_ */

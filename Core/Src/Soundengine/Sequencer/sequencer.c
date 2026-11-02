@@ -235,6 +235,7 @@ void seq_copyPatternToBackupBuffer(uint8_t patternNr)
 	memcpy(&patternBackupBuffer.length, &seq_patternSet.length[patternNr],  sizeof(uint8_t)*NUM_TRACKS);
 	memcpy(&patternBackupBuffer.grid, &seq_patternSet.grid[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&patternBackupBuffer.trig, &seq_patternSet.trig[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
+	memcpy(&patternBackupBuffer.lfo, &seq_patternSet.lfo[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 
 
 
@@ -254,6 +255,7 @@ void seq_copyBackupBufferToPattern(uint8_t patternNr)
 	memcpy(&seq_patternSet.length[patternNr], &patternBackupBuffer.length,  sizeof(uint8_t)*NUM_TRACKS);
 	memcpy(&seq_patternSet.grid[patternNr], &patternBackupBuffer.grid,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&seq_patternSet.trig[patternNr], &patternBackupBuffer.trig,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
+	memcpy(&seq_patternSet.lfo[patternNr], &patternBackupBuffer.lfo,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 
 	seq_patternSet.shuffle[patternNr] = patternBackupBuffer.shuffle;
 	seq_patternSet.kitNr[patternNr] = patternBackupBuffer.kitNr;
@@ -1179,6 +1181,8 @@ static int32_t seq_ctlOrigin[NUM_TRACKS];	//tick of the track's local tick 0
 static int32_t seq_ctlEnd[NUM_TRACKS];		//local tick from which the track pauses (-1 = never)
 static uint8_t seq_ctlMode[NUM_TRACKS];		//how the track is controlled (SEQ_TRIG_x as a target)
 static uint8_t seq_ctlPattern = 0xff;		//pattern the control state belongs to
+static uint8_t seq_lfoSeen[NUM_TRACKS];		//LFO -> track: the last start count seen
+static uint8_t seq_lfoPending = 0;			//LFO -> track: tracks waiting for the next step of their grid
 
 static void seq_ctlReset(void)
 {
@@ -1190,6 +1194,7 @@ static void seq_ctlReset(void)
 	}
 	seq_ctlMute = 0;
 	seq_ctlPattern = 0xff;
+	seq_lfoPending = 0;
 }
 
 static void seq_gridReset(void)
@@ -1214,7 +1219,8 @@ static inline uint8_t seq_trackLen(const uint8_t track)
 //MOD: the track steps on its own tick count (seq_gridTrackTick) instead of in seq_nextStep
 static inline uint8_t seq_ownClock(const uint8_t track)
 {
-	return seq_trackTicks(track) != 24u || seq_ctlMode[track] == SEQ_TRIG_RST || seq_ctlMode[track] == SEQ_TRIG_CLK;
+	return seq_trackTicks(track) != 24u || seq_ctlMode[track] == SEQ_TRIG_RST || seq_ctlMode[track] == SEQ_TRIG_CLK
+			|| seq_ctlMode[track] == SEQ_TRIG_LFO;
 }
 //length of the pattern in 1/16 steps when it has grid tracks (the longest track in time)
 __attribute__((noinline)) static uint16_t seq_gridPatternSteps(uint8_t* hasGrid)
@@ -1333,8 +1339,18 @@ static void seq_ctlSetMode(const uint8_t d, const uint8_t m, const int32_t T)
 		t = seq_stepIndex[d] < 0 ? -1 : (int32_t)seq_stepIndex[d] * G + (T % 24);
 	if(seq_ctlMode[d] == SEQ_TRIG_MUT)
 		seq_ctlMute &= (uint8_t)~(1u << d);
+	seq_lfoPending &= (uint8_t)~(1u << d);
 	seq_ctlMode[d] = m;
-	if(m == SEQ_TRIG_RST || m == SEQ_TRIG_CLK)
+	if(m == SEQ_TRIG_LFO)
+	{
+		//waits for the next start of the LFO's waveform
+		uint8_t cause;
+		seq_lfoSeen[d] = lfo_getStarts((uint8_t)(SEQ_LFO_VOICE(seq_patternSet.lfo[seq_activePattern][d]) - 1u), &cause);
+		seq_ctlOrigin[d] = T;
+		seq_ctlEnd[d] = 0;
+		seq_stepIndex[d] = -1;
+	}
+	else if(m == SEQ_TRIG_RST || m == SEQ_TRIG_CLK)
 	{
 		if(t < 0 || (t == 0 && m == SEQ_TRIG_CLK))
 		{
@@ -1387,9 +1403,30 @@ __attribute__((noinline)) static void seq_ctlTick(const int32_t T)
 	}
 	for(uint8_t d=0;d<NUM_TRACKS;d++)
 	{
-		const uint8_t m = src[d] == 0xff ? SEQ_TRIG_OFF : SEQ_TRIG_MODE(seq_patternSet.trig[seq_activePattern][src[d]]);
+		//an LFO start setting of the track counts before a trigger track
+		const uint8_t lv = seq_validLfo(seq_patternSet.lfo[seq_activePattern][d]);
+		const uint8_t m = lv ? SEQ_TRIG_LFO : src[d] == 0xff ? SEQ_TRIG_OFF : SEQ_TRIG_MODE(seq_patternSet.trig[seq_activePattern][src[d]]);
 		if(m != seq_ctlMode[d])
 			seq_ctlSetMode(d, m, T);
+		if(m != SEQ_TRIG_LFO)
+			continue;
+		src[d] = 0xff;
+		//LFO -> track: a start of the waveform (not one caused by this track's own
+		//trigger: the track would restart itself) starts the track at step 1
+		uint8_t cause;
+		const uint8_t c = lfo_getStarts((uint8_t)(SEQ_LFO_VOICE(lv) - 1u), &cause);
+		if(c != seq_lfoSeen[d])
+		{
+			seq_lfoSeen[d] = c;
+			if(cause != (d < 6 ? d : 5u))
+				seq_lfoPending |= (uint8_t)(1u << d);
+		}
+		if((seq_lfoPending & (1u << d)) && ((lv & SEQ_LFO_NOW) || (T % seq_trackTicks(d)) == 0))
+		{
+			seq_lfoPending &= (uint8_t)~(1u << d);
+			seq_ctlOrigin[d] = T;
+			seq_ctlEnd[d] = (int32_t)seq_trackLen(d) * seq_trackTicks(d);	//to its last step
+		}
 	}
 	if(!any)
 		return;
@@ -1479,6 +1516,21 @@ void seq_setTrackGrid(uint8_t trackNr, uint8_t grid)
 	seq_gridLastT[trackNr] = seq_gridSteps >= 0 ? seq_gridSteps * 24 + seq_prescaleCounter : -1;
 	if(grid == 0 && seq_gridSteps >= 0)
 		seq_stepIndex[trackNr] = (int8_t)((uint32_t)seq_gridSteps % seq_trackLen(trackNr));
+}
+//MOD: LFO -> track of the shown pattern
+uint8_t seq_validLfo(uint8_t value)
+{
+	const uint8_t v = SEQ_LFO_VOICE(value);
+	return (v >= 1 && v <= 6) ? (uint8_t)(v | (value & SEQ_LFO_NOW)) : 0;
+}
+void seq_setTrackLfo(uint8_t trackNr, uint8_t value)
+{
+	if(trackNr >= NUM_TRACKS) return;
+	seq_patternSet.lfo[frontParser_shownPattern][trackNr] = seq_validLfo(value);
+}
+uint8_t seq_getTrackLfo(uint8_t trackNr)
+{
+	return trackNr < NUM_TRACKS ? seq_validLfo(seq_patternSet.lfo[frontParser_shownPattern][trackNr]) : 0;
 }
 //MOD: trigger track of the shown pattern
 uint8_t seq_validTrig(uint8_t trackNr, uint8_t value)
@@ -3021,6 +3073,7 @@ void seq_clearTrack(uint8_t trackNr, uint8_t pattern)
 	seq_patternSet.length[pattern][trackNr]=16;
 	seq_patternSet.grid[pattern][trackNr]=0;	//MOD: 1/16
 	seq_patternSet.trig[pattern][trackNr]=0;	//MOD: no trigger track
+	seq_patternSet.lfo[pattern][trackNr]=0;		//MOD: not started by an LFO
 
 }
 //------------------------------------------------------------------------------
@@ -3080,6 +3133,7 @@ void seq_copyTrack(uint8_t srcNr, uint8_t dstNr, uint8_t pattern)
 	seq_patternSet.length[pattern][dstNr] = seq_patternSet.length[pattern][srcNr];
 	seq_patternSet.grid[pattern][dstNr] = seq_patternSet.grid[pattern][srcNr];	//MOD
 	seq_patternSet.trig[pattern][dstNr] = seq_validTrig(dstNr, seq_patternSet.trig[pattern][srcNr]);	//MOD
+	seq_patternSet.lfo[pattern][dstNr] = seq_patternSet.lfo[pattern][srcNr];	//MOD
 
 
 }
@@ -3114,6 +3168,7 @@ void seq_copyPattern(uint8_t src, uint8_t dst)
 		seq_patternSet.length[dst][j] = seq_patternSet.length[src][j];
 		seq_patternSet.grid[dst][j] = seq_patternSet.grid[src][j];	//MOD
 		seq_patternSet.trig[dst][j] = seq_patternSet.trig[src][j];	//MOD
+		seq_patternSet.lfo[dst][j] = seq_patternSet.lfo[src][j];	//MOD
 
 		seq_patternSet.shuffle[dst] = seq_patternSet.shuffle[src];
 		seq_patternSet.kitNr[dst] = seq_patternSet.kitNr[src];

@@ -106,6 +106,7 @@ typedef struct PatternFileDataStruct
 	uint8_t kitNr;
 	uint8_t grid[NUM_TRACKS];	//MOD
 	uint8_t trig[NUM_TRACKS];	//MOD
+	uint8_t lfo[NUM_TRACKS];	//MOD
 }PatternFileData;
 static PatternFileData preset_patternBuffer;
 
@@ -161,6 +162,28 @@ static void preset_writeTrigBlock(const uint8_t patternNr)
 	UINT bytesWritten;
 	preset_fwrite((FIL*)&SDFile, preset_trigTag, sizeof(preset_trigTag), &bytesWritten);
 	preset_fwrite((FIL*)&SDFile, seq_patternSet.trig[patternNr], NUM_TRACKS, &bytesWritten);
+}
+//MOD: LFO -> track after the trigger tracks: a tag and one byte per track
+static const char preset_lfoTag[4] = { 'L','F','T','1' };
+static void preset_writeLfoBlock(const uint8_t patternNr)
+{
+	UINT bytesWritten;
+	preset_fwrite((FIL*)&SDFile, preset_lfoTag, sizeof(preset_lfoTag), &bytesWritten);
+	preset_fwrite((FIL*)&SDFile, seq_patternSet.lfo[patternNr], NUM_TRACKS, &bytesWritten);
+}
+static void preset_readLfoBlock(uint8_t* lfo)
+{
+	UINT bytesRead;
+	char tag[4];
+	memset(lfo, 0, NUM_TRACKS);
+	if(f_read((FIL*)&SDFile, tag, sizeof(tag), &bytesRead) != FR_OK || bytesRead != sizeof(tag)
+			|| memcmp(tag, preset_lfoTag, sizeof(tag)) != 0)
+		return;
+	uint8_t v[NUM_TRACKS];
+	if(f_read((FIL*)&SDFile, v, NUM_TRACKS, &bytesRead) != FR_OK || bytesRead != NUM_TRACKS)
+		return;
+	for(uint8_t i=0;i<NUM_TRACKS;i++)
+		lfo[i] = seq_validLfo(v[i]);
 }
 static void preset_readTrigBlock(uint8_t* trig)
 {
@@ -638,6 +661,7 @@ FRESULT preset_saveTmpPat()
 		preset_fwrite((FIL*)&SDFile,&seq_patternSet.kitNr[presetNr],sizeof(uint8_t),&bytesWritten);
 		preset_writeGridBlock(presetNr);	//MOD
 		preset_writeTrigBlock(presetNr);	//MOD
+		preset_writeLfoBlock(presetNr);		//MOD
 
 #endif
 
@@ -1762,6 +1786,7 @@ static void preset_writePatternData(uint8_t patternNr)
 		preset_fwrite((FIL*)&SDFile,&seq_patternSet.kitNr[patternNr],sizeof(uint8_t),&bytesWritten);
 		preset_writeGridBlock(patternNr);	//MOD
 		preset_writeTrigBlock(patternNr);	//MOD
+		preset_writeLfoBlock(patternNr);	//MOD
 
 #endif
 }
@@ -2068,6 +2093,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 	}
 	preset_readGridBlock(buf->grid);	//MOD
 	preset_readTrigBlock(buf->trig);	//MOD
+	preset_readLfoBlock(buf->lfo);		//MOD
 
 	//complete: copy into the pattern
 	memcpy(seq_patternSet.seq_subStepPattern[patternNr], buf->steps, sizeof(buf->steps));
@@ -2077,6 +2103,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 	memcpy(seq_patternSet.length[patternNr], buf->length, sizeof(buf->length));
 	memcpy(seq_patternSet.grid[patternNr], buf->grid, sizeof(buf->grid));	//MOD
 	memcpy(seq_patternSet.trig[patternNr], buf->trig, sizeof(buf->trig));	//MOD
+	memcpy(seq_patternSet.lfo[patternNr], buf->lfo, sizeof(buf->lfo));	//MOD
 	seq_patternSet.shuffle[patternNr] = buf->shuffle;
 	seq_patternSet.kitNr[patternNr] = buf->kitNr;
 	preset_validateKitNr(patternNr);

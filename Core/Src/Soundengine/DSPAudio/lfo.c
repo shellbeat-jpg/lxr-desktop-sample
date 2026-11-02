@@ -56,7 +56,7 @@ __attribute__((noinline)) static float lfo_calcOneShot(Lfo *lfo, const uint32_t 
 	if(lfo->osDelay)
 	{
 		if(lfo->osDelay > incInt) lfo->osDelay -= incInt;
-		else lfo->osDelay = 0;
+		else { lfo->osDelay = 0; lfo->starts++; }	//MOD: the cycle starts after the delay
 		lfo->phase = 0;
 	}
 	else if(!lfo->osDone)
@@ -95,6 +95,7 @@ IN_ITCM_RAM float lfo_calc(Lfo *lfo)
 	uint32_t oldPhase 		= lfo->phase;
 	lfo->phase 			   += incInt;//lfo->phaseInc*lfo->modNodeValue;
 	const uint8_t overflow 	= oldPhase>lfo->phase;
+	if(overflow) { lfo->starts++; lfo->startCause = 0xff; }	//MOD: a new cycle
 
 	switch(lfo->waveform)
 	{
@@ -273,6 +274,13 @@ void lfo_recalcSync()
 	}
 }
 //-------------------------------------------------------------
+uint8_t lfo_getStarts(uint8_t slot, uint8_t* cause)
+{
+	const Lfo* lfo = &voiceSlots[slot < 6 ? slot : 5].u.c.lfo;
+	*cause = lfo->startCause;
+	return lfo->starts;
+}
+//-------------------------------------------------------------
 void lfo_retrigger(uint8_t voice)
 {
 	//restart the LFOs that are retriggered by this voice
@@ -282,6 +290,11 @@ void lfo_retrigger(uint8_t voice)
 		if(lfo->retrigger == voice+1)
 		{
 			lfo->phase = lfo->phaseOffset;
+			if(lfo->waveform < LFO_SINE_1)
+			{
+				lfo->starts++;	//MOD: restarted
+				lfo->startCause = voice;
+			}
 		}
 		//MOD: the cycle LFO steps on each trigger of its retrigger voice, without
 		//retrigger on each trigger of its own voice
@@ -296,6 +309,9 @@ void lfo_retrigger(uint8_t voice)
 			lfo->phase   = 0;
 			lfo->osDone  = 0;
 			lfo->osDelay = lfo->phaseOffset;
+			lfo->startCause = voice;	//MOD
+			if(!lfo->osDelay)
+				lfo->starts++;		//MOD: starts now (otherwise after the delay)
 			if(lfo->waveform == LFO_NOISE_1)
 				lfo->rnd = GetRngValue() / (float)0xffffffff;
 		}

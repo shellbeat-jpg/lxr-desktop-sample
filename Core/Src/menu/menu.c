@@ -1023,7 +1023,7 @@ static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t 
 	return isLong ? menu_fxSyncLong[v] : menu_fxSyncNames[v];
 }
 //MOD: step grid on the last step page: encoder click switches between length and grid
-//(0 = length, 1 = grid, 2 = trigger mode, 3 = trigger target)
+//(0 = length, 1 = grid, 2 = trigger mode, 3 = trigger target, 4 = LFO start, 5 = its timing)
 static uint8_t menu_lastStepGrid = 0;
 static const char menu_trigNames[SEQ_NUM_TRIG_MODES][4] = { "OFF", "RST", "MUT", "CLK" };
 static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4", "5/64", "1/16." };
@@ -1602,7 +1602,18 @@ static void menu_repaintSimplePage()
 		}
 		//MOD: "[16]  1/16T  2/3": length and step grid, the brackets mark what the encoder edits;
 		//"Trg [RST] > T3": trigger track mode and target
-		if(menu_lastStepGrid >= 2)
+		if(menu_lastStepGrid >= 4)
+		{
+			//MOD: "LFO [L3]  NXT": started by the LFO of voice 3, on the next step / at once
+			const uint8_t v = seq_getTrackLfo(menu_activeVoice);
+			char sb[7], nb[6];
+			if(v)	snprintf(sb, sizeof(sb), menu_lastStepGrid == 4 ? "[L%u]" : " L%u ", (unsigned)SEQ_LFO_VOICE(v));
+			else	snprintf(sb, sizeof(sb), menu_lastStepGrid == 4 ? "[OFF]" : " OFF ");
+			if(v)	snprintf(nb, sizeof(nb), menu_lastStepGrid == 5 ? "[%s]" : " %s ", (v & SEQ_LFO_NOW) ? "NOW" : "NXT");
+			else	nb[0] = 0;
+			snprintf(&editDisplayBuffer[1][0], 17, "LFO %-5s %s", sb, nb);
+		}
+		else if(menu_lastStepGrid >= 2)
 		{
 			const uint8_t v = seq_getTrackTrig(menu_activeVoice);
 			const uint8_t m = SEQ_TRIG_MODE(v);
@@ -3454,8 +3465,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				//or the trigger target (only with a mode)
 				menu_lastStepGrid++;
 				if(menu_lastStepGrid == 3 && SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) == SEQ_TRIG_OFF)
+					menu_lastStepGrid = 4;
+				if(menu_lastStepGrid == 5 && !seq_getTrackLfo(menu_activeVoice))
 					menu_lastStepGrid = 0;
-				if(menu_lastStepGrid > 3)
+				if(menu_lastStepGrid > 5)
 					menu_lastStepGrid = 0;
 			}
 			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
@@ -3492,6 +3505,19 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	else if(menu_activePage == SONG_MODE_PAGE)
 	{
 		menu_handleSongMenu(inc, btnClicked);
+	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 4)
+	{
+		//MOD: LFO -> track: the voice of the LFO (off, 1..6), or the timing of the start
+		const uint8_t v = seq_getTrackLfo(menu_activeVoice);
+		if(menu_lastStepGrid == 4)
+		{
+			int16_t n = (int16_t)SEQ_LFO_VOICE(v) + (inc > 0 ? 1 : -1);
+			n = n < 0 ? 0 : n > 6 ? 6 : n;
+			seq_setTrackLfo(menu_activeVoice, (uint8_t)(n | (v & SEQ_LFO_NOW)));
+		}
+		else
+			seq_setTrackLfo(menu_activeVoice, (uint8_t)(inc > 0 ? (v | SEQ_LFO_NOW) : (v & (uint8_t)~SEQ_LFO_NOW)));
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 2)
 	{

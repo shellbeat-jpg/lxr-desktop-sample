@@ -272,7 +272,8 @@ On grid tracks the repeats follow the track's own steps. Other firmwares play th
 
 Any track can additionally act on another track. SHIFT + LAST STEP shows the length and the grid
 of the track; **click the encoder** to go on to the trigger mode (`Trg [OFF]`) and, with a mode,
-to the target track (`Trg  RST  >[T3]`); another click returns to the length.
+to the target track (`Trg  RST  >[T3]`), then to the LFO start (see below); another click returns
+to the length.
 
 | Mode | Each active step of the trigger track ... |
 |---|---|
@@ -287,6 +288,22 @@ to the target track (`Trg  RST  >[T3]`); another click returns to the length.
   triplet steps, a `CLK` target plays each of its steps with its own step length.
 - A track can be the target of one trigger track (the first one counts). Stored in the pattern;
   other firmwares ignore it.
+
+### LFO start
+
+On the LAST STEP page of a track, after the trigger settings: **`LFO [L3]`** = the track is
+started by the LFO of voice 3 (`OFF`, `L1` … `L6`), then the timing **`NXT`** / **`NOW`**.
+
+- Each start of the LFO's waveform (a new cycle, a restart by `RTG`, a one-shot after its `OFS`
+  delay) starts the track at step 1: with `NXT` on the next step of the track's grid (stays in
+  time), with `NOW` at once.
+- The track plays to its last step and then waits for the next start. If the LFO cycle is
+  shorter than the track, the next start comes first: the track loops the part up to there.
+- Not counted: a restart of the LFO caused by this track's own trigger (`RTG` on the track's
+  voice), otherwise the track would keep restarting itself.
+- Until the first start the track is silent. With `SNC` the starts fall on the beat; free-running
+  LFOs give starts that drift against the pattern.
+- The LFO start counts before a trigger track that targets the same track. Stored in the pattern.
 
 ## Second FX slot (1.2.8)
 
