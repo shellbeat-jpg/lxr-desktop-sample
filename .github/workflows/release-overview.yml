@@ -1,8 +1,9 @@
 name: Release overview
 
 # Attaches the feature overview (docs/OVERVIEW.md, docs/OVERVIEW.de.md of the
-# default branch) to an existing release, replacing older copies. New releases
-# get it from the Build workflow; this is for releases made before that.
+# default branch) to an existing release, replacing older copies, and updates
+# the release text from .github/releases/<tag>.md. New releases get both from
+# the Build workflow; this is for corrections afterwards.
 on:
   workflow_dispatch:
     inputs:
@@ -29,3 +30,6 @@ jobs:
           cp docs/OVERVIEW.md "out/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "out/${FW_NAME}_Overview_DE.md"
           gh release upload "$TAG" out/*.md --clobber -R "$GITHUB_REPOSITORY"
+          if [ -f ".github/releases/$TAG.md" ]; then
+            gh release edit "$TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"
+          fi

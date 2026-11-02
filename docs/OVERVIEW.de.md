@@ -11,26 +11,26 @@ Waser), alles andere aus OE02-Samples.
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Engines frei zuweisbar [OE] | Jeder Voice-Slot spielt Drum, Snare, Cymbal oder Hi-Hat. | VOICE (SHIFT + KIT) | Kit | NRPN 98 |
-| Samples | Bis zu 31 WAVs als `S1`…`S31` nach den Wellenformen; Coarse 60 = Originaltonhöhe. Start und Länge in ms mit Fade, Loops mit Crossfade, Declick beim Retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, Samples im Flash | CC 2–5, 7, 8 (`WAV`), NRPN 100–105 (`STA`), NRPN 93, 94, 97 (`LEN`) |
-| Choke-Gruppe | Tracks der Gruppe blenden sich beim Trigger gegenseitig aus (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
+| Engines [OE] | Jede Voice zur Engine frei zuweisbar | VOICE (SHIFT + KIT) | Kit | NRPN 98 |
+| Samples | Max. 31 WAVs, 5,9 s Gesamtlänge (mit `BIGFLASH` ≈ 17,8 s). Parameter Start und Länge in ms mit Fade, Loops mit Crossfade, Declick beim Retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, Samples im Flash | CC 2–5, 7, 8 (`WAV`), NRPN 100–105 (`STA`), NRPN 93, 94, 97 (`LEN`) |
+| Choke | Voices der Choke-Gruppe blenden sich gegenseitig aus (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
 
 ## Sequencer / Tracks
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Velocity 0 = Lock | Der Step setzt nur seine Automation und löst die Voice nicht aus. | STEP (`VEL`) | Pattern | – |
-| Sofortiger Pattern-Wechsel | Ein von Hand gewähltes Pattern startet beim nächsten Step an derselben Position. | CONFIG (`IPS`) | Global | – |
-| Raster pro Track | `1/4` … `1/32T` inkl. `1/16.`, `5/64`, `1/32.`: Polyrhythmen; 1/16-Tracks mit unverändertem Timing. Der Roll `ROL` zählt in den Steps des Tracks. | LAST STEP (Encoder-Klick), PERF (`ROL`) | Pattern | – |
-| Ratchets und Roll-Lock | Flam `X12`, `X24`, `X4+`/`X4-` (Velocity-Rampe); `1/8` … `1/1` wiederholt den Step alle 2–16 Steps bis zum nächsten aktiven Step. | STEP (`FLM`) | Pattern | – |
+| Lock Trigger | Lock Trigger für Automationen über Velocity 0 | STEP (`VEL`) | Pattern | – |
+| Pattern-Mode | Pattern wechseln sofort zum nächsten Step | CONFIG (`IPS`) | Global | – |
+| Raster pro Track | `1/4` … `1/32T` inkl. `1/16.`, `5/64`, `1/32.`: 1/16-Tracks mit unverändertem Timing.  Roll `ROL` zählt in den Steps des Tracks. | LAST STEP (Encoder-Klick), PERF (`ROL`) | Pattern | – |
+| Ratchets und Roll-Lock | Flam `X12`, `X24`, `X4+`/`X4-` (Velocity-Slope); `1/8` … `1/1` wiederholt den Step alle 2–16 Steps bis zum nächsten aktiven Step. | STEP (`FLM`) | Pattern | – |
 | Wiedergabe ohne Unterbrechung [OE] | Regler, Menüs, Laden und Speichern unterbrechen weder Audio noch Sequencer. | – | – | – |
 
 ## MIDI
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Mod Wheel → Kit-Morph | CC 1 auf dem globalen Kanal steuert `MRP`. | – | – | CC 1 |
-| Velocity-Layer | Die Anschlagstärke wählt Samples aus einem Bereich. | VOICE (Velocity `DST` = `WAV`, `AMT`) | Kit | Note-Velocity |
+| Mod Wheel → Kit-Morph | CC 1 auf globalem Kanal steuert `MRP`. | – | – | CC 1 |
+| Velocity-Layer | Die Anschlagstärke wählt Samples aus einem definierten Bereich. | VOICE (Velocity `DST` = `WAV`, `AMT`) | Kit | Note-Velocity |
 | Fehlerbehebungen [OE] | Zahlreiche Fehler der Original-Firmware (MIDI, Sequencer, SD-Karte, Speicher). | – | – | – |
 
 ## LFO
@@ -38,7 +38,7 @@ Waser), alles andere aus OE02-Samples.
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
 | Sample-Auswahl | Ziel `WAV`: `MOD` = Anzahl weiterer Samples; `CYC` = Round Robin (ein Sample pro Trigger weiter). | VOICE (LFO) | Kit | CC 122–127 (`MOD`), NRPN 27–32 (`WAV`) |
-| Neue Wellenformen | `XTR`; One-Shots `SI1` … `XT1`, `RN1` (Zufall pro Trigger), `SQ1` (Gate); `OFS` = One-Shot-Verzögerung. | VOICE (LFO `WAV`, `OFS`) | Kit | NRPN 27–32, 57–62 |
+| Neue Wellenformen | `XTR`; One-Shots `SI1` … `XT1`, `RN1` (Zufall pro Trigger), `SQ1` (Gate); `OFS` = One-Shot-Verzögerung; `CYC` (MOD = Anzahl der Stufen) | VOICE (LFO `WAV`, `OFS`) | Kit | NRPN 27–32, 57–62 |
 | Anzeige | `MOD` zeigt den Zielbereich (`21..127`); eindeutige Zielnamen `WAV` / `FWV` / `CWV`. | VOICE (LFO) | – | – |
 
 ## FX / Mixer
@@ -46,10 +46,10 @@ Waser), alles andere aus OE02-Samples.
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
 | Limiter [OE] | 32-Bit-Summe mit Limiter je Ausgang. | CONFIG (`LIM`) | Global | – |
-| DJ-Filter [OE] | LP/HP-Filter auf dem Gesamtmix. | PERF (`DJ`, `RES`) | nicht gespeichert | – |
-| Zwei FX-Slots | FX1 = Kit-FX, FX2 mit denselben Effekten (`DRV`, `RNG`, `CMP`, `DEL`). Reihenfolge `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
-| Routing und Sends | `OUT` = `FX` / `FXB`: 100 % in Slot A / B. `SNA` / `SNB` = Send in A / B zusätzlich zum Ausgang, beide gleichzeitig möglich. Sinnvoll bei `OUT` = `St1` … `R2`; bei `FX` / `FXB` erhöhen sie den Anteil im selben Slot bzw. speisen zusätzlich den anderen. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT`) |
-| Delay-Tempo-Sync | `1/4` … `1/32T`, punktiert, Triolen und die Track-Raster. | FX (Setup `SYA` / `SYB`) | Global | – |
+| DJ-Filter [OE] | LP/HP-Filter | PERF (`DJ`, `RES`) | nicht gespeichert | – |
+| Zweiter FX-Slot | FX2 = Projekt-FX. Reihenfolge `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
+| Routing und Sends | `OUT` = `FX` / `FXB`: 100 % in Slot A / B. `SNA` / `SNB` = Send in A / B zusätzlich zum Ausgang, beide gleichzeitig möglich. Sinnvoll bei `OUT` = `St1` … `R2`; bei `FX` / `FXB` erhöhen sie den Anteil im selben Slot bzw. füttern zusätzlich den anderen. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT`) |
+| Delay-Tempo-Sync | `1/4` … `1/32T`, punktiert, Triolen und die Track-Raster | FX (Setup `SYA` / `SYB`) | Global | – |
 
 ## Load / Save
 
@@ -70,5 +70,5 @@ Waser), alles andere aus OE02-Samples.
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Kit-Morph | Startwert im aktiven Kit / Zielwert im Morph-Kit (SHIFT), SHIFT + Klick nimmt den Parameter vom Morph aus; `MRV` = Morph pro Voice ein/aus. | VOICE (Edit-Ansicht), CONFIG (`MRV`) | Morph-Kit (Projekt), `MRV`: Global | CC 1 (`MRP`) |
-| Voice-Morph | Eine Voice zu einer anderen morphen: `VMV` = Paar, `VMO` = Stärke, `VSW` = Umschaltpunkt (Sample, Filtertyp …) pro Voice. | PERF | `VSW`: Global, sonst nicht gespeichert | – |
+| Kit-Morph | `MRP` 0 → 127, Startwert im aktiven Kit → Zielwert im Morph-Kit (mit SHIFT); SHIFT + Klick nimmt den Parameter vom Morph aus; `MRV` = Morph pro Voice ein/aus. | VOICE (Edit-Ansicht), CONFIG (`MRV`) | Morph-Kit (Projekt), `MRV`: Global | CC 1 (`MRP`) |
+| Voice-Morph | Morph zwischen zwei Voices: `VMV` = Paar, `VMO` = Stärke, `VSW` = Umschaltpunkt (Sample, Filtertyp …) pro Voice. | PERF | `VSW`: Global, sonst nicht gespeichert | – |
