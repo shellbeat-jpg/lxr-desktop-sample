@@ -277,6 +277,9 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   (0..127, default 0 = no send), stored in the kit. They work besides the voice's output (`OUT`
   `St1` … `R2`), both at once if wanted, before the voice's pan. Set the mix of the slot to fully
   wet for a classic send/return, otherwise the dry bus signal is heard twice.
+- **Sends with `OUT` = `FX`/`FXB`:** the voice is already fully in that slot, so a send into the
+  same slot only raises its level there (up to twice); a send into the other slot feeds both
+  slots, which can be interesting too.
 - **Kit format:** the send levels are a small block after the engine block of the kit file.
   Older kits load with 0; OpenElixir-02 ignores the block. The outputs `1+A` … `R2B` of the
   first 1.2.8 test versions play as the output only (set the send again).
