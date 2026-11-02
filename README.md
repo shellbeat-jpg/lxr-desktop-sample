@@ -232,7 +232,7 @@ Recommended settings:
 - Project template: `INIT.SND` in the project folder (needs a saved project; `Save proj first`
   otherwise; a project save keeps it). Global template: `/INIT.SND`.
 
-### 7. Performance and sequencer additions (1.2.4, in test)
+### 7. Performance and sequencer additions (1.2.4)
 
 - **Mod wheel** (CC 1) on the global MIDI channel = kit morph `MRP`.
 - **Morph target quick access:** in the edit view of a sound parameter, hold **SHIFT**: `Morph>`
@@ -250,20 +250,20 @@ Recommended settings:
   `XD1` `XT1`: one cycle per trigger, then hold; `OFS` = delay before the start; `RN1` = a new random
   value per trigger; `SQ1` = a gate after each trigger.
 
-Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-124-in-test).
+Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-124).
 
-### 8. Step grid per track (1.2.7, in test)
+### 8. Step grid per track (1.2.7)
 
 - SHIFT + LAST STEP, click the encoder: grid of the track `1/4` `1/4T` `1/8` `1/16.` `1/8T` `5/64`
   **`1/16`** `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
-  pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127-in-test).
+  pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127).
 
-### 8a. Step flam: ratchets and roll locks (1.2.8, in test)
+### 8a. Step flam: ratchets and roll locks (1.2.8)
 
 - Step flam `X12`, `X24`, `X4+`/`X4-` (velocity ramp) and roll locks `1/8` … `1/1` (repeats every
-  2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128-in-test).
+  2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128).
 
-### 9. Two FX slots (1.2.8, in test)
+### 9. Two FX slots (1.2.8)
 
 - SHIFT + FX = slot A (kit), SHIFT + FX again = slot B (`FX2`). Voice `OUT` `FX` → A, `FXB` → B
   (100 %). Sends: `SNA` (into A) and `SNB` (into B) on the AEG page, besides the voice's output
@@ -271,7 +271,7 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
   they only add to the level in the effect (the same slot) or send into the other slot.
 - On the FX pages, scrolled past the last effect parameter: order `ORD` (FX1 page, stored in the kit) (`A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
   (`1/4` … `1/32T`, dotted, triplets and the step grids). Details:
-  [docs/SAMPLES.md](docs/SAMPLES.md#two-fx-slots-128-in-test).
+  [docs/SAMPLES.md](docs/SAMPLES.md#two-fx-slots-128).
 
 ### Compatibility
 

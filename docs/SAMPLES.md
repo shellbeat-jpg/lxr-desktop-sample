@@ -154,7 +154,7 @@ but between two voices. Performance page, after `RES` of the DJ filter (scroll o
   modulation target. The six `VSW` values are kept with the global settings (SAVE → Global or a
   project save).
 
-## Performance and sequencer additions (1.2.4, in test)
+## Performance and sequencer additions (1.2.4)
 
 ### Mod wheel → kit morph
 
@@ -221,7 +221,7 @@ New after `CYC`:
 - `SQ1` is 1 (high) in the first half of the cycle and 0 in the second half, before the start and
   after the end: a gate after each trigger.
 
-## Step grid per track (1.2.7, in test)
+## Step grid per track (1.2.7)
 
 Each track of a pattern can run in its own step grid, e.g. hi-hats in 1/16 triplets against straight
 drums. **SHIFT + LAST STEP** (step button 14): the bottom row shows `[16]  1/16    1` = length,
@@ -251,7 +251,7 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
 - Roll on a grid track repeats on the track's own steps. Shuffle moves grid tracks slightly; live
   recording is quantized to the 1/16 grid.
 
-## Step flam: ratchets and roll locks (1.2.8, in test)
+## Step flam: ratchets and roll locks (1.2.8)
 
 The step parameter flam (step mode) has more values after `X2` … `X8`:
 
@@ -263,7 +263,7 @@ The step parameter flam (step mode) has more values after `X2` … `X8`:
 
 On grid tracks the repeats follow the track's own steps. Other firmwares play these steps once.
 
-## Two FX slots (1.2.8, in test)
+## Two FX slots (1.2.8)
 
 The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (distortion), `RNG`
 (ring modulator), `CMP` (compressor), `DEL` (delay).
