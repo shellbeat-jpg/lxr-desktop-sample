@@ -382,6 +382,13 @@ enum ParamEnums
 	PAR_FX_SEND4,
 	PAR_FX_SEND5,
 	PAR_FX_SEND6,
+	//MOD: send level of each voice slot into FX slot B (kitEngines[KIT_SENDB_OFFSET + slot])
+	PAR_FX_SENDB1,
+	PAR_FX_SENDB2,
+	PAR_FX_SENDB3,
+	PAR_FX_SENDB4,
+	PAR_FX_SENDB5,
+	PAR_FX_SENDB6,
 
 	
 	//#########################################

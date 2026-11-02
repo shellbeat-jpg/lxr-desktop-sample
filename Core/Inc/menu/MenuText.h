@@ -329,7 +329,7 @@ const char waveformNames[][4]  =
 //-----------------------------------------------------------------
 const char outputNames[][7]  =
 {
-	{20},		//number of entries
+	{8},		//number of entries
 	{"St1"}	,	//Stereo Out DAC 1
 	{"St2"}	,	//Stereo Out DAC 2
 	{"L1"}	,	//Mono Out Left DAC 1
@@ -338,9 +338,6 @@ const char outputNames[][7]  =
 	{"R2"}	,	//Mono Out Right DAC 2
 	{"FX"}	,	//to FX Bus
 	{"FXB"}	,	//MOD: to the second FX slot
-	//MOD: output and a send to FX slot A / B (level: FX send of the voice)
-	{"1+A"}, {"2+A"}, {"L1A"}, {"R1A"}, {"L2A"}, {"R2A"},
-	{"1+B"}, {"2+B"}, {"L1B"}, {"R1B"}, {"L2B"}, {"R2B"},
 };
 //-----------------------------------------------------------------
 //output routing for FX processor, without FX target
@@ -518,7 +515,8 @@ const char shortNames[][4]  =
 	{"ord"},
 	{"sya"},
 	{"syb"},
-	{"snd"},
+	{"sna"},
+	{"snb"},
 	{"fx1"},
 
 };
@@ -666,7 +664,8 @@ const char longNames[][16] =
 	{"Order"},
 	{"Sync A"},
 	{"Sync B"},
-	{"FX Send"},
+	{"FX1 Send"},
+	{"FX2 Send"},
 };
 
 

@@ -227,7 +227,7 @@ static FRESULT preset_writeEngines(const uint8_t* engines)
 //read the engine block after the kit parameters (stock engines if there is none)
 static void preset_readEngines(uint8_t* engines)
 {
-	uint8_t block[32];
+	uint8_t block[KIT_DATA_BLOCK_SIZE + 16];	//(later versions may add parts)
 	unsigned int bytesRead = 0;
 	if(f_read((FIL*)&SDFile, block, sizeof(block), &bytesRead) != FR_OK)
 		bytesRead = 0;

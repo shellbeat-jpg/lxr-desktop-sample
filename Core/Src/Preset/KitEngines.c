@@ -20,7 +20,8 @@
 #include <string.h>
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
-		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0 };
+		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
+		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT };
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
@@ -31,6 +32,7 @@ void kitEngines_setStock(uint8_t* engines)
 	{
 		engines[slot] = slot_stockEngine(slot);
 		engines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD
+		engines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
 	}
 	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
 }
@@ -49,15 +51,15 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	memcpy(block, kitEngines_signature, 4);
 	block[4] = NUM_VOICE_SLOTS;
 	memcpy(&block[5], engines, NUM_VOICE_SLOTS);
-	//MOD: the send levels
-	block[KIT_ENGINES_BLOCK_SIZE+0] = 'S';
-	block[KIT_ENGINES_BLOCK_SIZE+1] = 'N';
-	block[KIT_ENGINES_BLOCK_SIZE+2] = 'D';
-	block[KIT_ENGINES_BLOCK_SIZE+3] = NUM_VOICE_SLOTS;
-	memcpy(&block[KIT_ENGINES_BLOCK_SIZE+4], &engines[KIT_SEND_OFFSET], NUM_VOICE_SLOTS);
-	//MOD: the order of the FX slots
-	uint8_t* o = &block[KIT_ENGINES_BLOCK_SIZE+4+NUM_VOICE_SLOTS];
+	//MOD: the sends into slot A, the order of the FX slots, the sends into slot B
+	uint8_t* o = &block[KIT_ENGINES_BLOCK_SIZE];
+	o[0] = 'S'; o[1] = 'N'; o[2] = 'A'; o[3] = NUM_VOICE_SLOTS;
+	memcpy(&o[4], &engines[KIT_SEND_OFFSET], NUM_VOICE_SLOTS);
+	o += 4 + NUM_VOICE_SLOTS;
 	o[0] = 'O'; o[1] = 'R'; o[2] = 'D'; o[3] = 1; o[4] = engines[KIT_FXMODE_OFFSET];
+	o += 5;
+	o[0] = 'S'; o[1] = 'N'; o[2] = 'B'; o[3] = NUM_VOICE_SLOTS;
+	memcpy(&o[4], &engines[KIT_SENDB_OFFSET], NUM_VOICE_SLOTS);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -71,16 +73,23 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		if(block[5+slot] < NUM_ENGINES)
 			engines[slot] = block[5+slot];
 	}
-	//MOD: the send levels (kits without them keep the default)
-	const uint16_t e = (uint16_t)(5u + block[4]);
-	if(size >= e + 4u + NUM_VOICE_SLOTS && block[e] == 'S' && block[e+1] == 'N' && block[e+2] == 'D' && block[e+3] >= NUM_VOICE_SLOTS)
+	//MOD: tagged parts after the engines (kits without them keep the defaults)
+	uint16_t e = (uint16_t)(5u + block[4]);
+	while(size >= e + 4u && size >= e + 4u + block[e+3])
 	{
-		for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
-			engines[KIT_SEND_OFFSET + slot] = block[e+4+slot] > 127 ? KIT_SEND_DEFAULT : block[e+4+slot];
-		//MOD: the order of the FX slots
-		const uint16_t o = (uint16_t)(e + 4u + block[e+3]);
-		if(size >= o + 5u && block[o] == 'O' && block[o+1] == 'R' && block[o+2] == 'D' && block[o+3] >= 1)
-			engines[KIT_FXMODE_OFFSET] = block[o+4] < 3 ? block[o+4] : 0;
+		const uint8_t* t = &block[e];
+		const uint8_t n = t[3];
+		if(t[0] == 'S' && t[1] == 'N' && (t[2] == 'A' || t[2] == 'B') && n >= NUM_VOICE_SLOTS)
+		{
+			const uint8_t offset = t[2] == 'A' ? KIT_SEND_OFFSET : KIT_SENDB_OFFSET;
+			for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
+				engines[offset + slot] = t[4+slot] > 127 ? KIT_SEND_DEFAULT : t[4+slot];
+		}
+		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
+			engines[KIT_FXMODE_OFFSET] = t[4] < 3 ? t[4] : 0;
+		else if(!((t[0] >= 'A' && t[0] <= 'Z') && (t[1] >= 'A' && t[1] <= 'Z') && (t[2] >= 'A' && t[2] <= 'Z')))
+			break;	//not a part: data that isn't ours
+		e = (uint16_t)(e + 4u + n);
 	}
 }
 //---------------------------------------------------
@@ -310,7 +319,8 @@ void kitEngines_initVoice(const uint8_t slot)
 {
 	if(slot >= NUM_VOICE_SLOTS)
 		return;
-	kitEngines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD: FX send
+	kitEngines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD: FX sends
+	kitEngines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
 	kitEngines_reset(slot, kitEngines[slot] % NUM_ENGINES);
 }
 //---------------------------------------------------

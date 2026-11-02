@@ -76,6 +76,7 @@ static FRESULT vi_load(void)
 	{
 		kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
 		kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
+			kitEngines[KIT_SENDB_OFFSET + voiceLoad_slot()] = engines[KIT_SENDB_OFFSET + voiceLoad_slot()];
 	}
 	return res;
 }
@@ -94,7 +95,8 @@ static FRESULT vi_save(const uint8_t project)
 	}
 	kitEngines_copyVoice(slot, params, activeParameters);
 	engines[slot] = kitEngines[slot];
-	engines[KIT_SEND_OFFSET + slot] = kitEngines[KIT_SEND_OFFSET + slot];	//MOD: FX send
+	engines[KIT_SEND_OFFSET + slot] = kitEngines[KIT_SEND_OFFSET + slot];	//MOD: FX sends
+	engines[KIT_SENDB_OFFSET + slot] = kitEngines[KIT_SENDB_OFFSET + slot];
 	const FRESULT res = preset_writeInitTemplate(project, params, engines, (uint8_t)(mask | (1u << slot)));
 	soundengine_backgroundAudioEnd(bg);
 	return res;
@@ -263,6 +265,7 @@ void voiceLoad_click(void)
 		{
 			kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
 			kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
+			kitEngines[KIT_SENDB_OFFSET + voiceLoad_slot()] = engines[KIT_SENDB_OFFSET + voiceLoad_slot()];
 		}
 		else
 			menu_showSdError(res);

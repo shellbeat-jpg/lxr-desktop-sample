@@ -30,16 +30,20 @@
 //the stock firmware or anywhere else) load with the stock engines, and the
 //stock firmware ignores the block.
 #define KIT_ENGINES_BLOCK_SIZE	(5 + NUM_VOICE_SLOTS)
-//MOD: per kit data after the engines: the FX send level of each slot (0..127,
-//for the voice outputs "St1+A" ...). Arrays of kit data (kitEngines, kitEngines_ram,
-//...) hold KIT_DATA_SIZE bytes: [0..5] engines, [6..11] send levels. In the file
-//the block continues after the engines: "SND", count, the levels.
+//MOD: per kit data after the engines: the send levels of each slot into FX slot A
+//and B (0..127, independent of the voice output) and the order of the FX slots.
+//Arrays of kit data (kitEngines, kitEngines_ram, ...) hold KIT_DATA_SIZE bytes:
+//[0..5] engines, [6..11] sends A, [12] order, [13..18] sends B. In the file the
+//block continues after the engines with tagged parts (3 letters, count, data):
+//"SNA" sends A, "ORD" order, "SNB" sends B. Unknown parts are skipped (the
+//"SND" of the 1.2.8 test versions: a level for the former "1+A" outputs).
 #define KIT_SEND_OFFSET			NUM_VOICE_SLOTS
 #define KIT_FXMODE_OFFSET		(2*NUM_VOICE_SLOTS)		//order of the FX slots (FXBUS_MODE_x)
-#define KIT_DATA_SIZE			(2*NUM_VOICE_SLOTS + 1)
-#define KIT_SEND_DEFAULT		64
-//engine block, "SND" + count + levels, "ORD" + 1 + order
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5)
+#define KIT_SENDB_OFFSET		(2*NUM_VOICE_SLOTS + 1)
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1)
+#define KIT_SEND_DEFAULT		0
+//engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

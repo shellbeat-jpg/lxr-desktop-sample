@@ -37,9 +37,10 @@ enum
 	MIXER_ROUTING_DAC2_R,
 	MIXER_ROUTING_FX_BUS,
 	MIXER_ROUTING_FX_BUS_B,	//MOD: second FX slot
-	MIXER_ROUTING_SEND_A,	//MOD: 6 values: St1 ... R2 and a send to FX slot A
-	MIXER_ROUTING_SEND_B = MIXER_ROUTING_SEND_A + 6,	//MOD: 6 values: ... to slot B
-	MIXER_NUM_ROUTINGS = MIXER_ROUTING_SEND_B + 6
+	MIXER_NUM_ROUTINGS,
+	//MOD: 12 values "1+A" ... "R2B" of the 1.2.8 test versions (output and a send),
+	//now played as the output only: the sends are separate levels (SNA, SNB)
+	MIXER_ROUTING_SEND_A = MIXER_NUM_ROUTINGS
 };
 
 void mixer_init();

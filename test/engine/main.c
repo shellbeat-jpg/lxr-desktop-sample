@@ -362,9 +362,20 @@ static int roleTest(int round)
 //the engine block in kit files: round trip, and stock engines for anything else
 static int blockTest(void)
 {
+#ifdef KIT_DATA_SIZE
+	uint8_t engines[KIT_DATA_SIZE] = { ENGINE_HIHAT, ENGINE_SNARE, ENGINE_DRUM, ENGINE_CYMBAL, ENGINE_DRUM, ENGINE_SNARE };
+	uint8_t stock[KIT_DATA_SIZE], out[KIT_DATA_SIZE], block[KIT_DATA_BLOCK_SIZE + 16];
+	for(uint8_t i = NUM_VOICE_SLOTS; i < KIT_DATA_SIZE; i++)
+		engines[i] = (uint8_t)(i * 7 % 128);	//sends and order (order < 3)
+#ifdef KIT_FXMODE_OFFSET
+	engines[KIT_FXMODE_OFFSET] = 2;
+#endif
+#else
 	static const uint8_t engines[NUM_VOICE_SLOTS] = { ENGINE_HIHAT, ENGINE_SNARE, ENGINE_DRUM, ENGINE_CYMBAL, ENGINE_DRUM, ENGINE_SNARE };
 	uint8_t stock[NUM_VOICE_SLOTS], out[NUM_VOICE_SLOTS], block[32];
+#endif
 	int fail = 0;
+	memset(block, 0, sizeof(block));
 	kitEngines_setStock(stock);
 	const uint8_t size = kitEngines_encode(engines, block);
 	kitEngines_decode(block, size, out);
@@ -380,7 +391,7 @@ static int blockTest(void)
 	fail |= memcmp(out, stock, sizeof(out)) != 0;
 	block[1] = 'E'; block[5] = 9;								//invalid engine: that slot stock
 	kitEngines_decode(block, size, out);
-	fail |= out[0] != stock[0] || memcmp(&out[1], &engines[1], NUM_VOICE_SLOTS - 1) != 0;
+	fail |= out[0] != stock[0] || memcmp(&out[1], &engines[1], sizeof(out) - 1) != 0;
 	printf("engine block in kit files: %s\n", fail ? "FAILED" : "ok");
 	return fail;
 }

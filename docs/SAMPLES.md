@@ -273,14 +273,13 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   are the same as slot A's (type, `OUT`, mix, effect parameters).
 - **Routing:** a voice's output (`OUT` on its mix page) `FX` goes to slot A, the new **`FXB`** to
   slot B (100 %, nothing dry).
-- **Send (dry and FX):** `1+A`, `2+A`, `L1A`, `R1A`, `L2A`, `R2A` = dry to St1, St2, L1, R1, L2, R2
-  **and** a send to slot A; `1+B` … `R2B` the same with slot B (edit view e.g. `St1 + FX A`). The
-  send level is **`SND`** on the AEG page of the voice (0..127, default 64), stored in the kit. Set
-  the mix of the slot to fully wet for a classic send/return, otherwise the dry bus signal is heard
-  twice.
-- **Kit format:** the send levels are a small block after the engine block of the kit file. Older
-  kits load with 64; OpenElixir-02 ignores the block. Voices routed to a send play silent on other
-  firmwares.
+- **Sends:** **`SNA`** (into slot A) and **`SNB`** (into slot B) on the AEG page of the voice
+  (0..127, default 0 = no send), stored in the kit. They work besides the voice's output (`OUT`
+  `St1` … `R2`), both at once if wanted, before the voice's pan. Set the mix of the slot to fully
+  wet for a classic send/return, otherwise the dry bus signal is heard twice.
+- **Kit format:** the send levels are a small block after the engine block of the kit file.
+  Older kits load with 0; OpenElixir-02 ignores the block. The outputs `1+A` … `R2B` of the
+  first 1.2.8 test versions play as the output only (set the send again).
 - **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`
   and `ORD` on slot A's page, `SYB` on slot B's page.
 - **Order** (`ORD`):

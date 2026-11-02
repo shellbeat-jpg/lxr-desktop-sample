@@ -289,7 +289,8 @@ enum NamesEnum
 	TEXT_FX_MODE,		//MOD: order of the FX slots
 	TEXT_FXA_SYNC,		//MOD: delay sync of slot A
 	TEXT_FXB_SYNC,		//MOD: delay sync of slot B
-	TEXT_FX_SEND,		//MOD: FX send level of the voice
+	TEXT_FX_SEND,		//MOD: FX send level of the voice (slot A)
+	TEXT_FX_SENDB,		//MOD: ... into slot B
 	TEXT_FXA_TYPE,		//MOD: type of FX slot A ("fx1")
 
 
@@ -416,6 +417,7 @@ enum shortNamesEnum
 	SHORT_FXA_SYNC,
 	SHORT_FXB_SYNC,
 	SHORT_FX_SEND,
+	SHORT_FX_SENDB,
 	SHORT_FXA_TYPE
 
 	
@@ -562,7 +564,8 @@ enum longNamesEnum
 	LONG_FX_MODE,
 	LONG_FXA_SYNC,
 	LONG_FXB_SYNC,
-	LONG_FX_SEND
+	LONG_FX_SEND,
+	LONG_FX_SENDB
 	
 };
 

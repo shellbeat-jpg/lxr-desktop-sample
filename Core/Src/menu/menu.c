@@ -280,6 +280,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FXA_SYNC, CAT_FX, LONG_FXA_SYNC},/*TEXT_FXA_SYNC*/
 		{SHORT_FXB_SYNC, CAT_FX, LONG_FXB_SYNC},/*TEXT_FXB_SYNC*/
 		{SHORT_FX_SEND, CAT_FX, LONG_FX_SEND},/*TEXT_FX_SEND*/
+		{SHORT_FX_SENDB, CAT_FX, LONG_FX_SENDB},/*TEXT_FX_SENDB*/
 		{SHORT_FXA_TYPE, CAT_FX, LONG_TYPE},/*TEXT_FXA_TYPE*/
 
 
@@ -567,6 +568,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_STEP_FLAM*/ 		DTYPE_MENU | (MENU_STEP_FLAM<<8),							//251
 		/*PAR_STEP_SHIFT*/		DTYPE_MENU | (MENU_STEP_SHIFT<<8),
 		/*PAR_FX_SEND1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
+		/*PAR_FX_SENDB1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -725,8 +727,10 @@ static uint16_t menu_trackPar(const uint16_t par, const uint8_t fromTrack, const
 		return midiChan[toTrack];
 	if(par == PAR_MIDI_NOTE1 + fromTrack)
 		return PAR_MIDI_NOTE1 + toTrack;
-	if(par >= PAR_FX_SEND1 && par <= PAR_FX_SEND6)	//MOD: the slot's FX send
+	if(par >= PAR_FX_SEND1 && par <= PAR_FX_SEND6)	//MOD: the slot's FX sends
 		return PAR_FX_SEND1 + (toTrack < NUM_VOICE_SLOTS ? toTrack : NUM_VOICE_SLOTS-1);
+	if(par >= PAR_FX_SENDB1 && par <= PAR_FX_SENDB6)
+		return PAR_FX_SENDB1 + (toTrack < NUM_VOICE_SLOTS ? toTrack : NUM_VOICE_SLOTS-1);
 	return par;
 }
 
@@ -999,6 +1003,15 @@ static uint8_t menu_fxChoiceCount(const uint16_t p)
 {
 	if(p == PAR_FX_MODE) return FXBUS_NUM_MODES;
 	if(p == PAR_FXA_SYNC || p == PAR_FXB_SYNC) return FXBUS_NUM_SYNC;
+	return 0;
+}
+//MOD: the FX send level a menu entry shows (kit data), NULL for other parameters
+static uint8_t* menu_sendLevel(const uint16_t p)
+{
+	if(p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
+		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
+	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
+		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
 	return 0;
 }
 static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t isLong)
@@ -2084,17 +2097,10 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr >= PAR_FX_SEND1 && parNr <= PAR_FX_SEND6)
+			else if(menu_sendLevel(parNr))
 			{
 				//MOD: FX send level (kit data)
-				numtostrpu(&editDisplayBuffer[1][13], kitEngines[KIT_SEND_OFFSET + (parNr - PAR_FX_SEND1)], ' ');
-			}
-			else if(parNr >= PAR_AUDIO_OUT1 && parNr <= PAR_AUDIO_OUT6 && curParmVal >= MIXER_ROUTING_SEND_A && curParmVal < MIXER_NUM_ROUTINGS)
-			{
-				//MOD: "St1 + FX A": the output and a send
-				static const char outs[6][4] = { "St1", "St2", "L1", "R1", "L2", "R2" };
-				const uint8_t k = (uint8_t)(curParmVal - MIXER_ROUTING_SEND_A);
-				snprintf(&editDisplayBuffer[1][6], 11, "%s + FX %c", outs[k % 6], k < 6 ? 'A' : 'B');
+				numtostrpu(&editDisplayBuffer[1][13], *menu_sendLevel(parNr), ' ');
 			}
 			else if(menu_fxChoiceCount(parNr))
 			{
@@ -2286,9 +2292,9 @@ void menu_repaintGeneric()
 				uint8_t s, d;
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
-			} else if(parNr >= PAR_FX_SEND1 && parNr <= PAR_FX_SEND6) {
+			} else if(menu_sendLevel(parNr)) {
 				//MOD: FX send level (kit data)
-				numtostrpu(valueAsText, kitEngines[KIT_SEND_OFFSET + (parNr - PAR_FX_SEND1)], ' ');
+				numtostrpu(valueAsText, *menu_sendLevel(parNr), ' ');
 			} else if(menu_fxChoiceCount(parNr)) {
 				//MOD: FX slot order / delay sync
 				const char* s = menu_fxChoiceName(parNr, curParmVal, 0);
@@ -3576,7 +3582,7 @@ static void menu_skipHiddenTargets(uint8_t* value, int8_t inc, const uint8_t sta
 static uint8_t menu_isSpecialEncoderParam(const uint16_t p)
 {
 	return p == PAR_VMORPH_PAIR || p == PAR_VMORPH_SWITCH || p == PAR_MORPH_VOICES
-		|| p == PAR_CHOKE_GROUP || (p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
+		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p)
 		|| menu_fxChoiceCount(p);
 }
 static void menu_encoderChangeParameter(int8_t inc)
@@ -3600,9 +3606,9 @@ static void menu_encoderChangeParameter(int8_t inc)
 		return;
 	}
 	//MOD: FX send level of the voice (kit data)
-	if(paramNr >= PAR_FX_SEND1 && paramNr <= PAR_FX_SEND6)
+	if(menu_sendLevel(paramNr))
 	{
-		uint8_t* s = &kitEngines[KIT_SEND_OFFSET + (paramNr - PAR_FX_SEND1)];
+		uint8_t* s = menu_sendLevel(paramNr);
 		const int16_t v = (int16_t)*s + inc;
 		*s = (uint8_t)(v < 0 ? 0 : v > 127 ? 127 : v);
 		activeParameters[paramNr] = *s;
