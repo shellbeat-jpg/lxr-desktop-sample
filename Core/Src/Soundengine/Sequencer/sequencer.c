@@ -232,6 +232,7 @@ void seq_copyPatternToBackupBuffer(uint8_t patternNr)
 		memcpy(&patternBackupBuffer.seq_mainSteps[i], &seq_patternSet.seq_mainSteps[i][patternNr],  sizeof(uint16_t)*NUM_TRACKS);
 	}
 	memcpy(&patternBackupBuffer.length, &seq_patternSet.length[patternNr],  sizeof(uint8_t)*NUM_TRACKS);
+	memcpy(&patternBackupBuffer.grid, &seq_patternSet.grid[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 
 
 
@@ -249,6 +250,7 @@ void seq_copyBackupBufferToPattern(uint8_t patternNr)
 		memcpy(&seq_patternSet.seq_mainSteps[i][patternNr], &patternBackupBuffer.seq_mainSteps[i],  sizeof(uint16_t)*NUM_TRACKS);
 	}
 	memcpy(&seq_patternSet.length[patternNr], &patternBackupBuffer.length,  sizeof(uint8_t)*NUM_TRACKS);
+	memcpy(&seq_patternSet.grid[patternNr], &patternBackupBuffer.grid,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 
 	seq_patternSet.shuffle[patternNr] = patternBackupBuffer.shuffle;
 	seq_patternSet.kitNr[patternNr] = patternBackupBuffer.kitNr;
@@ -1097,6 +1099,162 @@ uint32_t seq_getShiftFlamPattern(const uint8_t track, uint8_t step, StepPosition
 
 uint8_t chokeCurrent=0;
 uint8_t chokeNext=0;
+//------------------------------------------------------------------------------
+//MOD: per-track step grid. seq_gridSteps counts the 1/16 steps since the position
+//was reset; with the 24 ticks of each step (seq_prescaleCounter) it gives the
+//absolute tick. Tracks with another grid don't advance in seq_nextStep: they
+//step on their own tick count here (from seq_processFlam, every tick), so the
+//timing of the 1/16 tracks is unchanged.
+const uint8_t seq_gridTicks[SEQ_NUM_GRIDS] = { 24, 16, 12, 8, 18, 32, 48, 64, 96 };
+static int32_t seq_gridSteps = -1;			//1/16 steps since the reset (-1 = before the first)
+static int32_t seq_gridLastT[NUM_TRACKS];	//last tick processed per track
+static int16_t seq_cycleStep = -1;			//pattern position (1/16 steps) with grid tracks
+
+static void seq_gridReset(void)
+{
+	seq_gridSteps = -1;
+	seq_cycleStep = -1;
+	for(uint8_t i=0;i<NUM_TRACKS;i++)
+		seq_gridLastT[i] = -1;
+}
+static inline uint8_t seq_trackTicks(const uint8_t track)
+{
+	const uint8_t g = seq_patternSet.grid[seq_activePattern][track];
+	return g < SEQ_NUM_GRIDS ? seq_gridTicks[g] : 24u;
+}
+static inline uint8_t seq_trackLen(const uint8_t track)
+{
+	const uint8_t l = seq_patternSet.length[seq_activePattern][track];
+	return l == 0 ? 16u : l > NUM_STEPS ? NUM_STEPS : l;
+}
+//length of the pattern in 1/16 steps when it has grid tracks (the longest track in time)
+__attribute__((noinline)) static uint16_t seq_gridPatternSteps(uint8_t* hasGrid)
+{
+	uint32_t ticks = 0;
+	*hasGrid = 0;
+	for(uint8_t i=0;i<NUM_TRACKS;i++)
+	{
+		const uint8_t g = seq_trackTicks(i);
+		if(g != 24u) *hasGrid = 1;
+		const uint32_t t = (uint32_t)seq_trackLen(i) * g;
+		if(t > ticks) ticks = t;
+	}
+	return (uint16_t)((ticks + 23u) / 24u);
+}
+//one tick of a grid track
+static void seq_gridTrackTick(const uint8_t track, const int32_t t)
+{
+	const uint8_t G   = seq_trackTicks(track);
+	const uint8_t len = seq_trackLen(track);
+	const uint32_t sub = (uint32_t)t % G;
+	if(sub == 0)
+	{
+		//a new step of this track
+		seq_stepIndex[track] = (int8_t)(((uint32_t)t / G) % len);
+		if(track == frontParser_activeTrack)
+		{
+			//running light of the shown track (as in seq_nextStep)
+			const uint8_t stepIdx = (uint8_t)seq_stepIndex[track];
+			if(menu_getViewedPattern() == menu_playedPattern && stepIdx >= menu_activeBar*16 && stepIdx < (menu_activeBar*16+16)
+					&& ((menu_activePage < MENU_MIDI_PAGE) || menu_activePage == PERF_PAGE || menu_activePage == SEQ_PAGE || menu_activePage == EUKLID_PAGE))
+				led_setActive_step(stepIdx%16);
+		}
+		if(!(seq_mutedTracks & (1<<track)) && seq_intIsMainStepActive(track,seq_stepIndex[track],seq_activePattern))
+		{
+			seq_rndValue[track].prev = seq_rndValue[track].current;
+			seq_rndValue[track].current = seq_rndValue[track].next;
+			seq_rndValue[track].next = GetRngValue()% 100 + 1;
+		}
+	}
+	if(seq_stepIndex[track] < 0 || (seq_mutedTracks & (1<<track)))
+		return;
+	//the 24 flam/shift positions of a step, scaled onto this track's step
+	//(rounded up: position 0 = the step's own hit falls on its first tick)
+	const uint32_t q0 = (sub * 24u + G - 1u) / G;
+	const uint32_t q1 = ((sub + 1u) * 24u + G - 1u) / G;
+	uint32_t m = 0;
+	for(uint32_t q=q0;q<q1 && q<24u;q++)
+		m |= 1UL << (23u - q);
+
+	const uint8_t currentStep = (uint8_t)seq_stepIndex[track];
+	const uint8_t nextStep = (uint8_t)((currentStep + 1u) % len);
+	const uint8_t prevStep = currentStep != 0 ? currentStep - 1u : len - 1u;
+	uint8_t trig = 0xff;
+	if(m)
+	{
+		if(seq_getShiftFlamPattern(track, nextStep, STEP_NEXT) & m)				trig = nextStep;
+		else if(seq_getShiftFlamPattern(track, currentStep, STEP_CURRENT) & m)	trig = currentStep;
+		else if(seq_getShiftFlamPattern(track, prevStep, STEP_PREV) & m)			trig = prevStep;
+	}
+	if(trig != 0xff)
+	{
+		lastWasNoteOn[track] = 1;
+		const uint8_t vol = seq_patternSet.seq_subStepPattern[seq_activePattern][track][trig].volume&STEP_VOLUME_MASK;
+		const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][trig].note;
+		seq_triggerVoice(track,vol,note);
+	}
+	else if(lastWasNoteOn[track])
+	{
+		lastWasNoteOn[track] = 0;
+		voiceControl_noteOff(track);
+	}
+}
+//the ticks of all grid tracks up to tick idx of the current 1/16 step
+__attribute__((noinline)) static void seq_gridTick(const uint8_t idx)
+{
+	if(seq_gridSteps < 0)
+		return;
+	const int32_t T = seq_gridSteps * 24 + idx;
+	for(uint8_t track=0;track<NUM_TRACKS;track++)
+	{
+		if(seq_trackTicks(track) == 24u)
+		{
+			seq_gridLastT[track] = T;
+			continue;
+		}
+		int32_t t = seq_gridLastT[track];
+		if(T <= t)
+			continue;
+		if(T - t > 96)		//a jump (e.g. external clock): no burst of old ticks
+			t = T - 1;
+		while(t < T)
+			seq_gridTrackTick(track, ++t);
+		seq_gridLastT[track] = T;
+	}
+}
+//called by seq_nextStep: the pattern position with grid tracks; returns 0xff
+//if the pattern has none (the stock calculation is used then)
+__attribute__((noinline)) static uint8_t seq_gridMasterStepPos(void)
+{
+	uint8_t hasGrid;
+	const uint16_t steps = seq_gridPatternSteps(&hasGrid);
+	if(!hasGrid)
+		return 0xff;
+	const int16_t next = (int16_t)(seq_cycleStep + 1);
+	return (next >= (int16_t)steps) ? 0u : (uint8_t)(next > 255 ? 255 : next);
+}
+//called by seq_nextStep before the tracks advance
+__attribute__((noinline)) static void seq_gridStep(const uint8_t masterStepPos)
+{
+	seq_cycleStep = masterStepPos;
+	seq_gridSteps++;
+}
+//------------------------------------------------------------------------------
+void seq_setTrackGrid(uint8_t trackNr, uint8_t grid)
+{
+	if(trackNr >= NUM_TRACKS || grid >= SEQ_NUM_GRIDS) return;
+	seq_patternSet.grid[frontParser_shownPattern][trackNr] = grid;
+	//from the next tick on: the track takes its position from the absolute tick
+	seq_gridLastT[trackNr] = seq_gridSteps >= 0 ? seq_gridSteps * 24 + seq_prescaleCounter : -1;
+	if(grid == 0 && seq_gridSteps >= 0)
+		seq_stepIndex[trackNr] = (int8_t)((uint32_t)seq_gridSteps % seq_trackLen(trackNr));
+}
+uint8_t seq_getTrackGrid(uint8_t trackNr)
+{
+	const uint8_t g = trackNr < NUM_TRACKS ? seq_patternSet.grid[frontParser_shownPattern][trackNr] : 0;
+	return g < SEQ_NUM_GRIDS ? g : 0;
+}
+//------------------------------------------------------------------------------
 void seq_processFlam(uint8_t idx)
 {
 	if(!seq_running)
@@ -1108,10 +1266,13 @@ void seq_processFlam(uint8_t idx)
 		chokeNext=0;
 	}
 
+	seq_gridTick(idx);	//MOD: tracks with another grid than 1/16
 	for(uint8_t track=0;track<NUM_TRACKS;track++)
 	{
 		//the step index is -1 until the first step (e.g. with external clock)
 		if(seq_stepIndex[track] < 0)
+			continue;
+		if(seq_trackTicks(track) != 24u)	//MOD: handled by seq_gridTick
 			continue;
 		//if track is not muted
 		if(!(seq_mutedTracks & (1<<track) ) )
@@ -1271,9 +1432,16 @@ __attribute__((noinline)) static void seq_switchPatternNow(void)
 	uint8_t last[NUM_TRACKS];
 	memcpy(idx, seq_stepIndex, sizeof(idx));
 	memcpy(last, seq_lastMasterStep, sizeof(last));
+	const int32_t gs = seq_gridSteps;
+	const int16_t cs = seq_cycleStep;
+	int32_t lt[NUM_TRACKS];
+	memcpy(lt, seq_gridLastT, sizeof(lt));
 	seq_setPendingPatternActive();
 	memcpy(seq_stepIndex, idx, sizeof(idx));
 	memcpy(seq_lastMasterStep, last, sizeof(last));
+	seq_gridSteps = gs;
+	seq_cycleStep = cs;
+	memcpy(seq_gridLastT, lt, sizeof(lt));
 	midi_process_block = 0;
 }
 IN_ITCM_RAM void seq_nextStep()
@@ -1297,7 +1465,12 @@ IN_ITCM_RAM void seq_nextStep()
 	if(!seqlen)
 		seqlen=16;
 
-	if( (((seq_stepIndex[longestTrack]+1) & 0x3f) == 0) || ((seq_stepIndex[longestTrack]+1) >= seqlen))
+	const uint8_t gridPos = seq_gridMasterStepPos();	//MOD: 0xff = no grid tracks
+	if(gridPos != 0xff)
+	{
+		masterStepPos = gridPos;
+	}
+	else if( (((seq_stepIndex[longestTrack]+1) & 0x3f) == 0) || ((seq_stepIndex[longestTrack]+1) >= seqlen))
 			//(((seq_patternSet.seq_subStepPattern[seq_activePattern][0][seq_stepIndex[0]+1]).note & PATTERN_END)) )
 	{
 		masterStepPos = 0;
@@ -1381,9 +1554,12 @@ IN_ITCM_RAM void seq_nextStep()
 	//trigger_clockTick(seq_stepIndex[0]+1);
 //	trigger_clockTick(1, 0);
 
+	seq_gridStep(masterStepPos);	//MOD
 	int i;
 	for(i=0;i<NUM_TRACKS;i++)
 	{
+		if(seq_trackTicks(i) != 24u)	//MOD: grid tracks step in seq_gridTick
+			continue;
 		//increment the step index
 		seq_stepIndex[i]++;
 		//check if track end is reached
@@ -2594,6 +2770,7 @@ void seq_clearTrack(uint8_t trackNr, uint8_t pattern)
 
 	//**PATROT all pattern rotations off and all patterns set to length 16
 	seq_patternSet.length[pattern][trackNr]=16;
+	seq_patternSet.grid[pattern][trackNr]=0;	//MOD: 1/16
 
 }
 //------------------------------------------------------------------------------
@@ -2651,6 +2828,7 @@ void seq_copyTrack(uint8_t srcNr, uint8_t dstNr, uint8_t pattern)
 
 	// copy length and rotation offset from source track
 	seq_patternSet.length[pattern][dstNr] = seq_patternSet.length[pattern][srcNr];
+	seq_patternSet.grid[pattern][dstNr] = seq_patternSet.grid[pattern][srcNr];	//MOD
 
 
 }
@@ -2683,6 +2861,7 @@ void seq_copyPattern(uint8_t src, uint8_t dst)
 
 		// copy length and rotation offset from source pattern for the track
 		seq_patternSet.length[dst][j] = seq_patternSet.length[src][j];
+		seq_patternSet.grid[dst][j] = seq_patternSet.grid[src][j];	//MOD
 
 		seq_patternSet.shuffle[dst] = seq_patternSet.shuffle[src];
 		seq_patternSet.kitNr[dst] = seq_patternSet.kitNr[src];
@@ -2839,6 +3018,6 @@ static void seq_setStepIndexToStart()
 		seq_stepIndex[i] =  - 1;
 
 	}
-
+	seq_gridReset();	//MOD
 }
 

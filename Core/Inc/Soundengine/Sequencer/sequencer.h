@@ -113,6 +113,7 @@ typedef struct PatternSetStruct
 	uint8_t length[NUM_PATTERN][NUM_TRACKS];	//only used in euklid generator?
 	uint8_t shuffle[NUM_PATTERN];
 	uint8_t kitNr[NUM_PATTERN];
+	uint8_t grid[NUM_PATTERN][NUM_TRACKS];		//MOD: step grid per track (SEQ_GRID_x, 0 = 1/16)
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -124,6 +125,7 @@ typedef struct PatternBackupBufferStruct
 	uint8_t length[NUM_TRACKS];	//only used in euklid generator?
 	uint8_t shuffle;
 	uint8_t kitNr;
+	uint8_t grid[NUM_TRACKS];	//MOD
 }PatternBackupBuffer;
 
 /*
@@ -188,6 +190,14 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note);
 void seq_setShuffle(float shuffle);
 //------------------------------------------------------------------------------
 void seq_setTrackLength(uint8_t trackNr, uint8_t length);
+
+//MOD: step grid per track. The internal clock has 24 ticks per 1/16 step
+//(96 ppq); a track with another grid steps every seq_gridTicks[] ticks.
+//Code 0 = 1/16 (the default of old patterns); the menu shows them sorted by length.
+#define SEQ_NUM_GRIDS	9
+extern const uint8_t seq_gridTicks[SEQ_NUM_GRIDS];
+void seq_setTrackGrid(uint8_t trackNr, uint8_t grid);	//of the shown pattern
+uint8_t seq_getTrackGrid(uint8_t trackNr);
 //------------------------------------------------------------------------------
 uint8_t seq_getTrackLength(uint8_t trackNr);
 //------------------------------------------------------------------------------

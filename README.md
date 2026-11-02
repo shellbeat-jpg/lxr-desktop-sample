@@ -179,6 +179,12 @@ Recommended settings:
 
 Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-124-in-test).
 
+### 8. Step grid per track (1.2.7, in test)
+
+- SHIFT + LAST STEP, click the encoder: grid of the track `1/4` `1/4T` `1/8` `1/8T` **`1/16`**
+  `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
+  pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127-in-test).
+
 ### Compatibility
 
 Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `ALL`, no choke

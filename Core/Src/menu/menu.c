@@ -966,6 +966,21 @@ static void menu_lfoRangeText(const uint16_t parNr, const uint8_t amount)
 	snprintf(buf, sizeof(buf), "%d..%d", lo, hi);
 	memcpy(&editDisplayBuffer[1][0], buf, strlen(buf));
 }
+//MOD: step grid on the last step page: encoder click switches between length and grid
+static uint8_t menu_lastStepGrid = 0;
+static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4" };
+static const char menu_gridRatios[SEQ_NUM_GRIDS][4] = { "1",    "2/3",   "1/2",  "1/3",   "3/4",   "4/3",  "x2",  "8/3",  "x4" };
+static const uint8_t menu_gridOrder[SEQ_NUM_GRIDS]  = { 8, 7, 6, 5, 0, 4, 1, 2, 3 };	//longest step first
+static uint8_t menu_gridStep(const uint8_t code, const int8_t inc)
+{
+	uint8_t pos = 0;
+	for(uint8_t i=0;i<SEQ_NUM_GRIDS;i++)
+		if(menu_gridOrder[i] == code) pos = i;
+	int16_t p = (int16_t)pos + inc;
+	if(p < 0) p = 0;
+	if(p >= SEQ_NUM_GRIDS) p = SEQ_NUM_GRIDS - 1;
+	return menu_gridOrder[p];
+}
 //MOD: the parameter selected on the active page
 static uint16_t menu_currentParamNr(void)
 {
@@ -1513,16 +1528,18 @@ static void menu_repaintSimplePage()
 			sprintf(trackNr, "%d", voice+1);
 			strcpy(&editDisplayBuffer[0][15], trackNr);
 
-			strcpy(&editDisplayBuffer[1][0], "Current: ");
-			numtostrps(&editDisplayBuffer[1][9],seq_getTrackLength(menu_activeVoice));
 		}
-
-
 		else //all
 		{
 			strcpy(&editDisplayBuffer[0][10], "All");
-			strcpy(&editDisplayBuffer[1][0], "Current: ");
-			numtostrps(&editDisplayBuffer[1][9],seq_getTrackLength(menu_activeVoice));
+		}
+		//MOD: "[16]  1/16T  2/3": length and step grid, the brackets mark what the encoder edits
+		{
+			const uint8_t g = seq_getTrackGrid(menu_activeVoice);
+			char lb[5], gb[8];
+			snprintf(lb, sizeof(lb), menu_lastStepGrid ? " %-2u " : "[%u]", (unsigned)seq_getTrackLength(menu_activeVoice));
+			snprintf(gb, sizeof(gb), menu_lastStepGrid ? "[%s]" : " %s ", menu_gridNames[g]);
+			snprintf(&editDisplayBuffer[1][0], 17, "%-4s %-7s %3s", lb, gb, menu_gridRatios[g]);
 		}
 
 
@@ -3336,6 +3353,11 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				//execute
 				copyClear_executeClear();
 			}
+			else if(menu_activePage == MENU_LAST_STEP_PAGE)
+			{
+				//MOD: the encoder edits the length or the step grid
+				menu_lastStepGrid = (uint8_t)!menu_lastStepGrid;
+			}
 			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
 			{
 				//MOD: SHIFT + click: the morph kit gets the active value, the
@@ -3370,6 +3392,18 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	else if(menu_activePage == SONG_MODE_PAGE)
 	{
 		menu_handleSongMenu(inc, btnClicked);
+	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid)
+	{
+		//MOD: step grid of the track (or of all tracks)
+		const uint8_t g = menu_gridStep(seq_getTrackGrid(menu_activeVoice), inc);
+		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_ALL)
+		{
+			for(uint8_t i=0;i<7;i++)
+				seq_setTrackGrid(i, g);
+		}
+		else
+			seq_setTrackGrid(menu_activeVoice, g);
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE)
 	{

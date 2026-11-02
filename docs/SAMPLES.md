@@ -221,6 +221,33 @@ New after `CYC`:
 - `SQ1` is 1 (high) in the first half of the cycle and 0 in the second half, before the start and
   after the end: a gate after each trigger.
 
+## Step grid per track (1.2.7, in test)
+
+Each track of a pattern can run in its own step grid, e.g. hi-hats in 1/16 triplets against straight
+drums. **SHIFT + LAST STEP** (step button 14): the bottom row shows `[16]  1/16    1` = length,
+grid and the step length compared with 1/16. **Click the encoder** to switch the encoder between
+length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets all tracks.
+
+| Grid | Step length (1/16 = 1) | Steps per bar |
+|---|---|---|
+| `1/4` | x4 | 4 |
+| `1/4T` | 8/3 | 6 |
+| `1/8` | x2 | 8 |
+| `1/8T` | 4/3 | 12 |
+| `1/16` | 1 (default) | 16 |
+| `1/32.` | 3/4 | 21⅓ |
+| `1/16T` | 2/3 | 24 |
+| `1/32` | 1/2 | 32 |
+| `1/32T` | 1/3 | 48 |
+
+- The 1/16 tracks keep their timing unchanged; the other tracks step on the internal 96 ppq clock
+  (24 ticks per 1/16). With MIDI clock all grids except `1/32.` fall on clock pulses.
+- Each track loops at its own length, as before (polymeter). The pattern ends after its longest track
+  in time.
+- Stored in the pattern (a small block after the pattern data). Older patterns load as `1/16`; other
+  firmwares ignore the block and play all tracks in 1/16.
+- Not on grid tracks: roll; shuffle moves them slightly; live recording is quantized to the 1/16 grid.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:
