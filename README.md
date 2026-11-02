@@ -185,6 +185,11 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
   `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
   pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127-in-test).
 
+### 8a. Step flam: ratchets and roll locks (1.2.8, in test)
+
+- Step flam `X12`, `X24`, `X4+`/`X4-` (velocity ramp) and roll locks `1/8` … `1/1` (repeats every
+  2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128-in-test).
+
 ### 9. Two FX slots (1.2.8, in test)
 
 - SHIFT + FX = slot A (kit), SHIFT + FX again = slot B (`FX2`). Voice `OUT` `FX` → A, `FXB` → B,

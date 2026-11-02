@@ -947,6 +947,19 @@ uint32_t flamIdxToPattern(uint8_t flamIdx)
 	case 5: //x8
 		return 0b100100100100100100100100;
 		break;
+
+	//MOD: more repeats, x4 with a velocity ramp (seq_flamVolume), and the slower
+	//rolls of SEQ_FLAM_SLOW_ROLL.. (one hit here, the repeats in seq_slowRoll)
+	case 6: //x12
+		return 0b101010101010101010101010;
+		break;
+	case 7: //x24
+		return 0b111111111111111111111111;
+		break;
+	case SEQ_FLAM_X4_UP:
+	case SEQ_FLAM_X4_DOWN:
+		return 0b100000100000100000100000;
+		break;
 	}
 }
 //return pattern as 8 bit binary value (steps 0-7)
@@ -1106,6 +1119,50 @@ uint8_t chokeNext=0;
 //step on their own tick count here (from seq_processFlam, every tick), so the
 //timing of the 1/16 tracks is unchanged.
 const uint8_t seq_gridTicks[SEQ_NUM_GRIDS] = { 24, 16, 12, 8, 18, 32, 48, 64, 96 };
+
+//MOD: velocity of a hit of a flam with a ramp (pos = position 0..23 in the step)
+static uint8_t seq_flamVolume(const uint8_t track, const uint8_t step, uint8_t vol, const uint8_t pos)
+{
+	const uint8_t f = seq_patternSet.seq_stepTiming[seq_activePattern][track][step].flam;
+	if(f != SEQ_FLAM_X4_UP && f != SEQ_FLAM_X4_DOWN)
+		return vol;
+	uint8_t hit = (uint8_t)((pos % 24u) / 6u);			//0..3
+	if(f == SEQ_FLAM_X4_DOWN) hit = (uint8_t)(3u - hit);
+	return (uint8_t)((uint16_t)vol * (hit + 1u) / 4u);
+}
+//MOD: slow roll lock: a step with flam 1/8 ... 1/1 repeats every 2 ... 16 steps of
+//its track until the next active step
+static uint8_t seq_slowRollInt[NUM_TRACKS];
+static uint8_t seq_slowRollCnt[NUM_TRACKS];
+static uint8_t seq_slowRollFrom[NUM_TRACKS];
+__attribute__((noinline)) void seq_slowRoll(const uint8_t track)
+{
+	const int8_t s = seq_stepIndex[track];
+	if(s < 0)
+		return;
+	if(seq_intIsMainStepActive(track,(uint8_t)s,seq_activePattern))
+	{
+		const uint8_t f = seq_patternSet.seq_stepTiming[seq_activePattern][track][s].flam;
+		if(f >= SEQ_FLAM_SLOW_ROLL && f < SEQ_FLAM_SLOW_ROLL + 4)
+		{
+			seq_slowRollInt[track] = (uint8_t)(2u << (f - SEQ_FLAM_SLOW_ROLL));	//2, 4, 8, 16 steps
+			seq_slowRollCnt[track] = 0;
+			seq_slowRollFrom[track] = (uint8_t)s;
+		}
+		else
+			seq_slowRollInt[track] = 0;
+		return;
+	}
+	if(!seq_slowRollInt[track])
+		return;
+	if(++seq_slowRollCnt[track] < seq_slowRollInt[track])
+		return;
+	seq_slowRollCnt[track] = 0;
+	if(seq_mutedTracks & (1<<track))
+		return;
+	const Step* st = &seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_slowRollFrom[track]];
+	seq_triggerVoice(track, st->volume&STEP_VOLUME_MASK, st->note);
+}
 static int32_t seq_gridSteps = -1;			//1/16 steps since the reset (-1 = before the first)
 static int32_t seq_gridLastT[NUM_TRACKS];	//last tick processed per track
 static int16_t seq_cycleStep = -1;			//pattern position (1/16 steps) with grid tracks
@@ -1114,6 +1171,7 @@ static void seq_gridReset(void)
 {
 	seq_gridSteps = -1;
 	seq_cycleStep = -1;
+	memset(seq_slowRollInt, 0, sizeof(seq_slowRollInt));	//MOD: slow rolls stop
 	for(uint8_t i=0;i<NUM_TRACKS;i++)
 		seq_gridLastT[i] = -1;
 }
@@ -1159,6 +1217,7 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t t)
 					&& ((menu_activePage < MENU_MIDI_PAGE) || menu_activePage == PERF_PAGE || menu_activePage == SEQ_PAGE || menu_activePage == EUKLID_PAGE))
 				led_setActive_step(stepIdx%16);
 		}
+		seq_slowRoll(track);	//MOD
 		//roll on this track's own steps (as seq_nextStep does for the 1/16 tracks)
 		if(seq_rollRate != 0xff && (seq_rollState & (1<<track)) && (seq_stepIndex[track] % seq_rollRate) == 0)
 		{
@@ -1196,7 +1255,7 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t t)
 	if(trig != 0xff)
 	{
 		lastWasNoteOn[track] = 1;
-		const uint8_t vol = seq_patternSet.seq_subStepPattern[seq_activePattern][track][trig].volume&STEP_VOLUME_MASK;
+		const uint8_t vol = seq_flamVolume(track, trig, seq_patternSet.seq_subStepPattern[seq_activePattern][track][trig].volume&STEP_VOLUME_MASK, (uint8_t)q0);
 		const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][trig].note;
 		seq_triggerVoice(track,vol,note);
 	}
@@ -1309,7 +1368,7 @@ void seq_processFlam(uint8_t idx)
 			{
 				lastWasNoteOn[track] = 1;
 				chokeNext = 1;
-				const uint8_t vol = seq_patternSet.seq_subStepPattern[seq_activePattern][track][nextStep].volume&STEP_VOLUME_MASK;
+				const uint8_t vol = seq_flamVolume(track, nextStep, seq_patternSet.seq_subStepPattern[seq_activePattern][track][nextStep].volume&STEP_VOLUME_MASK, idx);
 				const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][nextStep].note;
 				seq_triggerVoice(track,vol,note);
 			}
@@ -1317,14 +1376,14 @@ void seq_processFlam(uint8_t idx)
 			{
 				lastWasNoteOn[track] = 1;
 				chokeCurrent = 1;
-				const uint8_t vol = seq_patternSet.seq_subStepPattern[seq_activePattern][track][currentStep].volume&STEP_VOLUME_MASK;
+				const uint8_t vol = seq_flamVolume(track, currentStep, seq_patternSet.seq_subStepPattern[seq_activePattern][track][currentStep].volume&STEP_VOLUME_MASK, idx);
 				const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][currentStep].note;
 				seq_triggerVoice(track,vol,note);
 			}
 			else if((prevActive) && (chokeNext == 0) && (chokeCurrent == 0))
 			{
 				lastWasNoteOn[track] = 1;
-				const uint8_t vol = seq_patternSet.seq_subStepPattern[seq_activePattern][track][prevStep].volume&STEP_VOLUME_MASK;
+				const uint8_t vol = seq_flamVolume(track, prevStep, seq_patternSet.seq_subStepPattern[seq_activePattern][track][prevStep].volume&STEP_VOLUME_MASK, idx);
 				const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][prevStep].note;
 				seq_triggerVoice(track,vol,note);
 			}
@@ -1581,6 +1640,7 @@ IN_ITCM_RAM void seq_nextStep()
 			//if end is reached reset track to step 0
 			seq_stepIndex[i] = 0;
 		}
+		seq_slowRoll((uint8_t)i);	//MOD: slow roll lock
 
 
 

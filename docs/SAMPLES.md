@@ -249,6 +249,18 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
 - Roll on a grid track repeats on the track's own steps. Shuffle moves grid tracks slightly; live
   recording is quantized to the 1/16 grid.
 
+## Step flam: ratchets and roll locks (1.2.8, in test)
+
+The step parameter flam (step mode) has more values after `X2` … `X8`:
+
+| Value | Effect |
+|---|---|
+| `X12`, `X24` | 12 or 24 repeats within the step |
+| `X4+`, `X4-` | 4 repeats with rising / falling velocity (25 … 100 % of the step velocity) |
+| `1/8`, `1/4`, `1/2`, `1/1` | **roll lock**: the step repeats every 2, 4, 8, 16 steps of its track (like the slower PERF roll rates) until the next active step of the track |
+
+On grid tracks the repeats follow the track's own steps. Other firmwares play these steps once.
+
 ## Two FX slots (1.2.8, in test)
 
 The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (distortion), `RNG`

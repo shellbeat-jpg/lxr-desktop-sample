@@ -58,13 +58,22 @@ const char menuText_any[]  	= "any";
 //-----------------------------------------------------------------
 const char stepFlamNames[][4] =
 {
-	{6},		//number of entries
+	{14},		//number of entries
 	{"off"},
 	{"x2"},
 	{"x3"},
 	{"x4"},
 	{"x6"},
-	{"x8"}
+	{"x8"},
+	//MOD
+	{"x12"},
+	{"x24"},
+	{"x4+"},	//rising velocity
+	{"x4-"},	//falling velocity
+	{"1/8"},	//slow roll: every 2 steps until the next active step
+	{"1/4"},
+	{"1/2"},
+	{"1/1"},
 
 	//{"+8"},
 

@@ -195,6 +195,13 @@ void seq_setTrackLength(uint8_t trackNr, uint8_t length);
 //(96 ppq); a track with another grid steps every seq_gridTicks[] ticks.
 //Code 0 = 1/16 (the default of old patterns); the menu shows them sorted by length.
 #define SEQ_NUM_GRIDS	9
+
+//MOD: step flam values after x8 (StepTiming.flam has 4 bits): x12, x24, x4 with a
+//rising / falling velocity, and slow rolls repeating every 2, 4, 8, 16 steps
+#define SEQ_FLAM_X4_UP		8
+#define SEQ_FLAM_X4_DOWN	9
+#define SEQ_FLAM_SLOW_ROLL	10	//10..13: 1/8, 1/4, 1/2, 1/1
+#define SEQ_NUM_FLAMS		14
 extern const uint8_t seq_gridTicks[SEQ_NUM_GRIDS];
 void seq_setTrackGrid(uint8_t trackNr, uint8_t grid);	//of the shown pattern
 uint8_t seq_getTrackGrid(uint8_t trackNr);
