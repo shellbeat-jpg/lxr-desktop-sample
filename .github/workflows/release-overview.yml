@@ -1,0 +1,31 @@
+name: Release overview
+
+# Attaches the feature overview (docs/OVERVIEW.md, docs/OVERVIEW.de.md of the
+# default branch) to an existing release, replacing older copies. New releases
+# get it from the Build workflow; this is for releases made before that.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (e.g. v1.2.8)
+        required: true
+
+env:
+  FW_NAME: OE02-Samples
+
+jobs:
+  attach:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach the overview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          mkdir -p out
+          cp docs/OVERVIEW.md "out/${FW_NAME}_Overview_EN.md"
+          cp docs/OVERVIEW.de.md "out/${FW_NAME}_Overview_DE.md"
+          gh release upload "$TAG" out/*.md --clobber -R "$GITHUB_REPOSITORY"

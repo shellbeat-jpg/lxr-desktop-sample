@@ -94,6 +94,12 @@ jobs:
           fi
           test -f ".github/releases/$GITHUB_REF_NAME.md" || { echo "::error::Missing .github/releases/$GITHUB_REF_NAME.md"; exit 1; }
 
+      - name: Feature overview for the release
+        if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cp docs/OVERVIEW.md "build/release/${FW_NAME}_Overview_EN.md"
+          cp docs/OVERVIEW.de.md "build/release/${FW_NAME}_Overview_DE.md"
+
       - name: Publish release
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -104,3 +110,4 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             build/release/*.img
+            build/release/*_Overview_*.md
