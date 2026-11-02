@@ -268,6 +268,26 @@ The step parameter flam (step mode) has more values after `X2` … `X8`:
 
 On grid tracks the repeats follow the track's own steps. Other firmwares play these steps once.
 
+## Trigger tracks (1.2.9, in test)
+
+Any track can additionally act on another track. SHIFT + LAST STEP shows the length and the grid
+of the track; **click the encoder** to go on to the trigger mode (`Trg [OFF]`) and, with a mode,
+to the target track (`Trg  RST  >[T3]`); another click returns to the length.
+
+| Mode | Each active step of the trigger track ... |
+|---|---|
+| `OFF` | nothing (default, older patterns) |
+| `RST` | sets the target back to its step 1, which plays at once; otherwise the target runs as usual |
+| `MUT` | mutes the target for as long as the step lasts, step by step |
+| `CLK` | moves the target on by one step, which plays for one step length; then the target waits for the next impulse |
+
+- Steps of any velocity count; with velocity 0 the step only triggers and doesn't play its own
+  sound (lock trigger).
+- The step grids of both tracks are kept: a `1/16T` trigger track resets a `1/16` target on its
+  triplet steps, a `CLK` target plays each of its steps with its own step length.
+- A track can be the target of one trigger track (the first one counts). Stored in the pattern;
+  other firmwares ignore it.
+
 ## Second FX slot (1.2.8)
 
 Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with the same effects:

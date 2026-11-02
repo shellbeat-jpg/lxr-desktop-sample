@@ -263,6 +263,12 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - Step flam `X12`, `X24`, `X4+`/`X4-` (velocity ramp) and roll locks `1/8` … `1/1` (repeats every
   2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128).
 
+### 8b. Trigger tracks (1.2.9, in test)
+
+- SHIFT + LAST STEP, click the encoder to `Trg`: each active step (any velocity) acts on a target
+  track: `RST` = back to step 1, `MUT` = muted while the step lasts, `CLK` = one step on per
+  impulse. Stored in the pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#trigger-tracks-129-in-test).
+
 ### 9. Second FX slot (1.2.8)
 
 - SHIFT + FX = `FX1` (slot A, kit FX), SHIFT + FX again = `FX2` (slot B, project FX). Voice `OUT` `FX` → A, `FXB` → B
