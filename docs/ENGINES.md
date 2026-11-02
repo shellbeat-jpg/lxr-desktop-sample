@@ -1,5 +1,9 @@
 # Voice engines
 
+> From [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/blob/v1.2/docs/ENGINES.md)
+> by Moritz Waser (tunefish), the base of this fork, unchanged below this note. See
+> [SAMPLES.md](SAMPLES.md) for what this fork adds.
+
 Each of the 6 voice slots can run any of the 4 engines: drum, snare, cymbal or hi-hat. Track 7
 is always the second trigger of slot 6, for any engine: track 6 plays with decay A, track 7 with
 decay B, and each cuts the other off (like closed and open hi-hat).

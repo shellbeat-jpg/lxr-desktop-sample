@@ -1,6 +1,6 @@
 # OpenElixir-02 (original README of the base firmware)
 
-> This is the README of OpenElixir-02 v1.2 by Moritz Waser (tunefish),
+> This is the README of [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/blob/v1.2/README.md) by Moritz Waser (tunefish),
 > the base of this fork, unchanged below this note. See [README.md](README.md) for what this fork adds.
 
 [![Build](https://github.com/tunefish777/openelixir-02/actions/workflows/build.yml/badge.svg)](https://github.com/tunefish777/openelixir-02/actions/workflows/build.yml)
