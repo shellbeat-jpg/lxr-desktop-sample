@@ -3903,8 +3903,30 @@ checkvalid:
 			return; // would never happen unless we have > 3 skips in a row
 	}
 
-	if(param == TEXT_EMPTY) // disallow the change
-		return;
+	if(param == TEXT_EMPTY)
+	{
+		//MOD: on the scrolling pages (global settings, performance) a sub page
+		//that ends with empty entries continues on the next sub page; going
+		//back lands on the last entry of the previous one
+		const uint8_t scrolls = (menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE);
+		if(!scrolls)
+			return; // disallow the change
+		if(inc > 0)
+		{
+			const int8_t next = (int8_t)(activePage + 1);
+			if(next >= NUM_SUB_PAGES || pgm_read_byte(&menu_getPage(menu_activePage,next)->top1) == TEXT_EMPTY)
+				return;
+			activePage = next;
+			activeParameter = 0;
+		}
+		else
+		{
+			while(activeParameter > 0 && pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter) == TEXT_EMPTY)
+				activeParameter--;
+			if(pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter) == TEXT_EMPTY)
+				return;
+		}
+	}
 
 	// set the change
 	menuIndex = (uint8_t)( (activePage << PAGE_SHIFT) | activeParameter);
