@@ -35,9 +35,11 @@
 //...) hold KIT_DATA_SIZE bytes: [0..5] engines, [6..11] send levels. In the file
 //the block continues after the engines: "SND", count, the levels.
 #define KIT_SEND_OFFSET			NUM_VOICE_SLOTS
-#define KIT_DATA_SIZE			(2*NUM_VOICE_SLOTS)
+#define KIT_FXMODE_OFFSET		(2*NUM_VOICE_SLOTS)		//order of the FX slots (FXBUS_MODE_x)
+#define KIT_DATA_SIZE			(2*NUM_VOICE_SLOTS + 1)
 #define KIT_SEND_DEFAULT		64
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS)
+//engine block, "SND" + count + levels, "ORD" + 1 + order
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

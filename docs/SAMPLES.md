@@ -282,7 +282,7 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   kits load with 64; OpenElixir-02 ignores the block. Voices routed to a send play silent on other
   firmwares.
 - **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`
-  (or `SYB` on slot B's page) and `ORD`.
+  and `ORD` on slot A's page, `SYB` on slot B's page.
 - **Order** (`ORD`):
   - `A>B` (default): slot A, then slot B; voices on `FXB` only go through B. The chain goes to the
     `OUT` of slot A. With slot B `OFF` everything sounds as before.
@@ -292,8 +292,8 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   (free time and range as before), then from long to short `1/4`, `1/8.`, `1/4T`, `1/8`, `1/16.`,
   `1/8T`, `5/64` (shown `564`), `1/16`, `1/32.`, `1/16T`, `1/32`, `1/32T` (the step grids and 1/8.). Follows the tempo (also external clock). The delay is at most about 0.74 s
   (ping-pong 0.36 s): longer values are limited.
-- Slot B, the order and the sync are kept with the global settings (SAVE → Global or a project save),
-  not in the kit; slot A stays in the kit.
+- Slot A and the order `ORD` are stored in the kit (the order in the kit's extra block, older kits:
+  `A>B`); slot B and the sync are kept with the global settings (SAVE → Global or a project save).
 - CPU: each slot costs about as much as one effect did before (measure with the CPU meter build).
 
 ## Voice INIT

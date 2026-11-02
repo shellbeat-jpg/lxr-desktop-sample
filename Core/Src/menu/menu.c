@@ -1003,6 +1003,7 @@ static uint8_t menu_fxChoiceCount(const uint16_t p)
 }
 static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t isLong)
 {
+	if(p == PAR_FX_MODE) v = kitEngines[KIT_FXMODE_OFFSET];	//MOD: kit data
 	const uint8_t n = menu_fxChoiceCount(p);
 	if(v >= n) v = 0;
 	if(p == PAR_FX_MODE) return menu_fxModeNames[v];
@@ -3601,10 +3602,12 @@ static void menu_encoderChangeParameter(int8_t inc)
 	if(menu_fxChoiceCount(paramNr))
 	{
 		const uint8_t n = menu_fxChoiceCount(paramNr);
-		uint8_t cur = activeParameters[paramNr] < n ? activeParameters[paramNr] : 0;
+		uint8_t* val = paramNr == PAR_FX_MODE ? &kitEngines[KIT_FXMODE_OFFSET] : &activeParameters[paramNr];	//order: kit data
+		uint8_t cur = *val < n ? *val : 0;
 		const int16_t v = (int16_t)cur + inc;
-		activeParameters[paramNr] = (uint8_t)(v < 0 ? 0 : v >= n ? n - 1 : v);
-		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
+		*val = (uint8_t)(v < 0 ? 0 : v >= n ? n - 1 : v);
+		if(paramNr != PAR_FX_MODE)
+			menu_parseGlobalParam(paramNr, *val);
 		return;
 	}
 	//MOD: voice morph switch point of the source voice, 1..127
@@ -3870,7 +3873,7 @@ checkvalid:
 	//MOD: FX pages: after the parameters of the effect comes the setup page
 	//(sub page FX_SETUP_SUBPAGE: order and delay sync), back from there to the effect
 	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE);
-	if(isFxPage && inc < 0 && activeParameter == 0 && activePage == FX_SETUP_SUBPAGE)
+	if(isFxPage && inc < 0 && activeParameter == -1 && activePage == FX_SETUP_SUBPAGE)
 	{
 		activePage = (int8_t)(menu_activePage == FX_MODE_PAGE ? fxBus.fxType : fxBusB.fxType);
 		activeParameter = 7;
@@ -3880,7 +3883,7 @@ checkvalid:
 		return;
 	}
 	if(isFxPage && inc > 0 && activePage != FX_SETUP_SUBPAGE
-			&& (activeParameter == 7 || pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter + 1) == TEXT_EMPTY))
+			&& (activeParameter == 8 || pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter) == TEXT_EMPTY))
 	{
 		menuIndex = (uint8_t)(FX_SETUP_SUBPAGE << PAGE_SHIFT);
 		return;
@@ -4339,9 +4342,7 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 	//MOD: FX slots. The values come from the global settings (old files: 0 or
 	//padding bytes): out of range values are reset
 	case PAR_FX_MODE:
-		if(value >= FXBUS_NUM_MODES) value = activeParameters[paramNr] = 0;
-		fxBus_mode = value;
-		break;
+		break;	//MOD: the order is kit data (kitEngines[KIT_FXMODE_OFFSET])
 	case PAR_FXA_SYNC:
 	case PAR_FXB_SYNC:
 		if(value >= FXBUS_NUM_SYNC) value = activeParameters[paramNr] = 0;

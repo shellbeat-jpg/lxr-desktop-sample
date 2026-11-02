@@ -25,6 +25,7 @@
 #include "Soundengine/DSPAudio/BufferTools.h"
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Preset/KitEngines.h"
 #include <string.h>
 
 INDTCMZ FxBus fxBus;
@@ -168,6 +169,7 @@ void FxBus_process(int16_t *fxBuffer, int16_t *fxBufferB, int32_t* outL,int32_t*
 	int32_t *out, *out2;
 	const uint8_t channels = FxBus_outputs(fxBus.audioRouting, outL, outR, outL2, outR2, &out, &out2);
 
+	fxBus_mode = kitEngines[KIT_FXMODE_OFFSET];	//MOD: the order is kit data
 	switch(fxBus_mode)
 	{
 	default:

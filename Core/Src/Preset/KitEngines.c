@@ -20,7 +20,7 @@
 #include <string.h>
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
-		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT };
+		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0 };
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
@@ -32,6 +32,7 @@ void kitEngines_setStock(uint8_t* engines)
 		engines[slot] = slot_stockEngine(slot);
 		engines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD
 	}
+	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -54,6 +55,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	block[KIT_ENGINES_BLOCK_SIZE+2] = 'D';
 	block[KIT_ENGINES_BLOCK_SIZE+3] = NUM_VOICE_SLOTS;
 	memcpy(&block[KIT_ENGINES_BLOCK_SIZE+4], &engines[KIT_SEND_OFFSET], NUM_VOICE_SLOTS);
+	//MOD: the order of the FX slots
+	uint8_t* o = &block[KIT_ENGINES_BLOCK_SIZE+4+NUM_VOICE_SLOTS];
+	o[0] = 'O'; o[1] = 'R'; o[2] = 'D'; o[3] = 1; o[4] = engines[KIT_FXMODE_OFFSET];
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -73,6 +77,10 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 	{
 		for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
 			engines[KIT_SEND_OFFSET + slot] = block[e+4+slot] > 127 ? KIT_SEND_DEFAULT : block[e+4+slot];
+		//MOD: the order of the FX slots
+		const uint16_t o = (uint16_t)(e + 4u + block[e+3]);
+		if(size >= o + 5u && block[o] == 'O' && block[o+1] == 'R' && block[o+2] == 'D' && block[o+3] >= 1)
+			engines[KIT_FXMODE_OFFSET] = block[o+4] < 3 ? block[o+4] : 0;
 	}
 }
 //---------------------------------------------------
