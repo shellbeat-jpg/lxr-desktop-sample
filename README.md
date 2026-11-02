@@ -195,7 +195,7 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - SHIFT + FX = slot A (kit), SHIFT + FX again = slot B (`FX2`). Voice `OUT` `FX` → A, `FXB` → B,
   `1+A` … `R2B` = dry output plus a send to A/B with the level `SND` (AEG page, stored in the kit).
 - Global settings, third page: order `ORD` (`A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
-  (`1/4` … `1/32`, dotted and triplets). Details:
+  (`1/4` … `1/32T`, dotted, triplets and the step grids). Details:
   [docs/SAMPLES.md](docs/SAMPLES.md#two-fx-slots-128-in-test).
 
 ### Compatibility

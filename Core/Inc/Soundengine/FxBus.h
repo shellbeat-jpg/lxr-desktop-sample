@@ -71,7 +71,7 @@ enum FxBusModeEnum
 	FXBUS_MODE_PARALLEL,	//side by side
 	FXBUS_NUM_MODES
 };
-#define FXBUS_NUM_SYNC	10	//off, 1/4, 1/4T, 1/8., 1/8, 1/8T, 1/16., 1/16, 1/16T, 1/32
+#define FXBUS_NUM_SYNC	13	//off, then the delay time from long to short (FxBus.c)
 extern FxBus fxBusB;
 extern uint8_t fxBus_mode;
 void FxBus_setParameterB(uint8_t idx, float value);

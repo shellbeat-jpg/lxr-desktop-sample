@@ -33,9 +33,11 @@ uint8_t fxBus_mode = FXBUS_MODE_A_B;
 static uint16_t fxBus_syncBpm = 0;
 
 //tempo sync of the delay: length in quarter notes (index 0 = off)
+//(the grids of the tracks and 1/8.): off, 1/4, 1/8., 1/4T, 1/8, 1/16., 1/8T, 5/64,
+//1/16, 1/32., 1/16T, 1/32, 1/32T
 static const float fxBus_syncBeats[FXBUS_NUM_SYNC] =
 {
-	0.f, 1.f, 2.f/3.f, 0.75f, 0.5f, 1.f/3.f, 0.375f, 0.25f, 1.f/6.f, 0.125f
+	0.f, 1.f, 0.75f, 2.f/3.f, 0.5f, 0.375f, 1.f/3.f, 0.3125f, 0.25f, 0.1875f, 1.f/6.f, 0.125f, 1.f/12.f
 };
 
 static void FxBus_initSlot(FxBus* b)

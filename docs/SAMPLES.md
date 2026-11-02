@@ -287,8 +287,8 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   - `B>A`: slot B, then slot A (to the `OUT` of slot A).
   - `A+B`: side by side, each slot to its own `OUT`.
 - **Delay tempo sync** (global settings, third page): `SYA` for slot A, `SYB` for slot B: `OFF`
-  (free time and range as before), `1/4`, `1/4T`, `1/8.`, `1/8`, `1/8T`, `1/16.`, `1/16`,
-  `1/16T`, `1/32`. Follows the tempo (also external clock). The delay is at most about 0.74 s
+  (free time and range as before), then from long to short `1/4`, `1/8.`, `1/4T`, `1/8`, `1/16.`,
+  `1/8T`, `5/64` (shown `564`), `1/16`, `1/32.`, `1/16T`, `1/32`, `1/32T` (the step grids and 1/8.). Follows the tempo (also external clock). The delay is at most about 0.74 s
   (ping-pong 0.36 s): longer values are limited.
 - Slot B, the order and the sync are kept with the global settings (SAVE → Global or a project save),
   not in the kit; slot A stays in the kit.
