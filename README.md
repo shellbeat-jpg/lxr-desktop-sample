@@ -23,7 +23,7 @@ fork can be listed with `git log v1.2..HEAD`.
 ## Overview
 
 All features compared with the Erica Synths firmware, OpenElixir-02 included. **[OE]** = from
-OpenElixir-02 v1.2, everything else from this fork. **(T)** = not fully tested on the device yet.
+OpenElixir-02 v1.2, everything else from this fork. 
 "Global" = saved with SAVE → Global and in the project file. NRPN n = parameter 128 + n.
 Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.de.md](docs/OVERVIEW.de.md).
 
