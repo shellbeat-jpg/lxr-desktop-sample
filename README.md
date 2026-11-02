@@ -1,6 +1,6 @@
 # OpenElixir-02 + Samples
 
-A fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) v1.2 that adds user samples
+A fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) that adds user samples
 to the Erica Synths LXR-02: WAV import from the SD card, sample playback as oscillator waveforms, and
 start/length parameters.
 
