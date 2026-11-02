@@ -1118,7 +1118,7 @@ uint8_t chokeNext=0;
 //absolute tick. Tracks with another grid don't advance in seq_nextStep: they
 //step on their own tick count here (from seq_processFlam, every tick), so the
 //timing of the 1/16 tracks is unchanged.
-const uint8_t seq_gridTicks[SEQ_NUM_GRIDS] = { 24, 16, 12, 8, 18, 32, 48, 64, 96 };
+const uint8_t seq_gridTicks[SEQ_NUM_GRIDS] = { 24, 16, 12, 8, 18, 32, 48, 64, 96, 30, 36 };
 
 //MOD: velocity of a hit of a flam with a ramp (pos = position 0..23 in the step)
 static uint8_t seq_flamVolume(const uint8_t track, const uint8_t step, uint8_t vol, const uint8_t pos)

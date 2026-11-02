@@ -181,8 +181,8 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 
 ### 8. Step grid per track (1.2.7, in test)
 
-- SHIFT + LAST STEP, click the encoder: grid of the track `1/4` `1/4T` `1/8` `1/8T` **`1/16`**
-  `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
+- SHIFT + LAST STEP, click the encoder: grid of the track `1/4` `1/4T` `1/8` `1/16.` `1/8T` `5/64`
+  **`1/16`** `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
   pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127-in-test).
 
 ### 8a. Step flam: ratchets and roll locks (1.2.8, in test)

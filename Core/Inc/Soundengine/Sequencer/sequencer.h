@@ -194,7 +194,7 @@ void seq_setTrackLength(uint8_t trackNr, uint8_t length);
 //MOD: step grid per track. The internal clock has 24 ticks per 1/16 step
 //(96 ppq); a track with another grid steps every seq_gridTicks[] ticks.
 //Code 0 = 1/16 (the default of old patterns); the menu shows them sorted by length.
-#define SEQ_NUM_GRIDS	9
+#define SEQ_NUM_GRIDS	11
 
 //MOD: step flam values after x8 (StepTiming.flam has 4 bits): x12, x24, x4 with a
 //rising / falling velocity, and slow rolls repeating every 2, 4, 8, 16 steps

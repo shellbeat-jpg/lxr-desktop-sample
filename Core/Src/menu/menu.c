@@ -1009,9 +1009,9 @@ static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t 
 }
 //MOD: step grid on the last step page: encoder click switches between length and grid
 static uint8_t menu_lastStepGrid = 0;
-static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4" };
-static const char menu_gridRatios[SEQ_NUM_GRIDS][4] = { "1",    "2/3",   "1/2",  "1/3",   "3/4",   "4/3",  "x2",  "8/3",  "x4" };
-static const uint8_t menu_gridOrder[SEQ_NUM_GRIDS]  = { 8, 7, 6, 5, 0, 4, 1, 2, 3 };	//longest step first
+static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4", "5/64", "1/16." };
+static const char menu_gridRatios[SEQ_NUM_GRIDS][4] = { "1",    "2/3",   "1/2",  "1/3",   "3/4",   "4/3",  "x2",  "8/3",  "x4",  "5/4",  "6/4" };
+static const uint8_t menu_gridOrder[SEQ_NUM_GRIDS]  = { 8, 7, 6, 10, 5, 9, 0, 4, 1, 2, 3 };	//longest step first
 static uint8_t menu_gridStep(const uint8_t code, const int8_t inc)
 {
 	uint8_t pos = 0;

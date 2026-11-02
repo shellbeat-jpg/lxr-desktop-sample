@@ -233,7 +233,9 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
 | `1/4` | x4 | 4 |
 | `1/4T` | 8/3 | 6 |
 | `1/8` | x2 | 8 |
+| `1/16.` | 6/4 | 10⅔ |
 | `1/8T` | 4/3 | 12 |
+| `5/64` | 5/4 | 12⅘ |
 | `1/16` | 1 (default) | 16 |
 | `1/32.` | 3/4 | 21⅓ |
 | `1/16T` | 2/3 | 24 |
@@ -241,7 +243,7 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
 | `1/32T` | 1/3 | 48 |
 
 - The 1/16 tracks keep their timing unchanged; the other tracks step on the internal 96 ppq clock
-  (24 ticks per 1/16). With MIDI clock all grids except `1/32.` fall on clock pulses.
+  (24 ticks per 1/16). With MIDI clock all grids except `1/32.` and `5/64` fall on clock pulses.
 - Each track loops at its own length, as before (polymeter). The pattern ends after its longest track
   in time.
 - Stored in the pattern (a small block after the pattern data). Older patterns load as `1/16`; other
