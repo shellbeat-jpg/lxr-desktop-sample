@@ -3465,13 +3465,16 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			{
 				//MOD: the encoder edits the length, the step grid, the trigger mode
 				//or the trigger target (only with a mode)
-				menu_lastStepGrid++;
-				if(menu_lastStepGrid == 3 && SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) == SEQ_TRIG_OFF)
-					menu_lastStepGrid = 4;
-				if(menu_lastStepGrid == 5 && !seq_getTrackLfo(menu_activeVoice))
-					menu_lastStepGrid = 0;
-				if(menu_lastStepGrid > 5)
-					menu_lastStepGrid = 0;
+				//trigger and LFO start exclude each other: the one in use hides the other
+				const uint8_t trg = SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) != SEQ_TRIG_OFF;
+				const uint8_t lfo = seq_getTrackLfo(menu_activeVoice) != 0;
+				uint8_t s = (uint8_t)(menu_lastStepGrid + 1u);
+				if(s == 2 && lfo)	s = 4;
+				if(s == 3 && !trg)	s = 4;
+				if(s == 4 && trg)	s = 0;
+				if(s == 5 && !lfo)	s = 0;
+				if(s > 5)			s = 0;
+				menu_lastStepGrid = s;
 			}
 			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
 			{
@@ -3517,6 +3520,8 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			int16_t n = (int16_t)SEQ_LFO_TARGET(v) + (inc > 0 ? 1 : -1);
 			n = n < 0 ? 0 : n > 7 ? 7 : n;
 			seq_setTrackLfo(menu_activeVoice, (uint8_t)(n | (v & SEQ_LFO_NOW)));
+			if(n)
+				seq_setTrackTrig(menu_activeVoice, 0);	//exclusive
 		}
 		else
 			seq_setTrackLfo(menu_activeVoice, (uint8_t)(inc > 0 ? (v | SEQ_LFO_NOW) : (v & (uint8_t)~SEQ_LFO_NOW)));
@@ -3540,6 +3545,8 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			if(n >= 0 && n < 7) d = (uint8_t)n;
 		}
 		seq_setTrackTrig(t, SEQ_TRIG_VALUE(m, d));
+		if(m != SEQ_TRIG_OFF)
+			seq_setTrackLfo(t, 0);	//exclusive
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid)
 	{

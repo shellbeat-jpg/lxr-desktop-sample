@@ -304,8 +304,9 @@ track's voice (track 7: voice 6) starts track 3 (`OFF`, `T1` … `T7`), then the
   voice), otherwise the target would keep restarting itself.
 - Until the first start the target is silent. With `SNC` the starts fall on the beat;
   free-running LFOs give starts that drift against the pattern.
-- The track whose page it is plays on as usual. An LFO start counts before a trigger track on the
-  same target; one LFO per target (the first one counts). Stored in the pattern.
+- The track whose page it is plays on as usual. A track uses either its trigger or its LFO start:
+  while one is set, the other is hidden on the page. On the same target an LFO start counts
+  before a trigger track; one LFO per target (the first one counts). Stored in the pattern.
 
 ## Second FX slot (1.2.8)
 
