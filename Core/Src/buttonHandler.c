@@ -875,20 +875,16 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 			//MOD: pressed again on the FX page: the second FX slot (and back)
 			if(menu_getActivePage() == FX_MODE_PAGE)
 			{
-				const uint8_t typeB = fxBusB.fxType;
 				menu_switchPage(FXB_PAGE);
-				menu_switchSubPage(typeB, 1);
-				if(menu_getSubPage() != typeB)
-					menu_switchSubPage(typeB, 1);
+				menu_showSubPageStart(fxBusB.fxType);	//first entry of the effect
+				menu_repaintAll();
 				break;
 			}
 			menu_switchPage(FX_MODE_PAGE);
-			menu_switchSubPage(fxBus.fxType, 1 );
-
-
-			//change visible parameters to selected FX type
-			if(menu_getSubPage() != fxBus.fxType)
-				menu_switchSubPage(fxBus.fxType, 1);
+			//MOD: the first entry of the effect (switchSubPage toggled to its 2nd half
+			//when the FX page was shown before with the same effect)
+			menu_showSubPageStart(fxBus.fxType);
+			menu_repaintAll();
 			break;
 
 		case SEQ_SONG:

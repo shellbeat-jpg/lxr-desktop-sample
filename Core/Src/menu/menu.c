@@ -280,6 +280,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FXA_SYNC, CAT_FX, LONG_FXA_SYNC},/*TEXT_FXA_SYNC*/
 		{SHORT_FXB_SYNC, CAT_FX, LONG_FXB_SYNC},/*TEXT_FXB_SYNC*/
 		{SHORT_FX_SEND, CAT_FX, LONG_FX_SEND},/*TEXT_FX_SEND*/
+		{SHORT_FXA_TYPE, CAT_FX, LONG_TYPE},/*TEXT_FXA_TYPE*/
 
 
 };
@@ -3866,6 +3867,25 @@ checkvalid:
 	DISABLE_CONV_WARNING
 	activeParameter+=inc; // set new desired active parameter value
 	END_DISABLE_CONV_WARNING
+	//MOD: FX pages: after the parameters of the effect comes the setup page
+	//(sub page FX_SETUP_SUBPAGE: order and delay sync), back from there to the effect
+	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE);
+	if(isFxPage && inc < 0 && activeParameter == 0 && activePage == FX_SETUP_SUBPAGE)
+	{
+		activePage = (int8_t)(menu_activePage == FX_MODE_PAGE ? fxBus.fxType : fxBusB.fxType);
+		activeParameter = 7;
+		while(activeParameter > 0 && pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter) == TEXT_EMPTY)
+			activeParameter--;
+		menuIndex = (uint8_t)( (activePage << PAGE_SHIFT) | activeParameter);
+		return;
+	}
+	if(isFxPage && inc > 0 && activePage != FX_SETUP_SUBPAGE
+			&& (activeParameter == 7 || pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter + 1) == TEXT_EMPTY))
+	{
+		menuIndex = (uint8_t)(FX_SETUP_SUBPAGE << PAGE_SHIFT);
+		return;
+	}
+
 	if(inc > 0) {
 		if(activeParameter == 4) { // move to 2nd section of sub-page
 
@@ -4037,6 +4057,13 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 	menuIndex = (uint8_t)( (activePage << PAGE_SHIFT) | activeParameter);
 }
 
+//-----------------------------------------------------------------
+//MOD: show the first entry of a sub page
+void menu_showSubPageStart(uint8_t subPageNr)
+{
+	editModeActive = 0;
+	menuIndex = (uint8_t)(subPageNr << PAGE_SHIFT);
+}
 //-----------------------------------------------------------------
 void menu_resetActiveParameter()
 {

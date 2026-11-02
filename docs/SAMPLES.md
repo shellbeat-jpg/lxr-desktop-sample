@@ -268,8 +268,8 @@ On grid tracks the repeats follow the track's own steps. Other firmwares play th
 The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (distortion), `RNG`
 (ring modulator), `CMP` (compressor), `DEL` (delay).
 
-- **Slot A** is the FX of the kit as before (**SHIFT + FX**, step button 15). **Press SHIFT + FX
-  again** for **slot B**: its type is shown as `FX2`, the edit view shows `FX B`. Its parameters
+- **Slot A** is the FX of the kit as before (**SHIFT + FX**, step button 15; its type is shown as
+  `FX1`). **Press SHIFT + FX again** for **slot B**: its type is shown as `FX2`, the edit view shows `FX B`. Its parameters
   are the same as slot A's (type, `OUT`, mix, effect parameters).
 - **Routing:** a voice's output (`OUT` on its mix page) `FX` goes to slot A, the new **`FXB`** to
   slot B (100 %, nothing dry).
@@ -281,12 +281,14 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
 - **Kit format:** the send levels are a small block after the engine block of the kit file. Older
   kits load with 64; OpenElixir-02 ignores the block. Voices routed to a send play silent on other
   firmwares.
-- **Order** (global settings, third page, `ORD`):
+- **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`
+  (or `SYB` on slot B's page) and `ORD`.
+- **Order** (`ORD`):
   - `A>B` (default): slot A, then slot B; voices on `FXB` only go through B. The chain goes to the
     `OUT` of slot A. With slot B `OFF` everything sounds as before.
   - `B>A`: slot B, then slot A (to the `OUT` of slot A).
   - `A+B`: side by side, each slot to its own `OUT`.
-- **Delay tempo sync** (global settings, third page): `SYA` for slot A, `SYB` for slot B: `OFF`
+- **Delay tempo sync** (setup page): `SYA` for slot A, `SYB` for slot B: `OFF`
   (free time and range as before), then from long to short `1/4`, `1/8.`, `1/4T`, `1/8`, `1/16.`,
   `1/8T`, `5/64` (shown `564`), `1/16`, `1/32.`, `1/16T`, `1/32`, `1/32T` (the step grids and 1/8.). Follows the tempo (also external clock). The delay is at most about 0.74 s
   (ping-pong 0.36 s): longer values are limited.

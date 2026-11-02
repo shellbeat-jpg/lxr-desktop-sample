@@ -290,6 +290,7 @@ enum NamesEnum
 	TEXT_FXA_SYNC,		//MOD: delay sync of slot A
 	TEXT_FXB_SYNC,		//MOD: delay sync of slot B
 	TEXT_FX_SEND,		//MOD: FX send level of the voice
+	TEXT_FXA_TYPE,		//MOD: type of FX slot A ("fx1")
 
 
 	NUM_NAMES
@@ -414,7 +415,8 @@ enum shortNamesEnum
 	SHORT_FX_MODE,
 	SHORT_FXA_SYNC,
 	SHORT_FXB_SYNC,
-	SHORT_FX_SEND
+	SHORT_FX_SEND,
+	SHORT_FXA_TYPE
 
 	
 };
@@ -740,6 +742,8 @@ void menu_parseEncoder(int8_t inc, uint8_t button);
 void menu_switchPage(uint8_t pageNr);
 //-----------------------------------------------------------------
 void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle);
+void menu_showSubPageStart(uint8_t subPageNr);	//MOD
+#define FX_SETUP_SUBPAGE	6	//MOD: FX pages: order and delay sync
 //-----------------------------------------------------------------
 void menu_resetActiveParameter();
 //-----------------------------------------------------------------
