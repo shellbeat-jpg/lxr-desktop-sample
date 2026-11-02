@@ -105,6 +105,7 @@ typedef struct PatternFileDataStruct
 	uint8_t shuffle;
 	uint8_t kitNr;
 	uint8_t grid[NUM_TRACKS];	//MOD
+	uint8_t trig[NUM_TRACKS];	//MOD
 }PatternFileData;
 static PatternFileData preset_patternBuffer;
 
@@ -152,6 +153,28 @@ static void preset_writeGridBlock(const uint8_t patternNr)
 	UINT bytesWritten;
 	preset_fwrite((FIL*)&SDFile, preset_gridTag, sizeof(preset_gridTag), &bytesWritten);
 	preset_fwrite((FIL*)&SDFile, seq_patternSet.grid[patternNr], NUM_TRACKS, &bytesWritten);
+}
+//MOD: trigger tracks after the step grids: a tag and one byte per track
+static const char preset_trigTag[4] = { 'T','R','G','1' };
+static void preset_writeTrigBlock(const uint8_t patternNr)
+{
+	UINT bytesWritten;
+	preset_fwrite((FIL*)&SDFile, preset_trigTag, sizeof(preset_trigTag), &bytesWritten);
+	preset_fwrite((FIL*)&SDFile, seq_patternSet.trig[patternNr], NUM_TRACKS, &bytesWritten);
+}
+static void preset_readTrigBlock(uint8_t* trig)
+{
+	UINT bytesRead;
+	char tag[4];
+	memset(trig, 0, NUM_TRACKS);
+	if(f_read((FIL*)&SDFile, tag, sizeof(tag), &bytesRead) != FR_OK || bytesRead != sizeof(tag)
+			|| memcmp(tag, preset_trigTag, sizeof(tag)) != 0)
+		return;
+	uint8_t v[NUM_TRACKS];
+	if(f_read((FIL*)&SDFile, v, NUM_TRACKS, &bytesRead) != FR_OK || bytesRead != NUM_TRACKS)
+		return;
+	for(uint8_t i=0;i<NUM_TRACKS;i++)
+		trig[i] = seq_validTrig(i, v[i]);
 }
 static void preset_readGridBlock(uint8_t* grid)
 {
@@ -614,6 +637,7 @@ FRESULT preset_saveTmpPat()
 		//write associated kit nr
 		preset_fwrite((FIL*)&SDFile,&seq_patternSet.kitNr[presetNr],sizeof(uint8_t),&bytesWritten);
 		preset_writeGridBlock(presetNr);	//MOD
+		preset_writeTrigBlock(presetNr);	//MOD
 
 #endif
 
@@ -1737,6 +1761,7 @@ static void preset_writePatternData(uint8_t patternNr)
 		//write associated kit nr
 		preset_fwrite((FIL*)&SDFile,&seq_patternSet.kitNr[patternNr],sizeof(uint8_t),&bytesWritten);
 		preset_writeGridBlock(patternNr);	//MOD
+		preset_writeTrigBlock(patternNr);	//MOD
 
 #endif
 }
@@ -2042,6 +2067,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 			return 0;
 	}
 	preset_readGridBlock(buf->grid);	//MOD
+	preset_readTrigBlock(buf->trig);	//MOD
 
 	//complete: copy into the pattern
 	memcpy(seq_patternSet.seq_subStepPattern[patternNr], buf->steps, sizeof(buf->steps));
@@ -2050,6 +2076,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 		memcpy(seq_patternSet.seq_mainSteps[bar][patternNr], buf->mainSteps[bar], sizeof(buf->mainSteps[bar]));
 	memcpy(seq_patternSet.length[patternNr], buf->length, sizeof(buf->length));
 	memcpy(seq_patternSet.grid[patternNr], buf->grid, sizeof(buf->grid));	//MOD
+	memcpy(seq_patternSet.trig[patternNr], buf->trig, sizeof(buf->trig));	//MOD
 	seq_patternSet.shuffle[patternNr] = buf->shuffle;
 	seq_patternSet.kitNr[patternNr] = buf->kitNr;
 	preset_validateKitNr(patternNr);

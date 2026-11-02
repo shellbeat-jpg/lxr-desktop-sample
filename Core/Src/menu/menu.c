@@ -1023,7 +1023,9 @@ static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t 
 	return isLong ? menu_fxSyncLong[v] : menu_fxSyncNames[v];
 }
 //MOD: step grid on the last step page: encoder click switches between length and grid
+//(0 = length, 1 = grid, 2 = trigger mode, 3 = trigger target)
 static uint8_t menu_lastStepGrid = 0;
+static const char menu_trigNames[SEQ_NUM_TRIG_MODES][4] = { "OFF", "RST", "MUT", "CLK" };
 static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4", "5/64", "1/16." };
 static const char menu_gridRatios[SEQ_NUM_GRIDS][4] = { "1",    "2/3",   "1/2",  "1/3",   "3/4",   "4/3",  "x2",  "8/3",  "x4",  "5/4",  "6/4" };
 static const uint8_t menu_gridOrder[SEQ_NUM_GRIDS]  = { 8, 7, 6, 10, 5, 9, 0, 4, 1, 2, 3 };	//longest step first
@@ -1598,7 +1600,21 @@ static void menu_repaintSimplePage()
 		{
 			strcpy(&editDisplayBuffer[0][10], "All");
 		}
-		//MOD: "[16]  1/16T  2/3": length and step grid, the brackets mark what the encoder edits
+		//MOD: "[16]  1/16T  2/3": length and step grid, the brackets mark what the encoder edits;
+		//"Trg [RST] > T3": trigger track mode and target
+		if(menu_lastStepGrid >= 2)
+		{
+			const uint8_t v = seq_getTrackTrig(menu_activeVoice);
+			const uint8_t m = SEQ_TRIG_MODE(v);
+			char mb[6], tb[6];
+			snprintf(mb, sizeof(mb), menu_lastStepGrid == 2 ? "[%s]" : " %s ", menu_trigNames[m]);
+			if(m == SEQ_TRIG_OFF)
+				tb[0] = 0;
+			else
+				snprintf(tb, sizeof(tb), menu_lastStepGrid == 3 ? "[T%u]" : " T%u ", (unsigned)(SEQ_TRIG_TARGET(v) + 1u));
+			snprintf(&editDisplayBuffer[1][0], 17, "Trg %s %s%s", mb, m == SEQ_TRIG_OFF ? "" : ">", tb);
+		}
+		else
 		{
 			const uint8_t g = seq_getTrackGrid(menu_activeVoice);
 			char lb[5], gb[8];
@@ -3434,8 +3450,13 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			}
 			else if(menu_activePage == MENU_LAST_STEP_PAGE)
 			{
-				//MOD: the encoder edits the length or the step grid
-				menu_lastStepGrid = (uint8_t)!menu_lastStepGrid;
+				//MOD: the encoder edits the length, the step grid, the trigger mode
+				//or the trigger target (only with a mode)
+				menu_lastStepGrid++;
+				if(menu_lastStepGrid == 3 && SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) == SEQ_TRIG_OFF)
+					menu_lastStepGrid = 0;
+				if(menu_lastStepGrid > 3)
+					menu_lastStepGrid = 0;
 			}
 			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
 			{
@@ -3471,6 +3492,26 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	else if(menu_activePage == SONG_MODE_PAGE)
 	{
 		menu_handleSongMenu(inc, btnClicked);
+	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 2)
+	{
+		//MOD: trigger track of the active track: mode, or the target (not the track itself)
+		const uint8_t t = menu_activeVoice;
+		const uint8_t v = seq_getTrackTrig(t);
+		uint8_t m = SEQ_TRIG_MODE(v), d = SEQ_TRIG_TARGET(v);
+		if(m == SEQ_TRIG_OFF) d = (uint8_t)((t + 1u) % 7u);
+		if(menu_lastStepGrid == 2)
+		{
+			const int16_t n = (int16_t)m + (inc > 0 ? 1 : -1);
+			m = (uint8_t)(n < 0 ? 0 : n >= SEQ_NUM_TRIG_MODES ? SEQ_NUM_TRIG_MODES - 1 : n);
+		}
+		else
+		{
+			int16_t n = (int16_t)d + (inc > 0 ? 1 : -1);
+			if(n == t) n += inc > 0 ? 1 : -1;
+			if(n >= 0 && n < 7) d = (uint8_t)n;
+		}
+		seq_setTrackTrig(t, SEQ_TRIG_VALUE(m, d));
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid)
 	{

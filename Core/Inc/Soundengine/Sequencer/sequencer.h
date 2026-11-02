@@ -114,6 +114,7 @@ typedef struct PatternSetStruct
 	uint8_t shuffle[NUM_PATTERN];
 	uint8_t kitNr[NUM_PATTERN];
 	uint8_t grid[NUM_PATTERN][NUM_TRACKS];		//MOD: step grid per track (SEQ_GRID_x, 0 = 1/16)
+	uint8_t trig[NUM_PATTERN][NUM_TRACKS];		//MOD: trigger track: mode << 4 | target track (0 = off)
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -126,6 +127,7 @@ typedef struct PatternBackupBufferStruct
 	uint8_t shuffle;
 	uint8_t kitNr;
 	uint8_t grid[NUM_TRACKS];	//MOD
+	uint8_t trig[NUM_TRACKS];	//MOD
 }PatternBackupBuffer;
 
 /*
@@ -205,6 +207,21 @@ void seq_setTrackLength(uint8_t trackNr, uint8_t length);
 extern const uint8_t seq_gridTicks[SEQ_NUM_GRIDS];
 void seq_setTrackGrid(uint8_t trackNr, uint8_t grid);	//of the shown pattern
 uint8_t seq_getTrackGrid(uint8_t trackNr);
+//MOD: trigger track: each active step (any velocity) acts on a target track.
+//SEQ_TRIG_RST: the target jumps to step 1; SEQ_TRIG_MUT: the target is muted while
+//the step is active; SEQ_TRIG_CLK: the target only steps on these impulses.
+//Value: mode << 4 | target track (0..6), 0 = off.
+#define SEQ_TRIG_OFF	0
+#define SEQ_TRIG_RST	1
+#define SEQ_TRIG_MUT	2
+#define SEQ_TRIG_CLK	3
+#define SEQ_NUM_TRIG_MODES	4
+#define SEQ_TRIG_VALUE(mode, target)	((uint8_t)(((mode) << 4) | ((target) & 7)))
+#define SEQ_TRIG_MODE(v)		((uint8_t)(((v) >> 4) & 3))
+#define SEQ_TRIG_TARGET(v)		((uint8_t)((v) & 7))
+void seq_setTrackTrig(uint8_t trackNr, uint8_t value);	//of the shown pattern
+uint8_t seq_getTrackTrig(uint8_t trackNr);
+uint8_t seq_validTrig(uint8_t trackNr, uint8_t value);	//a usable value (0 if not)
 //------------------------------------------------------------------------------
 uint8_t seq_getTrackLength(uint8_t trackNr);
 //------------------------------------------------------------------------------
