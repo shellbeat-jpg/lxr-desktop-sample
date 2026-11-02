@@ -62,7 +62,7 @@ static uint8_t vi_source(void)
 static FRESULT vi_load(void)
 {
 	static uint8_t params[END_OF_SOUND_PARAMETERS];
-	uint8_t engines[NUM_VOICE_SLOTS];
+	uint8_t engines[KIT_DATA_SIZE];
 	const uint8_t src = vi_source();
 	if(src == VI_SRC_FACT)
 	{
@@ -73,14 +73,17 @@ static FRESULT vi_load(void)
 	const FRESULT res = preset_readInitTemplate(src == VI_SRC_PROJ ? projectBrowse.project : PRESET_INIT_GLOBAL, params, engines);
 	soundengine_backgroundAudioEnd(bg);
 	if(res == FR_OK)
+	{
 		kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
+		kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
+	}
 	return res;
 }
 //the voice of the active kit goes into the template, the other voices stay
 static FRESULT vi_save(const uint8_t project)
 {
 	static uint8_t params[END_OF_SOUND_PARAMETERS];
-	uint8_t engines[NUM_VOICE_SLOTS];
+	uint8_t engines[KIT_DATA_SIZE];
 	const uint8_t slot = voiceLoad_slot();
 	const uint8_t bg = soundengine_backgroundAudioBegin();
 	uint8_t mask = preset_initTemplateMask(project);
@@ -91,6 +94,7 @@ static FRESULT vi_save(const uint8_t project)
 	}
 	kitEngines_copyVoice(slot, params, activeParameters);
 	engines[slot] = kitEngines[slot];
+	engines[KIT_SEND_OFFSET + slot] = kitEngines[KIT_SEND_OFFSET + slot];	//MOD: FX send
 	const FRESULT res = preset_writeInitTemplate(project, params, engines, (uint8_t)(mask | (1u << slot)));
 	soundengine_backgroundAudioEnd(bg);
 	return res;
@@ -99,7 +103,7 @@ static FRESULT vi_save(const uint8_t project)
 static FRESULT vi_delete(const uint8_t project)
 {
 	static uint8_t params[END_OF_SOUND_PARAMETERS];
-	uint8_t engines[NUM_VOICE_SLOTS];
+	uint8_t engines[KIT_DATA_SIZE];
 	const uint8_t bg = soundengine_backgroundAudioBegin();
 	const uint8_t mask = preset_initTemplateMask(project) & (uint8_t)~(1u << voiceLoad_slot());
 	FRESULT res;
@@ -253,10 +257,13 @@ void voiceLoad_click(void)
 	else if(projectBrowse_kitExists(voiceLoad_kit))
 	{
 		static uint8_t params[END_OF_SOUND_PARAMETERS];
-		uint8_t engines[NUM_VOICE_SLOTS];
+		uint8_t engines[KIT_DATA_SIZE];
 		const FRESULT res = projectBrowse_readKit(voiceLoad_kit, params, engines);
 		if(res == FR_OK)
+		{
 			kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
+			kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
+		}
 		else
 			menu_showSdError(res);
 	}

@@ -21,6 +21,7 @@
 #include "fatfs.h"
 #include "Parameters.h"
 #include "InitKit.h"
+#include "Preset/KitEngines.h"
 
 //#define f_unmount(path) f_mount(0, path, 0)
 
@@ -98,7 +99,7 @@ void preset_loadProjectNames(uint8_t projectNr);
 //Kits of a project folder on the SD card, without changing the current folder
 //or anything loaded. Kit files are NN-NAME.snd (or the older pNNN.snd).
 //names/engines of all kits of a project (exists[kit] = 0 for kits without a file)
-FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engines[][6], uint8_t* exists);
+FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engines[][KIT_DATA_SIZE], uint8_t* exists);
 //parameters (END_OF_SOUND_PARAMETERS) and engines of one kit
 FRESULT preset_readProjectKit(uint8_t projectNr, uint8_t kitNr, uint8_t* params, uint8_t* engines);
 //save a kit into an existing project folder (replaces the kit's old file)

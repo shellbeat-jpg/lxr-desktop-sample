@@ -220,7 +220,7 @@ uint8_t preset_isMorphVoiceExcluded(uint16_t par)
 //write the engine block after the kit parameters
 static FRESULT preset_writeEngines(const uint8_t* engines)
 {
-	uint8_t block[KIT_ENGINES_BLOCK_SIZE];
+	uint8_t block[KIT_DATA_BLOCK_SIZE];
 	unsigned int bytesWritten;
 	return preset_fwrite((FIL*)&SDFile, block, kitEngines_encode(engines, block), &bytesWritten);
 }
@@ -870,7 +870,7 @@ void preset_init(uint8_t presetNr)
 
 	//copy parameters to edit buffer
 	memcpy(activeParameters, mainParameters[presetNr], sizeof(uint8_t) * END_OF_SOUND_PARAMETERS);
-	memcpy(kitEngines, kitEngines_ram[presetNr], NUM_VOICE_SLOTS);
+	memcpy(kitEngines, kitEngines_ram[presetNr], KIT_DATA_SIZE);
 	preset_sendDrumsetParameters();
 	//frontPanel_sendData(PRESET,PRESET_LOAD,presetNr);
 
@@ -927,7 +927,7 @@ void preset_loadDrumsetRam(uint8_t presetNr, uint8_t isMorph, uint8_t sendImmedi
 	{
 		//copy parameters to edit buffer
 		memcpy(activeParameters, mainParameters[presetNr], sizeof(uint8_t) * END_OF_SOUND_PARAMETERS);
-		memcpy(kitEngines, kitEngines_ram[presetNr], NUM_VOICE_SLOTS);
+		memcpy(kitEngines, kitEngines_ram[presetNr], KIT_DATA_SIZE);
 		preset_otherKitLoaded = 0;
 		//if(activeParameters[PAR_PATTERN_MODE] = 1)
 		//load asociated morph kit as well
@@ -983,7 +983,7 @@ void preset_saveDrumsetRam(uint8_t presetNr, uint8_t isMorph)
 		preset_otherKitLoaded = 0;
 	}
 	//a morphed kit keeps the engines of the source kit
-	memcpy(kitEngines_ram[presetNr], kitEngines, NUM_VOICE_SLOTS);
+	memcpy(kitEngines_ram[presetNr], kitEngines, KIT_DATA_SIZE);
 }
 //----------------------------------------------------
 FRESULT preset_saveDrumsetSD(uint8_t presetNr, uint8_t isMorph)
@@ -2744,7 +2744,7 @@ static FRESULT preset_findProjectKit(const char* folder, uint8_t kitNr, char* pa
 	return found ? FR_OK : FR_NO_FILE;
 }
 //----------------------------------------------------
-FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engines[][6], uint8_t* exists)
+FRESULT preset_scanProjectKits(uint8_t projectNr, char names[][8], uint8_t engines[][KIT_DATA_SIZE], uint8_t* exists)
 {
 	//FatFs allows one open file or folder at a time (_FS_LOCK 1): first collect
 	//the kit files, then read them
@@ -2958,7 +2958,7 @@ FRESULT preset_saveProjectKit(uint8_t projectNr, uint8_t kitNr, char* name, cons
 void preset_loadKitData(const uint8_t* params, const uint8_t* engines, const char* name)
 {
 	memcpy(activeParameters, params, END_OF_SOUND_PARAMETERS);
-	memcpy(kitEngines, engines, NUM_VOICE_SLOTS);
+	memcpy(kitEngines, engines, KIT_DATA_SIZE);
 	memcpy(preset_otherKitName, name, 8);
 	preset_otherKitLoaded = 1;
 	preset_sendDrumsetParameters();

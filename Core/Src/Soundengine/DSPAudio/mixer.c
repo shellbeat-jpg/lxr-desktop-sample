@@ -26,6 +26,7 @@
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
+#include "Preset/KitEngines.h"
 #include "Soundengine/CpuMeter.h"
 
 	uint8_t r2_Available;
@@ -658,8 +659,21 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		const float panL = sqrtf((127-voice->pan)/127.f);
 		const float panR = sqrtf(voice->pan/127.f);
 #endif
-		const uint8_t isFxB = mixer_audioRouting[v] == MIXER_ROUTING_FX_BUS_B;	//MOD
-		mixer_addDataToOutput(isFxB ? MIXER_ROUTING_FX_BUS : mixer_audioRouting[v], panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], isFxB ? fxBusDataB : fxBusData);
+		const uint8_t route = mixer_audioRouting[v];
+		if(route >= MIXER_ROUTING_SEND_A && route < MIXER_NUM_ROUTINGS)
+		{
+			//MOD: an output and a send to FX slot A or B (level: the voice's FX send)
+			const uint8_t k = (uint8_t)(route - MIXER_ROUTING_SEND_A);
+			mixer_addDataToOutput(k % 6u, panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], fxBusData);
+			const float s = kitEngines[KIT_SEND_OFFSET + v] * (1.f/127.f);
+			if(s > 0.f)
+				mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*s, panR*s, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], k < 6u ? fxBusData : fxBusDataB);
+		}
+		else
+		{
+			const uint8_t isFxB = route == MIXER_ROUTING_FX_BUS_B;	//MOD
+			mixer_addDataToOutput(isFxB ? MIXER_ROUTING_FX_BUS : route, panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], isFxB ? fxBusDataB : fxBusData);
+		}
 		if(!mixer_limiterOn)
 		{
 			mixer_saturateMix(mix);

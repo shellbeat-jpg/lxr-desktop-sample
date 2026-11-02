@@ -22,7 +22,7 @@ ProjectBrowse projectBrowse;
 
 //names and engines of another project's kits, read from the SD card when it is chosen
 static char projectBrowse_names[NUM_KIT_SLOTS][8];
-static uint8_t projectBrowse_engines[NUM_KIT_SLOTS][NUM_VOICE_SLOTS];
+static uint8_t projectBrowse_engines[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 static uint8_t projectBrowse_exists[NUM_KIT_SLOTS];
 //---------------------------------------------------
 void projectBrowse_reset(void)
@@ -119,7 +119,7 @@ FRESULT projectBrowse_readKit(const uint8_t kit, uint8_t* params, uint8_t* engin
 	if(!projectBrowse_isOther())
 	{
 		memcpy(params, mainParameters[kit], END_OF_SOUND_PARAMETERS);
-		memcpy(engines, kitEngines_ram[kit], NUM_VOICE_SLOTS);
+		memcpy(engines, kitEngines_ram[kit], KIT_DATA_SIZE);
 		return FR_OK;
 	}
 	const uint8_t bg = soundengine_backgroundAudioBegin();
@@ -136,7 +136,7 @@ FRESULT projectBrowse_saveKit(const uint8_t kit, char* name)
 	if(res == FR_OK)
 	{
 		memcpy(projectBrowse_names[kit], name, 8);
-		memcpy(projectBrowse_engines[kit], kitEngines, NUM_VOICE_SLOTS);
+		memcpy(projectBrowse_engines[kit], kitEngines, KIT_DATA_SIZE);
 		projectBrowse_exists[kit] = 1;
 	}
 	return res;

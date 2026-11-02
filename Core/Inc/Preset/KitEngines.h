@@ -30,12 +30,20 @@
 //the stock firmware or anywhere else) load with the stock engines, and the
 //stock firmware ignores the block.
 #define KIT_ENGINES_BLOCK_SIZE	(5 + NUM_VOICE_SLOTS)
+//MOD: per kit data after the engines: the FX send level of each slot (0..127,
+//for the voice outputs "St1+A" ...). Arrays of kit data (kitEngines, kitEngines_ram,
+//...) hold KIT_DATA_SIZE bytes: [0..5] engines, [6..11] send levels. In the file
+//the block continues after the engines: "SND", count, the levels.
+#define KIT_SEND_OFFSET			NUM_VOICE_SLOTS
+#define KIT_DATA_SIZE			(2*NUM_VOICE_SLOTS)
+#define KIT_SEND_DEFAULT		64
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3
 
-extern uint8_t kitEngines[NUM_VOICE_SLOTS];							//the active kit
-extern uint8_t kitEngines_ram[NUM_KIT_SLOTS][NUM_VOICE_SLOTS];		//the kits in RAM (mainParameters)
+extern uint8_t kitEngines[KIT_DATA_SIZE];							//the active kit
+extern uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];		//the kits in RAM (mainParameters)
 
 //all kits: stock engines
 void kitEngines_init(void);

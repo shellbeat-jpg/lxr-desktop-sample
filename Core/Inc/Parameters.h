@@ -374,6 +374,15 @@ enum ParamEnums
 	PAR_STEP_FLAM,
 	PAR_STEP_SHIFT,
 
+	//MOD: FX send level of each voice slot, for the menu only: the values are in
+	//the kit data (kitEngines[KIT_SEND_OFFSET + slot]), stored in the kit file
+	PAR_FX_SEND1,
+	PAR_FX_SEND2,
+	PAR_FX_SEND3,
+	PAR_FX_SEND4,
+	PAR_FX_SEND5,
+	PAR_FX_SEND6,
+
 	
 	//#########################################
 	//######## Global Parameters ##############
