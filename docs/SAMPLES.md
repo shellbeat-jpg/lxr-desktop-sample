@@ -246,7 +246,8 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
   in time.
 - Stored in the pattern (a small block after the pattern data). Older patterns load as `1/16`; other
   firmwares ignore the block and play all tracks in 1/16.
-- Not on grid tracks: roll; shuffle moves them slightly; live recording is quantized to the 1/16 grid.
+- Roll on a grid track repeats on the track's own steps. Shuffle moves grid tracks slightly; live
+  recording is quantized to the 1/16 grid.
 
 ## Two FX slots (1.2.8, in test)
 

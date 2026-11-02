@@ -1159,6 +1159,13 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t t)
 					&& ((menu_activePage < MENU_MIDI_PAGE) || menu_activePage == PERF_PAGE || menu_activePage == SEQ_PAGE || menu_activePage == EUKLID_PAGE))
 				led_setActive_step(stepIdx%16);
 		}
+		//roll on this track's own steps (as seq_nextStep does for the 1/16 tracks)
+		if(seq_rollRate != 0xff && (seq_rollState & (1<<track)) && (seq_stepIndex[track] % seq_rollRate) == 0)
+		{
+			const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_stepIndex[track]].note;
+			seq_triggerVoice(track, ROLL_VOLUME, note);
+			seq_addNote(track, ROLL_VOLUME, note);
+		}
 		if(!(seq_mutedTracks & (1<<track)) && seq_intIsMainStepActive(track,seq_stepIndex[track],seq_activePattern))
 		{
 			seq_rndValue[track].prev = seq_rndValue[track].current;
