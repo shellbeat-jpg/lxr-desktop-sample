@@ -70,5 +70,5 @@ on the device). Details: [SAMPLES.md](SAMPLES.md).
 
 | Feature | Description | UI | Stored in | MIDI |
 |---|---|---|---|---|
-| Kit morph | SHIFT shows and edits the morph kit's value, SHIFT + click takes the parameter out of the morph; `MRV` = morph on/off per voice. | VOICE (edit view), CONFIG (`MRV`) | Morph kit (project), `MRV`: global | CC 1 (`MRP`) |
+| Kit morph | start value in the active kit / target value in the morph kit (SHIFT), SHIFT + click takes the parameter out of the morph; `MRV` = morph on/off per voice. | VOICE (edit view), CONFIG (`MRV`) | Morph kit (project), `MRV`: global | CC 1 (`MRP`) |
 | Voice morph | Morph one voice towards another: `VMV` = pair, `VMO` = amount, `VSW` = switch point (sample, filter type …) per voice. | PERF | `VSW`: global, otherwise not saved | – |

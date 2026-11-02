@@ -70,5 +70,5 @@ Waser), alles andere aus OE02-Samples.
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Kit-Morph | SHIFT zeigt und ändert den Wert im Morph-Kit, SHIFT + Klick nimmt den Parameter vom Morph aus; `MRV` = Morph pro Voice ein/aus. | VOICE (Edit-Ansicht), CONFIG (`MRV`) | Morph-Kit (Projekt), `MRV`: Global | CC 1 (`MRP`) |
+| Kit-Morph | Startwert im aktiven Kit / Zielwert im Morph-Kit (SHIFT), SHIFT + Klick nimmt den Parameter vom Morph aus; `MRV` = Morph pro Voice ein/aus. | VOICE (Edit-Ansicht), CONFIG (`MRV`) | Morph-Kit (Projekt), `MRV`: Global | CC 1 (`MRP`) |
 | Voice-Morph | Eine Voice zu einer anderen morphen: `VMV` = Paar, `VMO` = Stärke, `VSW` = Umschaltpunkt (Sample, Filtertyp …) pro Voice. | PERF | `VSW`: Global, sonst nicht gespeichert | – |
