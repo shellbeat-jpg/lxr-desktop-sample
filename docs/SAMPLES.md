@@ -303,7 +303,9 @@ track's voice (track 7: voice 6) starts track 3 (`OFF`, `T1` … `T7`), then the
 - Not counted: a restart of the LFO caused by the target's own trigger (`RTG` on the target's
   voice), otherwise the target would keep restarting itself.
 - Until the first start the target is silent. With `SNC` the starts fall on the beat;
-  free-running LFOs give starts that drift against the pattern.
+  free-running LFOs give starts that drift against the pattern: with `NXT` a cycle of e.g. 17.5
+  steps restarts the target alternately after 17 and 18 steps, with `NOW` exactly after each
+  cycle, but between the steps of the other tracks.
 - The track whose page it is plays on as usual; it can have a trigger target and an LFO target at
   the same time. Each target is controlled by one source only: tracks that are already the
   target of a trigger or an LFO start are skipped when choosing a target. Stored in the pattern.

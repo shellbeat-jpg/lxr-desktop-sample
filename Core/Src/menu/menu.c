@@ -3523,6 +3523,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	{
 		menu_handleSongMenu(inc, btnClicked);
 	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 2 && inc == 0)
+	{
+		//MOD: an encoder click only switches the view (this runs with inc 0 after it)
+	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 4)
 	{
 		//MOD: LFO start: the target track (off, 1..7; targets of others are skipped),
