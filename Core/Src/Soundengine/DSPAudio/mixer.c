@@ -586,15 +586,24 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	l2_Available = (switch_l2_GPIO_Port->IDR & switch_l2_Pin)>0;
 	r1_Available = (switch_r1_GPIO_Port->IDR & switch_r1_Pin)>0;
 
+	//MOD: calc the LFOs before the targets are reset: an LFO's modulation of another
+	//LFO (rate, amount ...) of the last block then applies to every LFO. Before, the
+	//reset undid it for LFOs with a lower number (LFO 3 -> rate of LFO 1 had no effect).
+	float lfoVal[6];
+	uint8_t v;
+	for(v=0;v<6;v++)
+	{
+		lfoVal[v] = lfo_calc(&voiceSlots[v].u.c.lfo);
+	}
+
 	modNode_resetTargets();
 	//re assign velocity modulation
 	modNode_reassignVeloMod();
 
-	//calc and dispatch LFO
-	uint8_t v;
+	//dispatch LFO
 	for(v=0;v<6;v++)
 	{
-		lfo_dispatchNextValue(&voiceSlots[v].u.c.lfo);
+		modNode_updateValue(&voiceSlots[v].u.c.lfo.modTarget, lfoVal[v]);
 	}
 
 	//update filter frequencies

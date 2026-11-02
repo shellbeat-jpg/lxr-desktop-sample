@@ -75,6 +75,7 @@ typedef struct LfoStruct
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo);
 void lfo_dispatchNextValue(Lfo* lfo);
+float lfo_calc(Lfo *lfo);	//MOD: the next value (without dispatching it)
 void lfo_setFreq(Lfo *lfo, float f);
 void lfo_setSync(Lfo* lfo, uint8_t sync);
 void lfo_recalcSync();
