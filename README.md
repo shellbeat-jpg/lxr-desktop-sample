@@ -268,8 +268,9 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - SHIFT + LAST STEP, click the encoder to `Trg`: each active step (any velocity) acts on a target
   track: `RST` = back to step 1, `MUT` = muted while the step lasts, `CLK` = one step on per
   impulse. Stored in the pattern.
-- LFO start (same page, `LFO [L3]`): each start of the waveform of a voice's LFO starts the track at
-  step 1 (`NXT` = on the next step of its grid, `NOW` = at once); it plays to its end and waits.
+- LFO start (same page, `LFO>[T3]`): each start of the waveform of the LFO of this track's voice
+  starts the target track at step 1 (`NXT` = on the next step of its grid, `NOW` = at once); the
+  target plays to its end and waits.
   Details: [docs/SAMPLES.md](docs/SAMPLES.md#trigger-tracks-129-in-test).
 
 ### 9. Second FX slot (1.2.8)

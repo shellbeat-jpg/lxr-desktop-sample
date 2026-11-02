@@ -291,19 +291,21 @@ to the length.
 
 ### LFO start
 
-On the LAST STEP page of a track, after the trigger settings: **`LFO [L3]`** = the track is
-started by the LFO of voice 3 (`OFF`, `L1` … `L6`), then the timing **`NXT`** / **`NOW`**.
+On the LAST STEP page of a track, after the trigger settings: **`LFO>[T3]`** = the LFO of this
+track's voice (track 7: voice 6) starts track 3 (`OFF`, `T1` … `T7`), then the timing **`NXT`** /
+**`NOW`**.
 
 - Each start of the LFO's waveform (a new cycle, a restart by `RTG`, a one-shot after its `OFS`
-  delay) starts the track at step 1: with `NXT` on the next step of the track's grid (stays in
+  delay) starts the target at step 1: with `NXT` on the next step of the target's grid (stays in
   time), with `NOW` at once.
-- The track plays to its last step and then waits for the next start. If the LFO cycle is
-  shorter than the track, the next start comes first: the track loops the part up to there.
-- Not counted: a restart of the LFO caused by this track's own trigger (`RTG` on the track's
-  voice), otherwise the track would keep restarting itself.
-- Until the first start the track is silent. With `SNC` the starts fall on the beat; free-running
-  LFOs give starts that drift against the pattern.
-- The LFO start counts before a trigger track that targets the same track. Stored in the pattern.
+- The target plays to its last step and then waits for the next start. If the LFO cycle is
+  shorter than the target, the next start comes first: it loops the part up to there.
+- Not counted: a restart of the LFO caused by the target's own trigger (`RTG` on the target's
+  voice), otherwise the target would keep restarting itself.
+- Until the first start the target is silent. With `SNC` the starts fall on the beat;
+  free-running LFOs give starts that drift against the pattern.
+- The track whose page it is plays on as usual. An LFO start counts before a trigger track on the
+  same target; one LFO per target (the first one counts). Stored in the pattern.
 
 ## Second FX slot (1.2.8)
 

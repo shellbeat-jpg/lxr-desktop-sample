@@ -1588,7 +1588,8 @@ static void menu_repaintSimplePage()
 	{
 		strcpy(&editDisplayBuffer[0][0], "Last Step ");
 		uint8_t voice = menu_getActiveVoice();
-		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_TRACK) //track
+		//MOD: the trigger and LFO settings are always those of the active track
+		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_TRACK || menu_lastStepGrid >= 2) //track
 		{
 			strcpy(&editDisplayBuffer[0][10], "Trk: ");
 			char trackNr[4];
@@ -1604,14 +1605,15 @@ static void menu_repaintSimplePage()
 		//"Trg [RST] > T3": trigger track mode and target
 		if(menu_lastStepGrid >= 4)
 		{
-			//MOD: "LFO [L3]  NXT": started by the LFO of voice 3, on the next step / at once
+			//MOD: "LFO > [T3]  NXT": the LFO of this track's voice starts track 3, on its
+			//next step / at once
 			const uint8_t v = seq_getTrackLfo(menu_activeVoice);
 			char sb[7], nb[6];
-			if(v)	snprintf(sb, sizeof(sb), menu_lastStepGrid == 4 ? "[L%u]" : " L%u ", (unsigned)SEQ_LFO_VOICE(v));
+			if(v)	snprintf(sb, sizeof(sb), menu_lastStepGrid == 4 ? "[T%u]" : " T%u ", (unsigned)SEQ_LFO_TARGET(v));
 			else	snprintf(sb, sizeof(sb), menu_lastStepGrid == 4 ? "[OFF]" : " OFF ");
 			if(v)	snprintf(nb, sizeof(nb), menu_lastStepGrid == 5 ? "[%s]" : " %s ", (v & SEQ_LFO_NOW) ? "NOW" : "NXT");
 			else	nb[0] = 0;
-			snprintf(&editDisplayBuffer[1][0], 17, "LFO %-5s %s", sb, nb);
+			snprintf(&editDisplayBuffer[1][0], 17, "LFO>%-5s %s", sb, nb);
 		}
 		else if(menu_lastStepGrid >= 2)
 		{
@@ -3508,12 +3510,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 4)
 	{
-		//MOD: LFO -> track: the voice of the LFO (off, 1..6), or the timing of the start
+		//MOD: LFO start: the target track (off, 1..7), or the timing of the start
 		const uint8_t v = seq_getTrackLfo(menu_activeVoice);
 		if(menu_lastStepGrid == 4)
 		{
-			int16_t n = (int16_t)SEQ_LFO_VOICE(v) + (inc > 0 ? 1 : -1);
-			n = n < 0 ? 0 : n > 6 ? 6 : n;
+			int16_t n = (int16_t)SEQ_LFO_TARGET(v) + (inc > 0 ? 1 : -1);
+			n = n < 0 ? 0 : n > 7 ? 7 : n;
 			seq_setTrackLfo(menu_activeVoice, (uint8_t)(n | (v & SEQ_LFO_NOW)));
 		}
 		else

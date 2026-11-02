@@ -1181,7 +1181,8 @@ static int32_t seq_ctlOrigin[NUM_TRACKS];	//tick of the track's local tick 0
 static int32_t seq_ctlEnd[NUM_TRACKS];		//local tick from which the track pauses (-1 = never)
 static uint8_t seq_ctlMode[NUM_TRACKS];		//how the track is controlled (SEQ_TRIG_x as a target)
 static uint8_t seq_ctlPattern = 0xff;		//pattern the control state belongs to
-static uint8_t seq_lfoSeen[NUM_TRACKS];		//LFO -> track: the last start count seen
+static uint8_t seq_lfoSeen[NUM_TRACKS];		//LFO start: the last start count seen per target
+static uint8_t seq_lfoSlot[NUM_TRACKS];		//LFO start: the voice slot of the LFO of each target
 static uint8_t seq_lfoPending = 0;			//LFO -> track: tracks waiting for the next step of their grid
 
 static void seq_ctlReset(void)
@@ -1345,7 +1346,7 @@ static void seq_ctlSetMode(const uint8_t d, const uint8_t m, const int32_t T)
 	{
 		//waits for the next start of the LFO's waveform
 		uint8_t cause;
-		seq_lfoSeen[d] = lfo_getStarts((uint8_t)(SEQ_LFO_VOICE(seq_patternSet.lfo[seq_activePattern][d]) - 1u), &cause);
+		seq_lfoSeen[d] = lfo_getStarts(seq_lfoSlot[d], &cause);
 		seq_ctlOrigin[d] = T;
 		seq_ctlEnd[d] = 0;
 		seq_stepIndex[d] = -1;
@@ -1382,6 +1383,14 @@ __attribute__((noinline)) static void seq_ctlTick(const int32_t T)
 {
 	uint8_t src[NUM_TRACKS];	//trigger track of each target (0xff = none; the first one counts)
 	memset(src, 0xff, sizeof(src));
+	uint8_t lfoSrc[NUM_TRACKS];	//track whose LFO starts each target (0xff = none; the first one counts)
+	memset(lfoSrc, 0xff, sizeof(lfoSrc));
+	for(uint8_t s=0;s<NUM_TRACKS;s++)
+	{
+		const uint8_t v = seq_validLfo(seq_patternSet.lfo[seq_activePattern][s]);
+		if(v && lfoSrc[SEQ_LFO_TARGET(v) - 1u] == 0xff)
+			lfoSrc[SEQ_LFO_TARGET(v) - 1u] = s;
+	}
 	uint8_t any = 0;
 	for(uint8_t s=0;s<NUM_TRACKS;s++)
 	{
@@ -1403,18 +1412,22 @@ __attribute__((noinline)) static void seq_ctlTick(const int32_t T)
 	}
 	for(uint8_t d=0;d<NUM_TRACKS;d++)
 	{
-		//an LFO start setting of the track counts before a trigger track
-		const uint8_t lv = seq_validLfo(seq_patternSet.lfo[seq_activePattern][d]);
+		//an LFO start counts before a trigger track
+		const uint8_t lv = lfoSrc[d] == 0xff ? 0 : seq_patternSet.lfo[seq_activePattern][lfoSrc[d]];
+		const uint8_t slot = lfoSrc[d] == 0xff ? 0 : (lfoSrc[d] < 6 ? lfoSrc[d] : 5u);
 		const uint8_t m = lv ? SEQ_TRIG_LFO : src[d] == 0xff ? SEQ_TRIG_OFF : SEQ_TRIG_MODE(seq_patternSet.trig[seq_activePattern][src[d]]);
+		if(m == SEQ_TRIG_LFO && seq_ctlMode[d] == SEQ_TRIG_LFO && seq_lfoSlot[d] != slot)
+			seq_ctlSetMode(d, SEQ_TRIG_OFF, T);	//another LFO: start over
+		seq_lfoSlot[d] = slot;
 		if(m != seq_ctlMode[d])
 			seq_ctlSetMode(d, m, T);
 		if(m != SEQ_TRIG_LFO)
 			continue;
 		src[d] = 0xff;
-		//LFO -> track: a start of the waveform (not one caused by this track's own
-		//trigger: the track would restart itself) starts the track at step 1
+		//a start of the waveform (not one caused by the target's own trigger: it
+		//would restart itself) starts the target at step 1
 		uint8_t cause;
-		const uint8_t c = lfo_getStarts((uint8_t)(SEQ_LFO_VOICE(lv) - 1u), &cause);
+		const uint8_t c = lfo_getStarts(slot, &cause);
 		if(c != seq_lfoSeen[d])
 		{
 			seq_lfoSeen[d] = c;
@@ -1520,8 +1533,8 @@ void seq_setTrackGrid(uint8_t trackNr, uint8_t grid)
 //MOD: LFO -> track of the shown pattern
 uint8_t seq_validLfo(uint8_t value)
 {
-	const uint8_t v = SEQ_LFO_VOICE(value);
-	return (v >= 1 && v <= 6) ? (uint8_t)(v | (value & SEQ_LFO_NOW)) : 0;
+	const uint8_t v = SEQ_LFO_TARGET(value);
+	return (v >= 1 && v <= NUM_TRACKS) ? (uint8_t)(v | (value & SEQ_LFO_NOW)) : 0;
 }
 void seq_setTrackLfo(uint8_t trackNr, uint8_t value)
 {

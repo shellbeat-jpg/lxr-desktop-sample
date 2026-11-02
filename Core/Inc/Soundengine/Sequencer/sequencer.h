@@ -115,7 +115,7 @@ typedef struct PatternSetStruct
 	uint8_t kitNr[NUM_PATTERN];
 	uint8_t grid[NUM_PATTERN][NUM_TRACKS];		//MOD: step grid per track (SEQ_GRID_x, 0 = 1/16)
 	uint8_t trig[NUM_PATTERN][NUM_TRACKS];		//MOD: trigger track: mode << 4 | target track (0 = off)
-	uint8_t lfo[NUM_PATTERN][NUM_TRACKS];		//MOD: started by an LFO: SEQ_LFO_x (0 = off)
+	uint8_t lfo[NUM_PATTERN][NUM_TRACKS];		//MOD: LFO start: target track (1..7) | SEQ_LFO_NOW, 0 = off
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -224,12 +224,12 @@ uint8_t seq_getTrackGrid(uint8_t trackNr);
 void seq_setTrackTrig(uint8_t trackNr, uint8_t value);	//of the shown pattern
 uint8_t seq_getTrackTrig(uint8_t trackNr);
 uint8_t seq_validTrig(uint8_t trackNr, uint8_t value);	//a usable value (0 if not)
-//MOD: LFO -> track: each start of the waveform of the LFO of a voice starts the
-//track at step 1; it plays to its last step and then waits for the next start.
-//Value: the voice of the LFO (1..6, 0 = off) | SEQ_LFO_NOW (start at once instead
-//of on the next step of the track's grid).
+//MOD: LFO start: each start of the waveform of the LFO of the track's voice (track 7:
+//voice 6) starts a target track at step 1; the target plays to its last step and
+//then waits for the next start. Value: target track (1..7, 0 = off) | SEQ_LFO_NOW
+//(start at once instead of on the next step of the target's grid).
 #define SEQ_LFO_NOW		0x10
-#define SEQ_LFO_VOICE(v)	((uint8_t)((v) & 7))
+#define SEQ_LFO_TARGET(v)	((uint8_t)((v) & 7))
 #define SEQ_TRIG_LFO	4	//the track's control mode while started by an LFO (not a trigger mode)
 uint8_t seq_validLfo(uint8_t value);
 void seq_setTrackLfo(uint8_t trackNr, uint8_t value);	//of the shown pattern
