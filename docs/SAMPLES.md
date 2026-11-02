@@ -248,6 +248,29 @@ length and grid (brackets). In the `ALL` mode (press LAST STEP again) it sets al
   firmwares ignore the block and play all tracks in 1/16.
 - Not on grid tracks: roll; shuffle moves them slightly; live recording is quantized to the 1/16 grid.
 
+## Two FX slots (1.2.8, in test)
+
+The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (distortion), `RNG`
+(ring modulator), `CMP` (compressor), `DEL` (delay).
+
+- **Slot A** is the FX of the kit as before (**SHIFT + FX**, step button 15). **Press SHIFT + FX
+  again** for **slot B**: its type is shown as `FX2`, the edit view shows `FX B`. Its parameters
+  are the same as slot A's (type, `OUT`, mix, effect parameters).
+- **Routing:** a voice's output (`OUT` on its mix page) `FX` goes to slot A, the new **`FXB`** to
+  slot B.
+- **Order** (global settings, third page, `ORD`):
+  - `A>B` (default): slot A, then slot B; voices on `FXB` only go through B. The chain goes to the
+    `OUT` of slot A. With slot B `OFF` everything sounds as before.
+  - `B>A`: slot B, then slot A (to the `OUT` of slot A).
+  - `A+B`: side by side, each slot to its own `OUT`.
+- **Delay tempo sync** (global settings, third page): `SYA` for slot A, `SYB` for slot B: `OFF`
+  (free time and range as before), `1/4`, `1/4T`, `1/8.`, `1/8`, `1/8T`, `1/16.`, `1/16`,
+  `1/16T`, `1/32`. Follows the tempo (also external clock). The delay is at most about 0.74 s
+  (ping-pong 0.36 s): longer values are limited.
+- Slot B, the order and the sync are kept with the global settings (SAVE → Global or a project save),
+  not in the kit; slot A stays in the kit.
+- CPU: each slot costs about as much as one effect did before (measure with the CPU meter build).
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:

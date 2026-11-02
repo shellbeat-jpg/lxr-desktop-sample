@@ -31,6 +31,7 @@
 #include "menu/projectBrowse.h"
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/DSPAudio/DjFilter.h"
+#include "Soundengine/FxBus.h"
 #include "SampleRom/sampleFlash.h"
 #include "Preset/voiceMorph.h"
 #include "buttonHandler.h"
@@ -274,6 +275,10 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_INSTANT_PAT, CAT_PATTERN, LONG_INSTANT_PAT},/*TEXT_INSTANT_PAT*/
 		{SHORT_MORPH_VOICES, CAT_KMORPH, LONG_VMORPH_PAIR},/*TEXT_MORPH_VOICES*/
 		{SHORT_VMORPH_SWITCH, CAT_VMORPH, LONG_VMORPH_SWITCH},/*TEXT_VMORPH_SWITCH*/
+		{SHORT_FXB_TYPE, CAT_FX, LONG_TYPE},/*TEXT_FXB_TYPE*/
+		{SHORT_FX_MODE, CAT_FX, LONG_FX_MODE},/*TEXT_FX_MODE*/
+		{SHORT_FXA_SYNC, CAT_FX, LONG_FXA_SYNC},/*TEXT_FXA_SYNC*/
+		{SHORT_FXB_SYNC, CAT_FX, LONG_FXB_SYNC},/*TEXT_FXB_SYNC*/
 
 
 };
@@ -592,6 +597,20 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_PATTERN_MODE*/ DTYPE_MENU | (MENU_PAT_MODE<<8),
 		/*PAR_MIXER_LIMITER*/	DTYPE_ON_OFF,
 		/*PAR_VMORPH_SW1-6*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
+		/*PAR_FX_MODE*/			DTYPE_0B127,	//MOD: shown/edited as names (menu_fxChoice)
+		/*PAR_FXA_SYNC*/		DTYPE_0B127,
+		/*PAR_FXB_SYNC*/		DTYPE_0B127,
+		/*PAR_FXB_TYPE*/		DTYPE_MENU | (MENU_FX<<8),
+		/*PAR_FXB_ROUTING*/		DTYPE_MENU | (MENU_AUDIO_OUT_FX<<8),
+		/*PAR_FXB_DRY_WET*/		DTYPE_0B100,
+		/*PAR_FXB_DIST_TYPE*/	DTYPE_MENU | (MENU_DIST<<8),
+		/*PAR_FXB_P1*/			DTYPE_0B127,
+		/*PAR_FXB_P2*/			DTYPE_0B127,
+		/*PAR_FXB_P3*/			DTYPE_0B127,
+		/*PAR_FXB_P4*/			DTYPE_0B127,
+		/*PAR_FXB_RATIO*/		DTYPE_MENU | (MENU_RATIO<<8),
+		/*PAR_FXB_WAVE*/		DTYPE_MENU | (MENU_WAVEFORM<<8),
+		/*PAR_FXB_DELAY_TYPE*/	DTYPE_MENU | (MENU_DELAY<<8),
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -965,6 +984,24 @@ static void menu_lfoRangeText(const uint16_t parNr, const uint8_t amount)
 	char buf[12];
 	snprintf(buf, sizeof(buf), "%d..%d", lo, hi);
 	memcpy(&editDisplayBuffer[1][0], buf, strlen(buf));
+}
+//MOD: FX slot order and delay sync: shown as names
+static const char menu_fxModeNames[FXBUS_NUM_MODES][4] = { "A>B", "B>A", "A+B" };
+static const char menu_fxSyncNames[FXBUS_NUM_SYNC][4]  = { "off", "1/4", "4T", "8.", "1/8", "8T", "16.", "16", "16T", "32" };
+static const char menu_fxSyncLong[FXBUS_NUM_SYNC][6]   = { "off", "1/4", "1/4T", "1/8.", "1/8", "1/8T", "1/16.", "1/16", "1/16T", "1/32" };
+//number of values of PAR_FX_MODE / PAR_FXA_SYNC / PAR_FXB_SYNC, 0 for other parameters
+static uint8_t menu_fxChoiceCount(const uint16_t p)
+{
+	if(p == PAR_FX_MODE) return FXBUS_NUM_MODES;
+	if(p == PAR_FXA_SYNC || p == PAR_FXB_SYNC) return FXBUS_NUM_SYNC;
+	return 0;
+}
+static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t isLong)
+{
+	const uint8_t n = menu_fxChoiceCount(p);
+	if(v >= n) v = 0;
+	if(p == PAR_FX_MODE) return menu_fxModeNames[v];
+	return isLong ? menu_fxSyncLong[v] : menu_fxSyncNames[v];
 }
 //MOD: step grid on the last step page: encoder click switches between length and grid
 static uint8_t menu_lastStepGrid = 0;
@@ -2015,6 +2052,8 @@ void menu_repaintGeneric()
 				(const char PROGMEM *)(&longNames[pgm_read_byte(&valueNames[parName].longName)]));
 			if(morphEdit)
 				memcpy(&editDisplayBuffer[0][0], "Morph>  ", 8);	//MOD: morph kit's value
+			if(parNr >= PAR_FXB_TYPE && parNr <= PAR_FXB_DELAY_TYPE)
+				memcpy(&editDisplayBuffer[0][0], "FX B    ", 8);	//MOD: second FX slot
 
 			//Bottom row -> parameter value (set below)
 			if(menu_sampleEditText(parNr, curParmVal))
@@ -2029,6 +2068,12 @@ void menu_repaintGeneric()
 					snprintf(&editDisplayBuffer[1][5], 12, "Voice %u > %u", (unsigned)(s+1u), (unsigned)(d+1u));
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
+			}
+			else if(menu_fxChoiceCount(parNr))
+			{
+				//MOD: FX slot order / delay sync
+				const char* s = menu_fxChoiceName(parNr, curParmVal, 1);
+				memcpy(&editDisplayBuffer[1][16 - strlen(s)], s, strlen(s));
 			}
 			else if(parNr == PAR_VMORPH_SWITCH)
 			{
@@ -2219,6 +2264,11 @@ void menu_repaintGeneric()
 				uint8_t s, d;
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
+			} else if(menu_fxChoiceCount(parNr)) {
+				//MOD: FX slot order / delay sync
+				const char* s = menu_fxChoiceName(parNr, curParmVal, 0);
+				memset(valueAsText, ' ', 3);
+				memcpy(valueAsText, s, strlen(s) > 3 ? 3 : strlen(s));
 			} else if(parNr == PAR_VMORPH_SWITCH) {
 				//MOD: switch point of the source voice ("---" while the voice morph is off)
 				uint8_t s, d;
@@ -3518,6 +3568,16 @@ static void menu_encoderChangeParameter(int8_t inc)
 		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
 		return;
 	}
+	//MOD: FX slot order / delay sync: a list of names
+	if(menu_fxChoiceCount(paramNr))
+	{
+		const uint8_t n = menu_fxChoiceCount(paramNr);
+		uint8_t cur = activeParameters[paramNr] < n ? activeParameters[paramNr] : 0;
+		const int16_t v = (int16_t)cur + inc;
+		activeParameters[paramNr] = (uint8_t)(v < 0 ? 0 : v >= n ? n - 1 : v);
+		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
+		return;
+	}
 	//MOD: voice morph switch point of the source voice, 1..127
 	if(paramNr == PAR_VMORPH_SWITCH)
 	{
@@ -3993,6 +4053,11 @@ void menu_switchPage(uint8_t pageNr)
 		menu_activePage=FX_MODE_PAGE;
 		break;
 
+	case FXB_PAGE:	//MOD: second FX slot
+		editModeActive = 0;
+		menu_activePage=FXB_PAGE;
+		break;
+
 	case SONG_MODE_PAGE:
 		editModeActive = 0;
 		menu_activePage=SONG_MODE_PAGE;
@@ -4192,6 +4257,56 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 
 	case PAR_DJ_RESO:
 		djFilter_reso = value;
+		break;
+
+	//MOD: FX slots. The values come from the global settings (old files: 0 or
+	//padding bytes): out of range values are reset
+	case PAR_FX_MODE:
+		if(value >= FXBUS_NUM_MODES) value = activeParameters[paramNr] = 0;
+		fxBus_mode = value;
+		break;
+	case PAR_FXA_SYNC:
+	case PAR_FXB_SYNC:
+		if(value >= FXBUS_NUM_SYNC) value = activeParameters[paramNr] = 0;
+		FxBus_setSync(paramNr == PAR_FXA_SYNC ? &fxBus : &fxBusB, value);
+		break;
+	case PAR_FXB_TYPE:
+		if(value > FX_DELAY) value = activeParameters[paramNr] = FX_OFF;
+		fxBusB.fxType = value;
+		FxBus_updateSlot(&fxBusB);
+		if(menu_activePage == FXB_PAGE && menu_getSubPage() != value)
+			menu_switchSubPage(value, 1);
+		break;
+	case PAR_FXB_ROUTING:
+		if(value > MIXER_ROUTING_DAC2_R) value = activeParameters[paramNr] = MIXER_ROUTING_DAC1_STEREO;
+		fxBusB.audioRouting = value;
+		break;
+	case PAR_FXB_DRY_WET:
+		if(value > 100) value = activeParameters[paramNr] = 50;
+		fxBusB.dryWet = value/100.f;
+		break;
+	case PAR_FXB_DIST_TYPE:
+		if(value > 2) value = activeParameters[paramNr] = 0;
+		fxBusB.distortion.distortionType = value;
+		break;
+	case PAR_FXB_P1:
+	case PAR_FXB_P2:
+	case PAR_FXB_P3:
+	case PAR_FXB_P4:
+		if(value > 127) value = activeParameters[paramNr] = 64;
+		FxBus_setParameterB((uint8_t)(paramNr - PAR_FXB_P1), value/127.f);
+		break;
+	case PAR_FXB_RATIO:
+		if(value > 5) value = activeParameters[paramNr] = 0;
+		Compressor_setRatio(&fxBusB.compressor, value);
+		break;
+	case PAR_FXB_WAVE:
+		if(value > 5) value = activeParameters[paramNr] = 0;
+		Ringmod_setWave(&fxBusB.ringmod, value);
+		break;
+	case PAR_FXB_DELAY_TYPE:
+		if(value > 1) value = activeParameters[paramNr] = 0;
+		fxBusB.delay.delayType = value;
 		break;
 
 	case PAR_VMORPH_AMT:	//MOD: voice morph (was the unused PAR_SOM_FREQ)

@@ -320,7 +320,7 @@ const char waveformNames[][4]  =
 //-----------------------------------------------------------------
 const char outputNames[][7]  =
 {
-	{7},		//number of entries
+	{8},		//number of entries
 	{"St1"}	,	//Stereo Out DAC 1
 	{"St2"}	,	//Stereo Out DAC 2
 	{"L1"}	,	//Mono Out Left DAC 1
@@ -328,6 +328,7 @@ const char outputNames[][7]  =
 	{"L2"}	,	//Mono Out Left DAC 2
 	{"R2"}	,	//Mono Out Right DAC 2
 	{"FX"}	,	//to FX Bus
+	{"FXB"}	,	//MOD: to the second FX slot
 };
 //-----------------------------------------------------------------
 //output routing for FX processor, without FX target
@@ -501,6 +502,10 @@ const char shortNames[][4]  =
 	{"ips"},
 	{"mrv"},
 	{"vsw"},
+	{"fx2"},
+	{"ord"},
+	{"sya"},
+	{"syb"},
 
 };
 //-----------------------------------------------------------------
@@ -644,6 +649,9 @@ const char longNames[][16] =
 	{" Amount"},
 	{"Instant"},	//"Pattern Instant"
 	{" Switch"},	//"V.Morph  Switch"
+	{"Order"},
+	{"Sync A"},
+	{"Sync B"},
 };
 
 

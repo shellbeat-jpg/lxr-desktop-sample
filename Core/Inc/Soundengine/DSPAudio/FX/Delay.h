@@ -66,6 +66,8 @@ typedef struct DelayStruct
 	OnePoleFilter tone2;
 	//RingBuffer timeBuffer;
 	uint8_t delayType;
+	__fp16* buf;			//MOD: delay buffer (FX_BUFFER or FX_BUFFER_B)
+	float syncSamples;		//MOD: tempo synced time in samples, 0 = free time
 
 } Delay;
 

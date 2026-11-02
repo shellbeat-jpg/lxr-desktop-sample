@@ -439,6 +439,22 @@ enum ParamEnums
 	PAR_VMORPH_SW5,
 	PAR_VMORPH_SW6,
 
+	//MOD: FX slots (global settings; 0 or padding bytes are sanitized when applied)
+	PAR_FX_MODE,		//order of the slots: A>B, B>A, A+B
+	PAR_FXA_SYNC,		//delay tempo sync of slot A
+	PAR_FXB_SYNC,		//delay tempo sync of slot B
+	PAR_FXB_TYPE,		//slot B: like PAR_FX_TYPE ... PAR_FX_DELAY_TYPE of slot A
+	PAR_FXB_ROUTING,
+	PAR_FXB_DRY_WET,
+	PAR_FXB_DIST_TYPE,
+	PAR_FXB_P1,
+	PAR_FXB_P2,
+	PAR_FXB_P3,
+	PAR_FXB_P4,
+	PAR_FXB_RATIO,
+	PAR_FXB_WAVE,
+	PAR_FXB_DELAY_TYPE,
+
 	NUM_PARAMS	
 };
 

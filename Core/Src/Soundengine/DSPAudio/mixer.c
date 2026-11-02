@@ -615,6 +615,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	//befor output distribution
 	int16_t sampleData[OUTPUT_DMA_SIZE];
 	int16_t fxBusData[OUTPUT_DMA_SIZE*2];
+	int16_t fxBusDataB[OUTPUT_DMA_SIZE*2];	//MOD: input of the second FX slot
 
 	const uint8_t pos = 0;
 #if CPU_METER
@@ -630,6 +631,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	memset(mix2, 0, sizeof(mix2));
 
 	bufferTool_clearBuffer(fxBusData,OUTPUT_DMA_SIZE*2);
+	bufferTool_clearBuffer(fxBusDataB,OUTPUT_DMA_SIZE*2);
 
 	//calc the voices, decimate them and add them to the selected outputs
 	for(v=0;v<6;v++)
@@ -656,7 +658,8 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		const float panL = sqrtf((127-voice->pan)/127.f);
 		const float panR = sqrtf(voice->pan/127.f);
 #endif
-		mixer_addDataToOutput(mixer_audioRouting[v], panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], fxBusData);
+		const uint8_t isFxB = mixer_audioRouting[v] == MIXER_ROUTING_FX_BUS_B;	//MOD
+		mixer_addDataToOutput(isFxB ? MIXER_ROUTING_FX_BUS : mixer_audioRouting[v], panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], isFxB ? fxBusDataB : fxBusData);
 		if(!mixer_limiterOn)
 		{
 			mixer_saturateMix(mix);
@@ -675,7 +678,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #if CPU_METER
 	meterStart = DWT->CYCCNT;
 #endif
-	FxBus_process(fxBusData,  &mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], OUTPUT_DMA_SIZE);
+	FxBus_process(fxBusData, fxBusDataB, &mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], OUTPUT_DMA_SIZE);
 	if(!mixer_limiterOn)
 	{
 		mixer_saturateMix(mix);

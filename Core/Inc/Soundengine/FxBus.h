@@ -45,6 +45,7 @@ typedef struct FxStruct
 	float dryWet;
 
 	float parameter[4];
+	uint8_t sync;		//MOD: delay tempo sync (0 = off, FXBUS_NUM_SYNC values)
 
 
 	MasterDistortion distortion;
@@ -62,8 +63,23 @@ typedef struct FxStruct
 
 extern INDTCMZ FxBus fxBus;
 
+//MOD: second FX slot and the order of the slots
+enum FxBusModeEnum
+{
+	FXBUS_MODE_A_B,		//A then B
+	FXBUS_MODE_B_A,		//B then A
+	FXBUS_MODE_PARALLEL,	//side by side
+	FXBUS_NUM_MODES
+};
+#define FXBUS_NUM_SYNC	10	//off, 1/4, 1/4T, 1/8., 1/8, 1/8T, 1/16., 1/16, 1/16T, 1/32
+extern FxBus fxBusB;
+extern uint8_t fxBus_mode;
+void FxBus_setParameterB(uint8_t idx, float value);
+void FxBus_updateSlot(FxBus* b);
+void FxBus_setSync(FxBus* b, const uint8_t sync);
+
 void FxBus_init();
-void FxBus_process(int16_t *fxBuffer, int32_t* outL,int32_t* outR,int32_t* outL2, int32_t* outR2, uint32_t size);
+void FxBus_process(int16_t *fxBuffer, int16_t *fxBufferB, int32_t* outL,int32_t* outR,int32_t* outL2, int32_t* outR2, uint32_t size);
 void FxBus_setParameter(uint8_t idx, float value);
 void FxBus_updateParameter();
 //to prevent NaN pollution from delay

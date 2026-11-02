@@ -36,6 +36,7 @@ enum
 	MIXER_ROUTING_DAC2_L,
 	MIXER_ROUTING_DAC2_R,
 	MIXER_ROUTING_FX_BUS,
+	MIXER_ROUTING_FX_BUS_B,	//MOD: second FX slot
 };
 
 void mixer_init();

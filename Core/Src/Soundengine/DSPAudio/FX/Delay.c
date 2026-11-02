@@ -18,6 +18,8 @@
 
 void Delay_init(Delay* d)
 {
+	d->buf = FX_BUFFER;		//MOD: the second FX slot gets its own buffer (FxBus_init)
+	d->syncSamples = 0.f;
 
 
 	d->pendingDelayTime = 0.f;
@@ -52,8 +54,8 @@ void Delay_calcBufferPingPong(Delay* d, uint8_t bufferIdx)
 		//calc with read pointer 0
 		uint32_t pos2 = d->oldRead+1;
 		pos2 = pos2 & (halfsize);
-		d->tmpBuffer[0] = interpolate_s16((float)FX_BUFFER[d->oldRead], (float)FX_BUFFER[pos2],d->fracReadOld)*32767.f ;
-		d->tmpBuffer2[0] = interpolate_s16((float)FX_BUFFER[halfsize + d->oldRead], (float)FX_BUFFER[halfsize + pos2],d->fracReadOld)*32767.f ;
+		d->tmpBuffer[0] = interpolate_s16((float)d->buf[d->oldRead], (float)d->buf[pos2],d->fracReadOld)*32767.f ;
+		d->tmpBuffer2[0] = interpolate_s16((float)d->buf[halfsize + d->oldRead], (float)d->buf[halfsize + pos2],d->fracReadOld)*32767.f ;
 		d->oldRead++;
 		d->oldRead = d->oldRead & (halfsize);
 	} else
@@ -61,8 +63,8 @@ void Delay_calcBufferPingPong(Delay* d, uint8_t bufferIdx)
 		//calc with read pointetr 2
 		uint32_t pos2 = d->newRead+1;
 		pos2 = pos2 & (halfsize);
-		d->tmpBuffer[1] = interpolate_s16((float)FX_BUFFER[d->newRead], (float)FX_BUFFER[pos2],d->fracReadNew)*32767.f;
-		d->tmpBuffer2[1] = interpolate_s16((float)FX_BUFFER[halfsize + d->newRead], (float)FX_BUFFER[halfsize + pos2],d->fracReadNew)*32767.f;
+		d->tmpBuffer[1] = interpolate_s16((float)d->buf[d->newRead], (float)d->buf[pos2],d->fracReadNew)*32767.f;
+		d->tmpBuffer2[1] = interpolate_s16((float)d->buf[halfsize + d->newRead], (float)d->buf[halfsize + pos2],d->fracReadNew)*32767.f;
 		d->newRead++;
 		d->newRead = d->newRead & (halfsize);
 	}
@@ -76,7 +78,7 @@ void Delay_calcBuffer(Delay* d, uint8_t bufferIdx)
 		//calc with read pointer 0
 		uint32_t pos2 = d->oldRead+1;
 		pos2 = pos2 & (FX_BUFFER_SIZE);
-		d->tmpBuffer[0] = interpolate_s16((float)FX_BUFFER[d->oldRead], (float)FX_BUFFER[pos2],d->fracReadOld)*32767.f ;
+		d->tmpBuffer[0] = interpolate_s16((float)d->buf[d->oldRead], (float)d->buf[pos2],d->fracReadOld)*32767.f ;
 		d->oldRead++;
 		d->oldRead = d->oldRead & (FX_BUFFER_SIZE);
 	} else
@@ -84,7 +86,7 @@ void Delay_calcBuffer(Delay* d, uint8_t bufferIdx)
 		//calc with read pointetr 2
 		uint32_t pos2 = d->newRead+1;
 		pos2 = pos2 & (FX_BUFFER_SIZE);
-		d->tmpBuffer[1] = interpolate_s16((float)FX_BUFFER[d->newRead], (float)FX_BUFFER[pos2],d->fracReadNew)*32767.f ;;
+		d->tmpBuffer[1] = interpolate_s16((float)d->buf[d->newRead], (float)d->buf[pos2],d->fracReadNew)*32767.f ;;
 		d->newRead++;
 		d->newRead = d->newRead & (FX_BUFFER_SIZE);
 	}
@@ -156,14 +158,14 @@ void Delay_processPingPong(Delay *d, int16_t *fxBuffer,int32_t* outL, int32_t* o
 			float val = itg/32767.f;
 			if(val > 1.f) val = 1.f;
 			else if(val < -1.f) val = -1.f;
-			FX_BUFFER[(FX_BUFFER_SIZE>>1) + d->write] = (__fp16)val;//(itg/32767.f);
+			d->buf[(FX_BUFFER_SIZE>>1) + d->write] = (__fp16)val;//(itg/32767.f);
 
 			//right delay line
 			itg = (__QADD16(fxBuffer[idx2] , (int16_t)(outR*d->feedback)));
 			val = itg/32767.f;
 			if(val > 1.f) val = 1.f;
 			else if(val < -1.f) val = -1.f;
-			FX_BUFFER[d->write++] = (__fp16)val;//(itg/32767.f);
+			d->buf[d->write++] = (__fp16)val;//(itg/32767.f);
 			//*signalFeedback = out;
 
 			d->write &= FX_BUFFER_SIZE>>1;
@@ -193,7 +195,7 @@ void Delay_processPingPong(Delay *d, int16_t *fxBuffer,int32_t* outL, int32_t* o
 
 void Delay_process(Delay *d, int16_t *fxBuffer,int32_t* outL, int32_t* outR, uint16_t size,  uint8_t channels, float dryWet)
 {
-	//FX_BUFFER[0] = 0;
+	//d->buf[0] = 0;
 
 	int32_t x;
 	int32_t* stereoOut = outL;
@@ -249,7 +251,7 @@ void Delay_process(Delay *d, int16_t *fxBuffer,int32_t* outL, int32_t* outR, uin
     float val = itg/32767.f;
     if(val > 1.f) val = 1.f;
     else if(val < -1.f) val = -1.f;
-    FX_BUFFER[d->write++] = (__fp16)val;//(itg/32767.f);
+    d->buf[d->write++] = (__fp16)val;//(itg/32767.f);
     //*signalFeedback = out;
 
     d->write &= FX_BUFFER_SIZE;
@@ -282,6 +284,12 @@ float interpolate(float a, float b, float x)
 }
 float calcDelayTime(Delay* d, float timeCv)
 {
+	//MOD: tempo sync: the time in samples, limited to the buffer
+	if(d->syncSamples > 0.f)
+	{
+		const float max = d->delayType == DELAY_NORMAL ? (float)HI_MAX : (float)HI_MAX*0.48f;
+		return d->syncSamples < max ? d->syncSamples : max;
+	}
 	if(d->delayType == DELAY_NORMAL)
 	{
 		const float min = interpolate(LOW_MIN,HI_MIN,d->range);

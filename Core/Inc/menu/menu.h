@@ -97,6 +97,7 @@ enum PageNames
 	PATTERN_SETTINGS_PAGE,
 	RECORDING_PAGE,
 	FX_MODE_PAGE,
+	FXB_PAGE,		//MOD: second FX slot
 
 
 
@@ -284,6 +285,10 @@ enum NamesEnum
 	TEXT_INSTANT_PAT,	//MOD: instant pattern switching
 	TEXT_MORPH_VOICES,	//MOD: voices of the kit morph
 	TEXT_VMORPH_SWITCH,	//MOD: voice morph switch point
+	TEXT_FXB_TYPE,		//MOD: type of FX slot B
+	TEXT_FX_MODE,		//MOD: order of the FX slots
+	TEXT_FXA_SYNC,		//MOD: delay sync of slot A
+	TEXT_FXB_SYNC,		//MOD: delay sync of slot B
 
 
 	NUM_NAMES
@@ -403,7 +408,11 @@ enum shortNamesEnum
 	SHORT_VMORPH_AMT,
 	SHORT_INSTANT_PAT,
 	SHORT_MORPH_VOICES,
-	SHORT_VMORPH_SWITCH
+	SHORT_VMORPH_SWITCH,
+	SHORT_FXB_TYPE,
+	SHORT_FX_MODE,
+	SHORT_FXA_SYNC,
+	SHORT_FXB_SYNC
 
 	
 };
@@ -545,7 +554,10 @@ enum longNamesEnum
 	LONG_VMORPH_PAIR,
 	LONG_VMORPH_AMT,
 	LONG_INSTANT_PAT,
-	LONG_VMORPH_SWITCH
+	LONG_VMORPH_SWITCH,
+	LONG_FX_MODE,
+	LONG_FXA_SYNC,
+	LONG_FXB_SYNC
 	
 };
 

@@ -872,6 +872,16 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 			buttonHandler_stateMemory.selectButtonMode = SELECT_MODE_FX;
 			led_clearAllBlinkLeds();
 			led_setBlinkLed(LED_STEP15,1);
+			//MOD: pressed again on the FX page: the second FX slot (and back)
+			if(menu_getActivePage() == FX_MODE_PAGE)
+			{
+				const uint8_t typeB = fxBusB.fxType;
+				menu_switchPage(FXB_PAGE);
+				menu_switchSubPage(typeB, 1);
+				if(menu_getSubPage() != typeB)
+					menu_switchSubPage(typeB, 1);
+				break;
+			}
 			menu_switchPage(FX_MODE_PAGE);
 			menu_switchSubPage(fxBus.fxType, 1 );
 

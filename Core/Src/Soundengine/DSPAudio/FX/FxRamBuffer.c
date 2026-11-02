@@ -16,4 +16,5 @@
 #include "Soundengine/DSPAudio/FX/FxRamBuffer.h"
 
 INDTCMZ __fp16 FX_BUFFER[FX_BUFFER_SIZE+1];
+__fp16 FX_BUFFER_B[FX_BUFFER_SIZE+1];	//MOD
 

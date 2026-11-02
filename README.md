@@ -185,6 +185,13 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
   `1/32.` `1/16T` `1/32` `1/32T` (polyrhythms, e.g. 1/16 triplets against 1/16). Stored in the
   pattern. Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-grid-per-track-127-in-test).
 
+### 9. Two FX slots (1.2.8, in test)
+
+- SHIFT + FX = slot A (kit), SHIFT + FX again = slot B (`FX2`). Voice `OUT` `FX` → A, `FXB` → B.
+- Global settings, third page: order `ORD` (`A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
+  (`1/4` … `1/32`, dotted and triplets). Details:
+  [docs/SAMPLES.md](docs/SAMPLES.md#two-fx-slots-128-in-test).
+
 ### Compatibility
 
 Kits from the stock firmware and from OpenElixir-02 load unchanged (start 0, length `ALL`, no choke
