@@ -1026,6 +1026,21 @@ static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t 
 //(0 = length, 1 = grid, 2 = trigger mode, 3 = trigger target, 4 = LFO start, 5 = its timing)
 static uint8_t menu_lastStepGrid = 0;
 static const char menu_trigNames[SEQ_NUM_TRIG_MODES][4] = { "OFF", "RST", "MUT", "CLK" };
+//MOD: a target is controlled by one trigger track or LFO start only: is track d a
+//target of another one (than the trigger (lfo = 0) / LFO start (lfo = 1) of track t)?
+static uint8_t menu_trackTargetTaken(const uint8_t d, const uint8_t t, const uint8_t lfo)
+{
+	for(uint8_t s=0;s<7;s++)
+	{
+		const uint8_t tv = seq_getTrackTrig(s);
+		if(SEQ_TRIG_MODE(tv) != SEQ_TRIG_OFF && SEQ_TRIG_TARGET(tv) == d && !(s == t && !lfo))
+			return 1;
+		const uint8_t lv = seq_getTrackLfo(s);
+		if(lv && SEQ_LFO_TARGET(lv) == d + 1u && !(s == t && lfo))
+			return 1;
+	}
+	return 0;
+}
 static const char menu_gridNames[SEQ_NUM_GRIDS][6]  = { "1/16", "1/16T", "1/32", "1/32T", "1/32.", "1/8T", "1/8", "1/4T", "1/4", "5/64", "1/16." };
 static const char menu_gridRatios[SEQ_NUM_GRIDS][4] = { "1",    "2/3",   "1/2",  "1/3",   "3/4",   "4/3",  "x2",  "8/3",  "x4",  "5/4",  "6/4" };
 static const uint8_t menu_gridOrder[SEQ_NUM_GRIDS]  = { 8, 7, 6, 10, 5, 9, 0, 4, 1, 2, 3 };	//longest step first
@@ -3465,13 +3480,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			{
 				//MOD: the encoder edits the length, the step grid, the trigger mode
 				//or the trigger target (only with a mode)
-				//trigger and LFO start exclude each other: the one in use hides the other
 				const uint8_t trg = SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) != SEQ_TRIG_OFF;
 				const uint8_t lfo = seq_getTrackLfo(menu_activeVoice) != 0;
 				uint8_t s = (uint8_t)(menu_lastStepGrid + 1u);
-				if(s == 2 && lfo)	s = 4;
 				if(s == 3 && !trg)	s = 4;
-				if(s == 4 && trg)	s = 0;
 				if(s == 5 && !lfo)	s = 0;
 				if(s > 5)			s = 0;
 				menu_lastStepGrid = s;
@@ -3513,40 +3525,50 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 4)
 	{
-		//MOD: LFO start: the target track (off, 1..7), or the timing of the start
+		//MOD: LFO start: the target track (off, 1..7; targets of others are skipped),
+		//or the timing of the start
 		const uint8_t v = seq_getTrackLfo(menu_activeVoice);
 		if(menu_lastStepGrid == 4)
 		{
-			int16_t n = (int16_t)SEQ_LFO_TARGET(v) + (inc > 0 ? 1 : -1);
-			n = n < 0 ? 0 : n > 7 ? 7 : n;
+			int16_t n = (int16_t)SEQ_LFO_TARGET(v);
+			do n += inc > 0 ? 1 : -1;
+			while(n >= 1 && n <= 7 && menu_trackTargetTaken((uint8_t)(n - 1), menu_activeVoice, 1));
+			if(n < 0 || n > 7) n = SEQ_LFO_TARGET(v);
 			seq_setTrackLfo(menu_activeVoice, (uint8_t)(n | (v & SEQ_LFO_NOW)));
-			if(n)
-				seq_setTrackTrig(menu_activeVoice, 0);	//exclusive
 		}
 		else
 			seq_setTrackLfo(menu_activeVoice, (uint8_t)(inc > 0 ? (v | SEQ_LFO_NOW) : (v & (uint8_t)~SEQ_LFO_NOW)));
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 2)
 	{
-		//MOD: trigger track of the active track: mode, or the target (not the track itself)
+		//MOD: trigger track of the active track: mode, or the target (not the track
+		//itself; targets of other trigger tracks and LFO starts are skipped)
 		const uint8_t t = menu_activeVoice;
 		const uint8_t v = seq_getTrackTrig(t);
 		uint8_t m = SEQ_TRIG_MODE(v), d = SEQ_TRIG_TARGET(v);
-		if(m == SEQ_TRIG_OFF) d = (uint8_t)((t + 1u) % 7u);
 		if(menu_lastStepGrid == 2)
 		{
 			const int16_t n = (int16_t)m + (inc > 0 ? 1 : -1);
+			const uint8_t was = m;
 			m = (uint8_t)(n < 0 ? 0 : n >= SEQ_NUM_TRIG_MODES ? SEQ_NUM_TRIG_MODES - 1 : n);
+			if(was == SEQ_TRIG_OFF && m != SEQ_TRIG_OFF)
+			{
+				//the first free target after the track
+				uint8_t k;
+				for(k=1;k<7;k++)
+					if(!menu_trackTargetTaken((uint8_t)((t + k) % 7u), t, 0)) break;
+				if(k < 7)	d = (uint8_t)((t + k) % 7u);
+				else		m = SEQ_TRIG_OFF;	//all taken
+			}
 		}
 		else
 		{
-			int16_t n = (int16_t)d + (inc > 0 ? 1 : -1);
-			if(n == t) n += inc > 0 ? 1 : -1;
+			int16_t n = (int16_t)d;
+			do n += inc > 0 ? 1 : -1;
+			while(n >= 0 && n < 7 && (n == t || menu_trackTargetTaken((uint8_t)n, t, 0)));
 			if(n >= 0 && n < 7) d = (uint8_t)n;
 		}
 		seq_setTrackTrig(t, SEQ_TRIG_VALUE(m, d));
-		if(m != SEQ_TRIG_OFF)
-			seq_setTrackLfo(t, 0);	//exclusive
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid)
 	{

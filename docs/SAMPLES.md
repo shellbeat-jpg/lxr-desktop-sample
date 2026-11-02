@@ -286,8 +286,8 @@ to the length.
   sound (lock trigger).
 - The step grids of both tracks are kept: a `1/16T` trigger track resets a `1/16` target on its
   triplet steps, a `CLK` target plays each of its steps with its own step length.
-- A track can be the target of one trigger track (the first one counts). Stored in the pattern;
-  other firmwares ignore it.
+- A track can be the target of one trigger track or LFO start only (targets in use are skipped
+  when choosing). Stored in the pattern; other firmwares ignore it.
 
 ### LFO start
 
@@ -304,9 +304,9 @@ track's voice (track 7: voice 6) starts track 3 (`OFF`, `T1` … `T7`), then the
   voice), otherwise the target would keep restarting itself.
 - Until the first start the target is silent. With `SNC` the starts fall on the beat;
   free-running LFOs give starts that drift against the pattern.
-- The track whose page it is plays on as usual. A track uses either its trigger or its LFO start:
-  while one is set, the other is hidden on the page. On the same target an LFO start counts
-  before a trigger track; one LFO per target (the first one counts). Stored in the pattern.
+- The track whose page it is plays on as usual; it can have a trigger target and an LFO target at
+  the same time. Each target is controlled by one source only: tracks that are already the
+  target of a trigger or an LFO start are skipped when choosing a target. Stored in the pattern.
 
 ## Second FX slot (1.2.8)
 
