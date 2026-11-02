@@ -3571,6 +3571,14 @@ static void menu_skipHiddenTargets(uint8_t* value, int8_t inc, const uint8_t sta
 	}
 }
 //-----------------------------------------------------------------
+//MOD: parameters with their own value handling in menu_encoderChangeParameter
+//(the knobs use it for them too)
+static uint8_t menu_isSpecialEncoderParam(const uint16_t p)
+{
+	return p == PAR_VMORPH_PAIR || p == PAR_VMORPH_SWITCH || p == PAR_MORPH_VOICES
+		|| p == PAR_CHOKE_GROUP || (p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
+		|| menu_fxChoiceCount(p);
+}
 static void menu_encoderChangeParameter(int8_t inc)
 {
 	preset_touchTimer(PRESET_KIT_TIMER);
@@ -4875,6 +4883,18 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 	}
 
 
+
+	//MOD: parameters that are not a plain 0..127 value (bit masks, kit data, name
+	//lists) change one step per knob tick like with the encoder: the knob would
+	//count the raw value up/down (e.g. CHK: tracks 1+2 = 3, +1 = 4 = track 3)
+	if(menu_isSpecialEncoderParam(paramNr))
+	{
+		const uint8_t keep = menuIndex;
+		menuIndex = (uint8_t)((menuIndex & (uint8_t)~MASK_PARAMETER) | (potNr + isOn2ndPage));
+		menu_encoderChangeParameter(diff > 0 ? 1 : -1);
+		menuIndex = keep;
+		return 1;
+	}
 
 	//parameter fetch. given the value of the pot, and the parameter number
 	// fetch the actual numeric value that the parameter should be set to
