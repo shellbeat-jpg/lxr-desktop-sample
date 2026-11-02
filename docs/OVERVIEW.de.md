@@ -47,7 +47,7 @@ Waser), alles andere aus OE02-Samples.
 |---|---|---|---|---|
 | Limiter [OE] | 32-Bit-Summe mit Limiter je Ausgang. | CONFIG (`LIM`) | Global | – |
 | DJ-Filter [OE] | LP/HP-Filter | PERF (`DJ`, `RES`) | nicht gespeichert | – |
-| Zweiter FX-Slot | FX2 = Projekt-FX. Reihenfolge `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
+| Zweiter FX-Slot | FX2 = Projekt-FX. FX-Routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
 | Routing und Sends | `OUT` = `FX` / `FXB`: 100 % in Slot A / B. `SNA` / `SNB` = Send in A / B zusätzlich zum Ausgang, beide gleichzeitig möglich. Sinnvoll bei `OUT` = `St1` … `R2`; bei `FX` / `FXB` erhöhen sie den Anteil im selben Slot bzw. füttern zusätzlich den anderen. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT`) |
 | Delay-Tempo-Sync | `1/4` … `1/32T`, punktiert, Triolen und die Track-Raster | FX (Setup `SYA` / `SYB`) | Global | – |
 
