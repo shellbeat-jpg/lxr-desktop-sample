@@ -263,15 +263,15 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - Step flam `X12`, `X24`, `X4+`/`X4-` (velocity ramp) and roll locks `1/8` … `1/1` (repeats every
   2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128).
 
-### 9. Two FX slots (1.2.8)
+### 9. Second FX slot (1.2.8)
 
-- SHIFT + FX = slot A (kit), SHIFT + FX again = slot B (`FX2`). Voice `OUT` `FX` → A, `FXB` → B
+- SHIFT + FX = `FX1` (slot A, kit FX), SHIFT + FX again = `FX2` (slot B, project FX). Voice `OUT` `FX` → A, `FXB` → B
   (100 %). Sends: `SNA` (into A) and `SNB` (into B) on the AEG page, besides the voice's output
   (0..127, default 0, stored in the kit). Meant for `OUT` = `St1` … `R2`; with `OUT` = `FX`/`FXB`
-  they only add to the level in the effect (the same slot) or send into the other slot.
-- On the FX pages, scrolled past the last effect parameter: order `ORD` (FX1 page, stored in the kit) (`A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
+  they raise the level in the same slot or also feed the other one.
+- On the FX pages, scrolled past the last effect parameter: FX routing `ORD` (FX1 page, stored in the kit: `A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
   (`1/4` … `1/32T`, dotted, triplets and the step grids). Details:
-  [docs/SAMPLES.md](docs/SAMPLES.md#two-fx-slots-128).
+  [docs/SAMPLES.md](docs/SAMPLES.md#second-fx-slot-128).
 
 ### Compatibility
 

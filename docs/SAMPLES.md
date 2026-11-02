@@ -114,6 +114,9 @@ waveforms:
 - **Round robin in order:** LFO waveform `CYC` (cycle) steps through the range, one sample per
   trigger (S5, S6, ... S9, S5, ...). It counts the triggers of the voice set with `RTG`, with
   `RTG` off those of the LFO's own voice. Rate and sync don't matter for `CYC`.
+- **`CYC` on other targets** is a step counter: one step up per trigger, `MOD` = number of
+  steps (about one value of the target per step), then it starts again, e.g. on `Coarse` with
+  `MOD` 7 eight hits a semitone apart each.
 - Random round robin: LFO waveform `RND`; with `RTG` on the voice the value stays the same for
   every hit (the LFO restarts), so leave `RTG` off and use a rate faster than the hits.
 - A retrigger cuts the sample that still plays with a short fade (about 1 ms) instead of a click.
@@ -163,8 +166,9 @@ performance page): 0 = the active kit, 127 = the morph kit. CC 1 had no function
 
 ### Morph target quick access
 
-In the edit view of a sound parameter (click the encoder), **hold SHIFT**: the top row shows
-`Morph>` and the value is the one of the **morph kit** (the target of `MRP`); turning the encoder
+`MRP` 0 → 127 morphs each parameter from its **start value** in the active kit to its **target
+value** in the morph kit. In the edit view of a sound parameter (click the encoder), **hold SHIFT**: the top row shows
+`Morph>` and the **target value** in the morph kit; turning the encoder
 changes it there. Release SHIFT to see and edit the active kit's value again.
 
 - With `MRP` above 0 the sound follows the change right away.
@@ -183,7 +187,7 @@ the morphed voices on the left (e.g. `----56`: only snare/cymbal and hi-hats mor
 are off keep their own sound at every `MRP` value (also with the mod wheel). Kept after a restart
 when the global settings are saved (SAVE → Global); default: all voices morph.
 
-### Velocity 0 = automation only
+### Lock trigger: velocity 0
 
 A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its step automation
 (`P1`/`P2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
@@ -258,15 +262,15 @@ The step parameter flam (step mode) has more values after `X2` … `X8`:
 | Value | Effect |
 |---|---|
 | `X12`, `X24` | 12 or 24 repeats within the step |
-| `X4+`, `X4-` | 4 repeats with rising / falling velocity (25 … 100 % of the step velocity) |
+| `X4+`, `X4-` | 4 repeats with a rising / falling velocity slope (25 … 100 % of the step velocity) |
 | `1/8`, `1/4`, `1/2`, `1/1` | **roll lock**: the step repeats every 2, 4, 8, 16 steps of its track (like the slower PERF roll rates) until the next active step of the track |
 
 On grid tracks the repeats follow the track's own steps. Other firmwares play these steps once.
 
-## Two FX slots (1.2.8)
+## Second FX slot (1.2.8)
 
-The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (distortion), `RNG`
-(ring modulator), `CMP` (compressor), `DEL` (delay).
+Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with the same effects:
+`OFF`, `DRV` (distortion), `RNG` (ring modulator), `CMP` (compressor), `DEL` (delay).
 
 - **Slot A** is the FX of the kit as before (**SHIFT + FX**, step button 15; its type is shown as
   `FX1`). **Press SHIFT + FX again** for **slot B**: its type is shown as `FX2`, the edit view shows `FX B`. Its parameters
@@ -285,7 +289,7 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   first 1.2.8 test versions play as the output only (set the send again).
 - **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`
   and `ORD` on slot A's page, `SYB` on slot B's page.
-- **Order** (`ORD`):
+- **FX routing** (`ORD`):
   - `A>B` (default): slot A, then slot B; voices on `FXB` only go through B. The chain goes to the
     `OUT` of slot A. With slot B `OFF` everything sounds as before.
   - `B>A`: slot B, then slot A (to the `OUT` of slot A).
@@ -294,8 +298,9 @@ The FX bus has two slots, A and B, each with the same effects: `OFF`, `DRV` (dis
   (free time and range as before), then from long to short `1/4`, `1/8.`, `1/4T`, `1/8`, `1/16.`,
   `1/8T`, `5/64` (shown `564`), `1/16`, `1/32.`, `1/16T`, `1/32`, `1/32T` (the step grids and 1/8.). Follows the tempo (also external clock). The delay is at most about 0.74 s
   (ping-pong 0.36 s): longer values are limited.
-- Slot A and the order `ORD` are stored in the kit (the order in the kit's extra block, older kits:
-  `A>B`); slot B and the sync are kept with the global settings (SAVE → Global or a project save).
+- Slot A and the FX routing `ORD` are stored in the kit (`ORD` in the kit's extra block, older
+  kits: `A>B`); slot B (the project FX) and the sync are kept with the global settings (SAVE →
+  Global) and in the project file.
 - CPU: each slot costs about as much as one effect did before (measure with the CPU meter build).
 
 ## Voice INIT
@@ -334,7 +339,6 @@ relies on the verify after writing.
 Tested on the device: sample import and playback, the skipping of invalid files, start and length
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
-samples above 1 MB play correctly). Of the additions of 1.2.4, the morph target access (SHIFT) and `MRV` are tried on the device; the
-mod wheel, SHIFT + click, velocity 0, instant pattern switching, the LFO range display and the new
-LFO waveforms are not tested on the device yet. Host tests (Linux, gcc) for import and playback:
+samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.8 were tried on the device
+before their release. Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.
