@@ -140,7 +140,7 @@ but between two voices. Performance page, after `RES` of the DJ filter (scroll o
 |---|---|
 | `VMV` | the voice pair: `OFF`, `1>2`, `1>3` ... `6>5` (source > target); edit view `Voice 1 > 2` |
 | `VMO` | amount 0..127: 0 = the source as set, 127 = the target's values |
-| `VSW` | switch point of the source voice, 1..127 (default 64): from this `VMO` value on, switch-like values are the target's; one value per voice (edit view `Voice 1   64`) |
+| `VSW` | switch point of the source voice, 1..127 (default 64): from this `VMO` value on, switch-like values are the target's; one value per voice (edit view `Voice 1   64`); with `VMV` off it shows the active voice |
 
 - Every sound parameter of the source voice moves towards the same parameter of the target voice
   (pitch, envelopes, filter, FM, sample start, LFO ...). Switch-like values (waveform/sample, filter
