@@ -40,10 +40,13 @@
 #define KIT_SEND_OFFSET			NUM_VOICE_SLOTS
 #define KIT_FXMODE_OFFSET		(2*NUM_VOICE_SLOTS)		//order of the FX slots (FXBUS_MODE_x)
 #define KIT_SENDB_OFFSET		(2*NUM_VOICE_SLOTS + 1)
-#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1)
+//MOD: FX3 (master bus of St1, MasterBus.h): 9 settings, part "FX3"
+#define KIT_FX3_OFFSET			(3*NUM_VOICE_SLOTS + 1)
+#define KIT_FX3_SIZE			9
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS)
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

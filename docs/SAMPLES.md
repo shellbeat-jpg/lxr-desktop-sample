@@ -389,6 +389,38 @@ Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with 
   Global) and in the project file.
 - CPU: each slot costs about as much as one effect did before (measure with the CPU meter build).
 
+## Master bus FX3 and FX knobs (1.2.10)
+
+A third FX slot, fixed at the end of the chain on the stereo output `St1` (after FX1/FX2, before
+the DJ filter and the limiter): saturation and a compressor, in either order.
+
+- **SHIFT + FX three times** (FX1 → FX2 → FX3, then FX1 again). Stored in the kit (kit extra
+  block; older kits: off).
+- `SAT` saturation (0 = off): soft clipping, up to +24 dB into the curve, level compensated.
+- `FRQ` split: `off` = full band, otherwise 40 Hz … 2 kHz: a 24 dB/oct crossover (Linkwitz-Riley),
+  only the band above it is saturated, the lows stay clean (e.g. `200 Hz`).
+- Compressor (stereo linked, peak): `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
+  (0 = off), `ATK` attack 0.1 … 100 ms, `DEC` release 20 … 1000 ms, `GAI` make-up 0 … +24 dB,
+  `D/W` mix (parallel compression, 127 = fully compressed).
+- Setup page (turn the encoder past `D/W`): `ORD` = `S>C` (saturation, then compressor, default)
+  or `C>S`.
+- With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.
+- Only `St1`: voices on `St2`, `L1` … `R2` don't pass through FX3.
+
+**SHIFT + knobs** (all pages except LOAD/SAVE): hold SHIFT and turn
+
+| Knob | Function |
+|---|---|
+| 1 | input gain FX1 (slot A) |
+| 2 | input gain FX2 (slot B) |
+| 3 | mix FX1 |
+| 4 | mix FX2 |
+
+The display shows the values for 1.5 s (`In dB A +0 B -6`, `Mix % A 50 B100`). The input gain
+scales everything going into the slot (outputs `FX`/`FXB` and all sends `SNA`/`SNB`), −∞ … +12 dB,
+center = 0 dB; it is kept with the global settings (SAVE → Global) and in the project file. The mix
+of FX1 is stored in the kit, of FX2 with the global settings, as before.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:

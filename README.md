@@ -74,6 +74,8 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 | Second FX slot | FX2 = project FX. FX routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
 | Routing and sends | `OUT` = `FX` / `FXB`: 100 % into slot A / B. `SNA` / `SNB` = send into A / B besides the output, both at once if wanted. Meant for `OUT` = `St1` … `R2`; with `FX` / `FXB` they raise the level in the same slot or also feed the other one. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT` / Voice 1–6) |
 | Delay tempo sync | `1/4` … `1/32T`, dotted, triplets and the track grids | FX (setup `SYA` / `SYB`) | Global | – |
+| Master bus FX3 | Last on `St1`: saturation `SAT` with split `FRQ` (24 dB/oct, only above 40 Hz … 2 kHz) and compressor; order `ORD` `S>C` / `C>S`. | FX (SHIFT + FX, 3× for FX3) | Kit | – |
+| FX knobs | SHIFT + knob 1 / 2 = input gain FX1 / FX2, knob 3 / 4 = mix FX1 / FX2. | SHIFT + knobs (all pages) | Input gain: Global | – |
 
 ### Load / save
 
@@ -81,7 +83,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 |---|---|---|---|---|
 | Sample import | At boot from `SAMPLES`, `SAMPLES/LOOPS` and `SAMPLES/WAVES`, only when changed; bad files are reported. Shows `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimental): ≈ 17.8 s instead of 5.9 s. | – (boot) | Flash | – |
 | Kit management [OE] | Load kits and single voices from any project; "Change Project". | LOAD (+ step) | Project | – |
-| Kit extension block | Sends and `ORD` in the kit; older kits load with defaults. | – | Kit | – |
+| Kit extension block | Sends, `ORD` and FX3 in the kit; older kits load with defaults. | – | Kit | – |
 | Safe project save [OE] | An interrupted save can't damage the project. | SAVE | Project | – |
 
 ### Preset system
@@ -293,6 +295,14 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - On the FX pages, scrolled past the last effect parameter: FX routing `ORD` (FX1 page, stored in the kit: `A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
   (`1/4` … `1/32T`, dotted, triplets and the step grids). Details:
   [docs/SAMPLES.md](docs/SAMPLES.md#second-fx-slot-128).
+
+### 9b. Master bus FX3 and FX knobs (1.2.10)
+
+- SHIFT + FX three times = `FX3`, the master bus of `St1` (last in the chain, stored in the kit):
+  saturation `SAT` with split `FRQ` (24 dB/oct, only the band above 40 Hz … 2 kHz is saturated)
+  and a compressor (`TRE`, `RAT`, `ATK`, `DEC`, `GAI`, `D/W`); setup `ORD` = `S>C` / `C>S`.
+- SHIFT + knob 1 / 2 = input gain FX1 / FX2 (global), SHIFT + knob 3 / 4 = mix FX1 / FX2.
+  Details: [docs/SAMPLES.md](docs/SAMPLES.md#master-bus-fx3-and-fx-knobs-1210).
 
 ### Compatibility
 

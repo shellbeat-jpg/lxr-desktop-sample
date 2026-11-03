@@ -521,6 +521,9 @@ const char shortNames[][4]  =
 	{"sna"},
 	{"snb"},
 	{"fx1"},
+	{"sat"},	//MOD: FX3
+	{"frq"},
+	{"ord"},
 
 };
 //-----------------------------------------------------------------
@@ -669,6 +672,9 @@ const char longNames[][16] =
 	{"Sync B"},
 	{"FX1 Send"},
 	{"FX2 Send"},
+	{"Saturation"},	//MOD: FX3
+	{"Sat split"},
+	{"Order"},
 };
 
 

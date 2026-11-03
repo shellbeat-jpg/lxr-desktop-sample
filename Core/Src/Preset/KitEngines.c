@@ -21,7 +21,10 @@
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
-		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT };
+		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT,
+		0, 0, 127, 0, 20, 40, 0, 127, 0 };	//MOD: FX3 off (kitEngines_fx3Defaults)
+//MOD: FX3 defaults: no saturation, full band, threshold 0 dB, ratio 1:1 (off), no gain, 100 % wet
+static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0 };
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
@@ -34,6 +37,7 @@ void kitEngines_setStock(uint8_t* engines)
 		engines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD
 		engines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
 	}
+	memcpy(&engines[KIT_FX3_OFFSET], kitEngines_fx3Defaults, KIT_FX3_SIZE);	//MOD
 	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
 }
 //---------------------------------------------------
@@ -60,6 +64,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 5;
 	o[0] = 'S'; o[1] = 'N'; o[2] = 'B'; o[3] = NUM_VOICE_SLOTS;
 	memcpy(&o[4], &engines[KIT_SENDB_OFFSET], NUM_VOICE_SLOTS);
+	o += 4 + NUM_VOICE_SLOTS;
+	o[0] = 'F'; o[1] = 'X'; o[2] = '3'; o[3] = KIT_FX3_SIZE;	//MOD: FX3 settings
+	memcpy(&o[4], &engines[KIT_FX3_OFFSET], KIT_FX3_SIZE);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -87,7 +94,12 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < 3 ? t[4] : 0;
-		else if(!((t[0] >= 'A' && t[0] <= 'Z') && (t[1] >= 'A' && t[1] <= 'Z') && (t[2] >= 'A' && t[2] <= 'Z')))
+		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= KIT_FX3_SIZE)
+		{
+			for(uint8_t k=0;k<KIT_FX3_SIZE;k++)	//MOD: FX3 settings (ORD 0/1, the others 0..127)
+				engines[KIT_FX3_OFFSET + k] = t[4+k] > (k == KIT_FX3_SIZE-1 ? 1 : 127) ? kitEngines_fx3Defaults[k] : t[4+k];
+		}
+		else if(!((t[0] >= 'A' && t[0] <= 'Z' && t[1] >= 'A' && t[1] <= 'Z') && ((t[2] >= 'A' && t[2] <= 'Z') || (t[2] >= '0' && t[2] <= '9'))))
 			break;	//not a part: data that isn't ours
 		e = (uint16_t)(e + 4u + n);
 	}

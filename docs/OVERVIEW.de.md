@@ -54,6 +54,8 @@ Waser), alles andere aus OE02-Samples.
 | Zweiter FX-Slot | FX2 = Projekt-FX. FX-Routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
 | Routing und Sends | `OUT` = `FX` / `FXB`: 100 % in Slot A / B. `SNA` / `SNB` = Send in A / B zusätzlich zum Ausgang, beide gleichzeitig möglich. Sinnvoll bei `OUT` = `St1` … `R2`; bei `FX` / `FXB` erhöhen sie den Anteil im selben Slot bzw. füttern zusätzlich den anderen. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT` / Voice 1–6) |
 | Delay-Tempo-Sync | `1/4` … `1/32T`, punktiert, Triolen und die Track-Raster | FX (Setup `SYA` / `SYB`) | Global | – |
+| Master-Bus FX3 | Zuletzt auf `St1`: Sättigung `SAT` mit Split `FRQ` (24 dB/Okt., nur oberhalb 40 Hz … 2 kHz) und Kompressor; Reihenfolge `ORD` `S>C` / `C>S`. | FX (SHIFT + FX, 3× für FX3) | Kit | – |
+| FX-Regler | SHIFT + Regler 1 / 2 = Input-Gain FX1 / FX2, Regler 3 / 4 = Mix FX1 / FX2. | SHIFT + Regler (alle Seiten) | Input-Gain: Global | – |
 
 ## Load / Save
 
@@ -61,7 +63,7 @@ Waser), alles andere aus OE02-Samples.
 |---|---|---|---|---|
 | Sample-Import | Beim Start aus `SAMPLES`, `SAMPLES/LOOPS` und `SAMPLES/WAVES`, nur bei Änderungen; fehlerhafte Dateien werden gemeldet. Anzeige `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimentell): ≈ 17,8 s statt 5,9 s. | – (Start) | Flash | – |
 | Kit-Management [OE] | Kits und einzelne Voices aus beliebigen Projekten laden; „Change Project“. | LOAD (+ Step) | Projekt | – |
-| Kit-Zusatzblock | Sends und `ORD` im Kit; ältere Kits laden mit Standardwerten. | – | Kit | – |
+| Kit-Zusatzblock | Sends, `ORD` und FX3 im Kit; ältere Kits laden mit Standardwerten. | – | Kit | – |
 | Sicheres Projekt-Speichern [OE] | Ein abgebrochenes Speichern kann das Projekt nicht beschädigen. | SAVE | Projekt | – |
 
 ## Preset-System

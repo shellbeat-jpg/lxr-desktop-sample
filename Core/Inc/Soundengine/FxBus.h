@@ -77,6 +77,7 @@ extern uint8_t fxBus_mode;
 void FxBus_setParameterB(uint8_t idx, float value);
 void FxBus_updateSlot(FxBus* b);
 void FxBus_setSync(FxBus* b, const uint8_t sync);
+extern float fxBus_inputGain[2];	//MOD: input gain of slot A / B
 
 void FxBus_init();
 void FxBus_process(int16_t *fxBuffer, int16_t *fxBufferB, int32_t* outL,int32_t* outR,int32_t* outL2, int32_t* outR2, uint32_t size);

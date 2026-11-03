@@ -163,9 +163,19 @@ static void FxBus_checkTempo(void)
 	if(fxBusB.sync)	FxBus_setSync(&fxBusB, fxBusB.sync);
 }
 //------------------------------------------------------------------------------
+//MOD: input gain of the slots (global PAR_FXA_GAIN / PAR_FXB_GAIN, SHIFT + knob 1 / 2)
+float fxBus_inputGain[2] = { 1.f, 1.f };
+static void FxBus_applyInputGain(int16_t* buf, const float g, const uint32_t size)
+{
+	if(g == 1.f) return;
+	for(uint32_t i=0;i<size*2;i++)
+		buf[i] = (int16_t)__SSAT((int32_t)(buf[i] * g), 16);
+}
 void FxBus_process(int16_t *fxBuffer, int16_t *fxBufferB, int32_t* outL,int32_t* outR,int32_t* outL2, int32_t* outR2, uint32_t size)
 {
 	FxBus_checkTempo();
+	FxBus_applyInputGain(fxBuffer, fxBus_inputGain[0], size);	//MOD
+	FxBus_applyInputGain(fxBufferB, fxBus_inputGain[1], size);
 	int32_t *out, *out2;
 	const uint8_t channels = FxBus_outputs(fxBus.audioRouting, outL, outR, outL2, outR2, &out, &out2);
 

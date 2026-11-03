@@ -32,7 +32,9 @@
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/DSPAudio/DjFilter.h"
 #include "Soundengine/FxBus.h"
+#include <math.h>
 #include "SampleRom/sampleFlash.h"
+#include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3
 #include "Preset/voiceMorph.h"
 #include "buttonHandler.h"
 #include <ctype.h>
@@ -282,6 +284,9 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX_SEND, CAT_FX, LONG_FX_SEND},/*TEXT_FX_SEND*/
 		{SHORT_FX_SENDB, CAT_FX, LONG_FX_SENDB},/*TEXT_FX_SENDB*/
 		{SHORT_FXA_TYPE, CAT_FX, LONG_TYPE},/*TEXT_FXA_TYPE*/
+		{SHORT_FX3_SAT, CAT_FX, LONG_FX3_SAT},/*TEXT_FX3_SAT*/
+		{SHORT_FX3_SPLIT, CAT_FX, LONG_FX3_SPLIT},/*TEXT_FX3_SPLIT*/
+		{SHORT_FX3_ORDER, CAT_FX, LONG_FX3_ORDER},/*TEXT_FX3_ORDER*/
 
 
 };
@@ -569,6 +574,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_STEP_SHIFT*/		DTYPE_MENU | (MENU_STEP_SHIFT<<8),
 		/*PAR_FX_SEND1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 		/*PAR_FX_SENDB1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
+		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -616,6 +622,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FXB_RATIO*/		DTYPE_MENU | (MENU_RATIO<<8),
 		/*PAR_FXB_WAVE*/		DTYPE_MENU | (MENU_WAVEFORM<<8),
 		/*PAR_FXB_DELAY_TYPE*/	DTYPE_MENU | (MENU_DELAY<<8),
+		/*PAR_FXA_GAIN*/		DTYPE_0B127,	//MOD
+		/*PAR_FXB_GAIN*/		DTYPE_0B127,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -963,6 +971,9 @@ uint8_t *morphParameters;
 //parameter, the display shows and the encoder edits the value of the morph kit
 //(the kit morph's target) instead of the active kit.
 static uint8_t menu_morphEditHeld = 0;
+//MOD: SHIFT + knob overlay (FX input gain and mix), shown for 1.5 s
+static uint8_t menu_fxKnobShown = 0;
+static uint32_t menu_fxKnobTimer = 0;
 static uint8_t menu_morphEditBusy = 0;
 static uint8_t menu_morphEditFor(const uint16_t p)
 {
@@ -1024,7 +1035,65 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
 	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
+	if(p >= PAR_FX3_SAT && p <= PAR_FX3_ORD)	//MOD: FX3 settings (MasterBus.h order)
+		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
 	return 0;
+}
+//MOD: FX3 values as text: 3 characters (four-parameter view) or the edit view's
+//value with its unit; returns 0 for other parameters
+static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
+{
+	if(p < PAR_FX3_SAT || p > PAR_FX3_ORD)
+		return 0;
+	char t[12];
+	const float f = v / 127.f;
+	switch(p)
+	{
+	case PAR_FX3_FRQ:
+	{
+		const uint32_t hz = masterBus_crossoverHz(v);
+		if(!hz)				snprintf(t, sizeof(t), isLong ? "full band" : "off");
+		else if(hz < 1000)	snprintf(t, sizeof(t), isLong ? "%lu Hz" : "%lu", (unsigned long)hz);
+		else				snprintf(t, sizeof(t), isLong ? "%lu.%lu kHz" : "%lu.%lu", (unsigned long)(hz / 1000), (unsigned long)((hz % 1000) / 100));
+		break;
+	}
+	case PAR_FX3_ORD:	snprintf(t, sizeof(t), isLong ? (v ? "Comp>Sat" : "Sat>Comp") : (v ? "C>S" : "S>C"));	break;
+	case PAR_FX3_THR:	snprintf(t, sizeof(t), isLong ? "%d dB" : "%d", (int)(-48.f + 48.f * f - 0.5f * (v < 127)));	break;
+	case PAR_FX3_RAT:
+	{
+		const float r = 1.f + 19.f * f * f;
+		if(!v)				snprintf(t, sizeof(t), isLong ? "1:1 (off)" : "off");
+		else				snprintf(t, sizeof(t), isLong ? "%u.%u:1" : "%u.%u", (unsigned)r, (unsigned)((r - (unsigned)r) * 10.f));
+		if(!isLong && r >= 10.f) snprintf(t, sizeof(t), "%u", (unsigned)(r + 0.5f));
+		break;
+	}
+	case PAR_FX3_ATK:
+	{
+		const float ms = 0.1f + 100.f * f * f;
+		if(ms < 10.f)		snprintf(t, sizeof(t), isLong ? "%u.%u ms" : "%u.%u", (unsigned)ms, (unsigned)((ms - (unsigned)ms) * 10.f));
+		else				snprintf(t, sizeof(t), isLong ? "%u ms" : "%u", (unsigned)(ms + 0.5f));
+		break;
+	}
+	case PAR_FX3_REL:
+	{
+		const unsigned ms = (unsigned)(20.f + 980.f * f * f + 0.5f);
+		if(isLong)			snprintf(t, sizeof(t), "%u ms", ms);
+		else if(ms < 1000)	snprintf(t, sizeof(t), "%u", ms);
+		else				snprintf(t, sizeof(t), "1s");
+		break;
+	}
+	case PAR_FX3_GAI:	snprintf(t, sizeof(t), isLong ? "+%u.%u dB" : "%u", (unsigned)(24.f * f), (unsigned)((24.f * f - (unsigned)(24.f * f)) * 10.f));	break;
+	default:			snprintf(t, sizeof(t), "%u", (unsigned)v);	break;	/* SAT, MIX 0..127 */
+	}
+	if(isLong)
+		memcpy(out, t, strlen(t) + 1);
+	else
+	{
+		memset(out, ' ', 3);
+		const size_t n = strlen(t) > 3 ? 3 : strlen(t);
+		memcpy(out + (3 - n), t, n);	/* right aligned as the numbers */
+	}
+	return 1;
 }
 static const char* menu_fxChoiceName(const uint16_t p, uint8_t v, const uint8_t isLong)
 {
@@ -1434,6 +1503,12 @@ void menu_uiTick()
 		menu_repaint();
 	}
 #endif
+
+	if(menu_fxKnobShown && (systick_ticks - menu_fxKnobTimer > 1500))	//MOD
+	{
+		menu_fxKnobShown = 0;
+		menu_repaintAll();
+	}
 
 	if((menu_activePage == PATTERN_SAVE_PAGE_OK) || (menu_activePage == KIT_SAVE_PAGE_OK))
 	{
@@ -2169,6 +2244,14 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
+			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_ORD)
+			{
+				//MOD: FX3 value with its unit, right aligned
+				char t[17];
+				menu_fx3Text(parNr, *menu_sendLevel(parNr), t, 1);
+				const size_t n = strlen(t) > 16 ? 16 : strlen(t);
+				memcpy(&editDisplayBuffer[1][16 - n], t, n);
+			}
 			else if(menu_sendLevel(parNr))
 			{
 				//MOD: FX send level (kit data)
@@ -2364,6 +2447,8 @@ void menu_repaintGeneric()
 				uint8_t s, d;
 				if(voiceMorph_decode(curParmVal, &s, &d)) { valueAsText[0] = (char)('1'+s); valueAsText[1] = '>'; valueAsText[2] = (char)('1'+d); }
 				else memcpy(valueAsText, menuText_off, 3);
+			} else if(menu_fx3Text(parNr, menu_sendLevel(parNr) ? *menu_sendLevel(parNr) : 0, valueAsText, 0)) {
+				//MOD: FX3 (kit data)
 			} else if(menu_sendLevel(parNr)) {
 				//MOD: FX send level (kit data)
 				numtostrpu(valueAsText, *menu_sendLevel(parNr), ' ');
@@ -2491,9 +2576,29 @@ void menu_repaintGeneric()
 
 //-----------------------------------------------------------------
 // repaint the screen
+static int menu_fxGainDb(const uint8_t v)
+{
+	if(v == 0) return 0;
+	const float db = 40.f * log10f(v / 64.f);
+	return (int)(db < 0.f ? db - 0.5f : db + 0.5f);
+}
+static void menu_repaintFxKnobs()
+{
+	snprintf(&editDisplayBuffer[0][0], 17, "In dB A%+3d B%+3d  ",
+			menu_fxGainDb(activeParameters[PAR_FXA_GAIN]), menu_fxGainDb(activeParameters[PAR_FXB_GAIN]));
+	snprintf(&editDisplayBuffer[1][0], 17, "Mix %% A%3u B%3u  ",
+			(unsigned)(activeParameters[PAR_FX_DRY_WET] * 100u / 127u),
+			(unsigned)(activeParameters[PAR_FXB_DRY_WET] > 100 ? 50 : activeParameters[PAR_FXB_DRY_WET]));
+}
 void menu_repaint()
 {
 	if(screensaver_Active) return;
+	if(menu_fxKnobShown)
+	{
+		menu_repaintFxKnobs();
+		display_needs_refresh = 1;
+		return;
+	}
 #if CPU_METER
 	if(menu_cpuMeterShown)
 	{
@@ -3748,7 +3853,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 	{
 		uint8_t* s = menu_sendLevel(paramNr);
 		const int16_t v = (int16_t)*s + inc;
-		*s = (uint8_t)(v < 0 ? 0 : v > 127 ? 127 : v);
+		const int16_t max = paramNr == PAR_FX3_ORD ? 1 : 127;	//MOD
+		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;
 	}
@@ -4025,10 +4131,10 @@ checkvalid:
 	END_DISABLE_CONV_WARNING
 	//MOD: FX pages: after the parameters of the effect comes the setup page
 	//(sub page FX_SETUP_SUBPAGE: order and delay sync), back from there to the effect
-	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE);
+	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE) || (menu_activePage == FX3_PAGE);
 	if(isFxPage && inc < 0 && activeParameter == -1 && activePage == FX_SETUP_SUBPAGE)
 	{
-		activePage = (int8_t)(menu_activePage == FX_MODE_PAGE ? fxBus.fxType : fxBusB.fxType);
+		activePage = (int8_t)(menu_activePage == FX_MODE_PAGE ? fxBus.fxType : menu_activePage == FXB_PAGE ? fxBusB.fxType : 0);
 		activeParameter = 7;
 		while(activeParameter > 0 && pgm_read_byte(&menu_getPage(menu_activePage,activePage)->top1 + activeParameter) == TEXT_EMPTY)
 			activeParameter--;
@@ -4291,6 +4397,11 @@ void menu_switchPage(uint8_t pageNr)
 		menu_activePage=FXB_PAGE;
 		break;
 
+	case FX3_PAGE:	//MOD: FX3, master bus of St1
+		editModeActive = 0;
+		menu_activePage=FX3_PAGE;
+		break;
+
 	case SONG_MODE_PAGE:
 		editModeActive = 0;
 		menu_activePage=SONG_MODE_PAGE;
@@ -4515,6 +4626,11 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 	case PAR_FXB_DRY_WET:
 		if(value > 100) value = activeParameters[paramNr] = 50;
 		fxBusB.dryWet = value/100.f;
+		break;
+	case PAR_FXA_GAIN:	//MOD: input gain of slot A / B, 64 = unity (0 = older project)
+	case PAR_FXB_GAIN:
+		if(value == 0 || value > 127) value = activeParameters[paramNr] = 64;
+		fxBus_inputGain[paramNr - PAR_FXA_GAIN] = (value / 64.f) * (value / 64.f);
 		break;
 	case PAR_FXB_DIST_TYPE:
 		if(value > 2) value = activeParameters[paramNr] = 0;
@@ -5018,6 +5134,25 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 	{
 		//force complete repaint if edit mode is left
 		menu_repaintAll();
+	}
+
+	//MOD: SHIFT + knob 1..4 = input gain FX1 / FX2, mix FX1 / FX2, on every page
+	if(buttonHandler_getShift() && (menu_activePage != SAVE_PAGE) && (menu_activePage != LOAD_PAGE))
+	{
+		static const uint16_t shiftParams[4] = { PAR_FXA_GAIN, PAR_FXB_GAIN, PAR_FX_DRY_WET, PAR_FXB_DRY_WET };
+		paramNr = shiftParams[potNr & 3];
+		if((paramNr == PAR_FXA_GAIN || paramNr == PAR_FXB_GAIN) && activeParameters[paramNr] == 0)
+			activeParameters[paramNr] = 64;
+		menu_fxKnobTimer = systick_ticks;
+		menu_fxKnobShown = 1;
+		uint8_t v = limitPotValue(diff, paramNr);
+		if((paramNr == PAR_FXA_GAIN || paramNr == PAR_FXB_GAIN) && v == 0) v = 1;
+		activeParameters[paramNr] = v;
+		if(paramNr == PAR_FX_DRY_WET)
+			frontPanel_sendData(paramNr < 128 ? MIDI_CC : CC_2, (uint8_t)(paramNr & 0x7F), preset_getMorphValue(paramNr, activeParameters[PAR_MORPH]));
+		else
+			menu_parseGlobalParam(paramNr, v);
+		return 1;
 	}
 
 	if( (menu_activePage == SAVE_PAGE) || (menu_activePage == LOAD_PAGE)) {

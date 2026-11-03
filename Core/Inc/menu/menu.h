@@ -98,6 +98,7 @@ enum PageNames
 	RECORDING_PAGE,
 	FX_MODE_PAGE,
 	FXB_PAGE,		//MOD: second FX slot
+	FX3_PAGE,		//MOD: FX3, the master bus of St1
 
 
 
@@ -292,6 +293,9 @@ enum NamesEnum
 	TEXT_FX_SEND,		//MOD: FX send level of the voice (slot A)
 	TEXT_FX_SENDB,		//MOD: ... into slot B
 	TEXT_FXA_TYPE,		//MOD: type of FX slot A ("fx1")
+	TEXT_FX3_SAT,		//MOD: FX3 saturation
+	TEXT_FX3_SPLIT,		//MOD: FX3 crossover of the saturation
+	TEXT_FX3_ORDER,		//MOD: FX3 order saturation/compressor
 
 
 	NUM_NAMES
@@ -418,7 +422,10 @@ enum shortNamesEnum
 	SHORT_FXB_SYNC,
 	SHORT_FX_SEND,
 	SHORT_FX_SENDB,
-	SHORT_FXA_TYPE
+	SHORT_FXA_TYPE,
+	SHORT_FX3_SAT,
+	SHORT_FX3_SPLIT,
+	SHORT_FX3_ORDER
 
 	
 };
@@ -565,7 +572,10 @@ enum longNamesEnum
 	LONG_FXA_SYNC,
 	LONG_FXB_SYNC,
 	LONG_FX_SEND,
-	LONG_FX_SENDB
+	LONG_FX_SENDB,
+	LONG_FX3_SAT,
+	LONG_FX3_SPLIT,
+	LONG_FX3_ORDER
 	
 };
 

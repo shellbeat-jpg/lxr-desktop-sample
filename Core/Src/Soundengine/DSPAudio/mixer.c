@@ -28,6 +28,7 @@
 #include "Soundengine/FxBus.h"
 #include "Preset/KitEngines.h"
 #include "Soundengine/CpuMeter.h"
+#include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3
 
 	uint8_t r2_Available;
 	uint8_t l1_Available;
@@ -711,6 +712,11 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #if CPU_METER
 	cpuMeter_section(CPU_SECTION_FX, meterStart);
 #endif
+
+	//MOD: FX3, the master bus of St1 (kit data); off: unchanged
+	masterBus_process(mix, OUTPUT_DMA_SIZE, &kitEngines[KIT_FX3_OFFSET]);
+	if(!mixer_limiterOn)
+		mixer_saturateMix(mix);
 
 	//global DJ filter on the final mix of all outputs (performance page); off: unchanged
 	if(djFilter_process(mix, mix2) && !mixer_limiterOn)

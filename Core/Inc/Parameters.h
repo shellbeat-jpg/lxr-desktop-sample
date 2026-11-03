@@ -389,6 +389,16 @@ enum ParamEnums
 	PAR_FX_SENDB4,
 	PAR_FX_SENDB5,
 	PAR_FX_SENDB6,
+	//MOD: FX3, the master bus of St1 (menu only, kit data kitEngines[KIT_FX3_OFFSET + MB_x])
+	PAR_FX3_SAT,
+	PAR_FX3_FRQ,
+	PAR_FX3_THR,
+	PAR_FX3_RAT,
+	PAR_FX3_ATK,
+	PAR_FX3_REL,
+	PAR_FX3_GAI,
+	PAR_FX3_MIX,
+	PAR_FX3_ORD,
 
 	
 	//#########################################
@@ -470,6 +480,10 @@ enum ParamEnums
 	PAR_FXB_RATIO,
 	PAR_FXB_WAVE,
 	PAR_FXB_DELAY_TYPE,
+	//MOD: input gain of FX slot A / B (SHIFT + knob 1 / 2): 64 = unity, 1..127
+	//(0 = older settings: unity)
+	PAR_FXA_GAIN,
+	PAR_FXB_GAIN,
 
 	NUM_PARAMS	
 };

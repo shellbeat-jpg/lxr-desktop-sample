@@ -880,6 +880,13 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 				menu_repaintAll();
 				break;
 			}
+			if(menu_getActivePage() == FXB_PAGE)	//MOD: and again: FX3, the master bus
+			{
+				menu_switchPage(FX3_PAGE);
+				menu_showSubPageStart(0);
+				menu_repaintAll();
+				break;
+			}
 			menu_switchPage(FX_MODE_PAGE);
 			//MOD: the first entry of the effect (switchSubPage toggled to its 2nd half
 			//when the FX page was shown before with the same effect)
