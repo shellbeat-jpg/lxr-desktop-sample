@@ -3,7 +3,8 @@
  *
  * MOD: FX3, the master bus of the stereo output St1 (DAC 1): saturation with an
  * optional split (only the band above the crossover is saturated, a 24 dB/oct
- * Linkwitz-Riley crossover) and a stereo-linked compressor, in either order.
+ * Linkwitz-Riley crossover) and a stereo-linked compressor with its own optional
+ * split (only the band above its crossover is compressed), in either order.
  * Its settings are kit data (kitEngines[KIT_FX3_OFFSET ...]).
  *
  * Modified firmware - not an official Erica Synths release.
@@ -28,6 +29,7 @@ enum
 	MB_MIX,		/* compressor wet (parallel compression), 127 = 100 % */
 	MB_ORD,		/* 0 = saturation then compressor, 1 = the other way round */
 	MB_AMU,		/* 1 = auto make-up gain (half the reduction at 0 dBFS), plus GAI */
+	MB_CFQ,		/* compressor split: 0 = full band, else as MB_FRQ */
 	MB_NUM_PARAMS
 };
 

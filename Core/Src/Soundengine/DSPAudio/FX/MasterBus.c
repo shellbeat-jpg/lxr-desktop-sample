@@ -28,6 +28,9 @@ static struct
 	float    thr, slope, att, rel, makeup, wet;
 	uint16_t relBpm;				/* tempo the auto release was made for (0 = fixed) */
 	uint8_t  comp;
+	uint8_t  cSplit;
+	mb_Coef  clp, chp;				/* compressor crossover */
+	float    cz[4][2][2];
 	float    env;					/* dB over the threshold */
 	float    grMax;					/* highest reduction of this block (display) */
 } mb;
@@ -101,6 +104,16 @@ static void mb_update(const uint8_t* s)
 		mb.rel = expf(-1000.f / ((20.f + 980.f * lr * lr) * REAL_FS));
 	}
 	(void)l;
+	const uint8_t cSplit = s[MB_CFQ] != 0;
+	if(cSplit)
+	{
+		const float fc = (float)masterBus_crossoverHz(s[MB_CFQ]);
+		mb_butter(&mb.clp, fc, 0);
+		mb_butter(&mb.chp, fc, 1);
+	}
+	if(cSplit != mb.cSplit)
+		memset(mb.cz, 0, sizeof(mb.cz));
+	mb.cSplit = cSplit;
 	float gainDb = 24.f * s[MB_GAI] / 127.f;
 	if(s[MB_AMU])
 		gainDb += -mb.thr * mb.slope * 0.5f;	/* auto: half the reduction of a 0 dBFS peak */
@@ -126,7 +139,7 @@ static inline float mb_saturate(const float x, const uint8_t ch)
 	const float hi = mb_biquad(&mb.hp, mb.z[3][ch], mb_biquad(&mb.hp, mb.z[2][ch], x));
 	return lo + mb_softclip(hi * mb.drive) * mb.satOut;
 }
-static inline void mb_compress(float* l, float* r)
+static inline void mb_compressBand(float* l, float* r)
 {
 	const float peak = fmaxf(fabsf(*l), fabsf(*r)) + 1e-9f;
 	float over = 20.f * log10f(peak) - mb.thr;
@@ -137,6 +150,22 @@ static inline void mb_compress(float* l, float* r)
 	const float g = powf(10.f, -mb.env * mb.slope / 20.f) * mb.makeup;
 	*l += (*l * g - *l) * mb.wet;
 	*r += (*r * g - *r) * mb.wet;
+}
+/* with the split only the band above the crossover is detected and compressed */
+static inline void mb_compress(float* l, float* r)
+{
+	if(!mb.cSplit)
+	{
+		mb_compressBand(l, r);
+		return;
+	}
+	const float loL = mb_biquad(&mb.clp, mb.cz[1][0], mb_biquad(&mb.clp, mb.cz[0][0], *l));
+	float       hiL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], *l));
+	const float loR = mb_biquad(&mb.clp, mb.cz[1][1], mb_biquad(&mb.clp, mb.cz[0][1], *r));
+	float       hiR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], *r));
+	mb_compressBand(&hiL, &hiR);
+	*l = loL + hiL;
+	*r = loR + hiR;
 }
 /*----------------------------------------------------------------------------*/
 void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)

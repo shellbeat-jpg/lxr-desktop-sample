@@ -400,15 +400,18 @@ the DJ filter and the limiter): saturation and a compressor, in either order.
 - `FRQ` split: `off` = full band, otherwise 40 Hz … 10 kHz, logarithmic (about 16 steps per
   octave, 200 Hz ≈ value 37): a 24 dB/oct crossover (Linkwitz-Riley), only the band above it is
   saturated, the lows stay clean.
-- Compressor (stereo linked, peak): `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
+- Compressor (feed-forward, stereo linked, peak, hard knee; level and gain computed in dB, attack
+  and release as exponential curves): `CFQ` split as `FRQ` (only the band above it is detected
+  and compressed, the lows pass unchanged), `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
   (0 = off), `ATK` attack 0.1 … 100 ms, `DEC` release: `AUT` (first value) = follows the tempo,
-  a 1/16 note (125 ms at 120 BPM), otherwise 20 … 1000 ms; `GAI` make-up 0 … +24 dB, `D/W` mix
-  (parallel compression, 127 = fully compressed).
-- Setup page (turn the encoder past `D/W`): `ORD` = `S>C` (saturation, then compressor, default)
-  or `C>S`; `AMU` = auto make-up gain: adds half the reduction a 0 dBFS peak gets (from `TRE` and
-  `RAT`), `GAI` comes on top.
-- PERF page: `SAT` after the DJ filter (`DJ`, `RES`), `FRQ` on the next page before `VMV`,
-  `VMO`, `VSW` (the same kit values as on the FX3 page).
+  a 1/16 note (125 ms at 120 BPM), otherwise 20 … 1000 ms.
+- `ORD` = `S>C` (saturation, then compressor, default) or `C>S`.
+- Output (turn the encoder on to the next page): `AMU` = auto make-up gain (adds half the
+  reduction a 0 dBFS peak gets, from `TRE` and `RAT`), `GAI` make-up 0 … +24 dB on top, `D/W` mix
+  of the compressor (parallel compression, 127 = fully compressed).
+- Page order: `SAT` `FRQ` `CFQ` `TRE` | `RAT` `ATK` `DEC` `ORD` | `AMU` `GAI` `D/W`.
+- PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
+  `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
 - With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.
 - Edit view: top left the peak levels of `St1` / `St2` before FX3 in dBFS (`-99` = silent), bottom
   left the state: `byp` = off, `on-4A` = on, highest gain reduction 4 dB, on `St1` (`B` = FX3

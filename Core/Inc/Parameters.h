@@ -400,6 +400,7 @@ enum ParamEnums
 	PAR_FX3_MIX,
 	PAR_FX3_ORD,
 	PAR_FX3_AMU,	//auto make-up gain on/off
+	PAR_FX3_CFQ,	//compressor split
 
 	
 	//#########################################

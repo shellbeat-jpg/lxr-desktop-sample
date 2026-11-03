@@ -289,6 +289,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_ORDER, CAT_FX, LONG_FX3_ORDER},/*TEXT_FX3_ORDER*/
 		{SHORT_PREFADER, CAT_GLOBAL, LONG_PREFADER},/*TEXT_PREFADER*/
 		{SHORT_FX3_AUTOGAIN, CAT_FX, LONG_FX3_AUTOGAIN},/*TEXT_FX3_AUTOGAIN*/
+		{SHORT_FX3_CSPLIT, CAT_FX, LONG_FX3_CSPLIT},/*TEXT_FX3_CSPLIT*/
 
 
 };
@@ -576,7 +577,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_STEP_SHIFT*/		DTYPE_MENU | (MENU_STEP_SHIFT<<8),
 		/*PAR_FX_SEND1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 		/*PAR_FX_SENDB1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
-		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD (+AMU)
+		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD (+AMU, CFQ)
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -1038,7 +1039,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
 	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
-	if(p >= PAR_FX3_SAT && p <= PAR_FX3_AMU)	//MOD: FX3 settings (MasterBus.h order)
+	if(p >= PAR_FX3_SAT && p <= PAR_FX3_CFQ)	//MOD: FX3 settings (MasterBus.h order)
 		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
 	return 0;
 }
@@ -1046,13 +1047,14 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 //value with its unit; returns 0 for other parameters
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
-	if(p < PAR_FX3_SAT || p > PAR_FX3_AMU)
+	if(p < PAR_FX3_SAT || p > PAR_FX3_CFQ)
 		return 0;
 	char t[12];
 	const float f = v / 127.f;
 	switch(p)
 	{
 	case PAR_FX3_FRQ:
+	case PAR_FX3_CFQ:
 	{
 		const uint32_t hz = masterBus_crossoverHz(v);
 		if(!hz)				snprintf(t, sizeof(t), isLong ? "full band" : "off");
@@ -2259,7 +2261,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_AMU)
+			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_CFQ)
 			{
 				//MOD: FX3 value with its unit, right aligned
 				char t[17];
@@ -4170,7 +4172,7 @@ checkvalid:
 	END_DISABLE_CONV_WARNING
 	//MOD: FX pages: after the parameters of the effect comes the setup page
 	//(sub page FX_SETUP_SUBPAGE: order and delay sync), back from there to the effect
-	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE) || (menu_activePage == FX3_PAGE);
+	const uint8_t isFxPage = (menu_activePage == FX_MODE_PAGE) || (menu_activePage == FXB_PAGE);	//MOD: FX3 scrolls
 	if(isFxPage && inc < 0 && activeParameter == -1 && activePage == FX_SETUP_SUBPAGE)
 	{
 		activePage = (int8_t)(menu_activePage == FX_MODE_PAGE ? fxBus.fxType : menu_activePage == FXB_PAGE ? fxBusB.fxType : 0);
@@ -4191,7 +4193,7 @@ checkvalid:
 		if(activeParameter == 4) { // move to 2nd section of sub-page
 
 		} else if(activeParameter == 8) { // moved past end of 2nd sub-page
-			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE)){ // in global menu (MOD: and performance page), we can move to next sub-page
+			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE) || (menu_activePage==FX3_PAGE)){ // in global menu (MOD: and performance page), we can move to next sub-page
 
 				activeParameter=0; // set to par 0 of next sub page
 				activePage++; // and change page
@@ -4204,7 +4206,7 @@ checkvalid:
 		if(activeParameter == 3) { // move to first section of sub-page
 
 		} else if(activeParameter==-1) { // if we went past 0
-			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE)) { // in global menu (MOD: and performance page), we can move to previous sub-page
+			if((menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE) || (menu_activePage==FX3_PAGE)) { // in global menu (MOD: and performance page), we can move to previous sub-page
 
 				activeParameter=7; // put us on the last param of the previous sub-page
 				activePage--; // and change page
@@ -4229,7 +4231,7 @@ checkvalid:
 		//MOD: on the scrolling pages (global settings, performance) a sub page
 		//that ends with empty entries continues on the next sub page; going
 		//back lands on the last entry of the previous one
-		const uint8_t scrolls = (menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE);
+		const uint8_t scrolls = (menu_activePage==MENU_MIDI_PAGE) || (menu_activePage==SEQ_PAGE) || (menu_activePage==PERF_PAGE) || (menu_activePage==FX3_PAGE);
 		if(!scrolls)
 			return; // disallow the change
 		if(inc > 0)
