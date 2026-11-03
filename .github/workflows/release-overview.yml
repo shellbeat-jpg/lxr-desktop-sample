@@ -30,7 +30,8 @@ jobs:
           cp docs/OVERVIEW.md "out/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "out/${FW_NAME}_Overview_DE.md"
           for f in docs/images/*.svg; do cp "$f" "out/${FW_NAME}_$(basename "$f")"; done
-          gh release upload "$TAG" out/*.md out/*.svg --clobber -R "$GITHUB_REPOSITORY"
+          cp docs/OE02-Samples_Manual_Supplement.pdf out/
+          gh release upload "$TAG" out/*.md out/*.svg out/*.pdf --clobber -R "$GITHUB_REPOSITORY"
           if [ -f ".github/releases/$TAG.md" ]; then
             gh release edit "$TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"
           fi

@@ -100,6 +100,7 @@ jobs:
           cp docs/OVERVIEW.md "build/release/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "build/release/${FW_NAME}_Overview_DE.md"
           for f in docs/images/*.svg; do cp "$f" "build/release/${FW_NAME}_$(basename "$f")"; done
+          cp docs/OE02-Samples_Manual_Supplement.pdf build/release/
 
       - name: Publish release
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
@@ -113,3 +114,4 @@ jobs:
             build/release/*.img
             build/release/*_Overview_*.md
             build/release/*.svg
+            build/release/*.pdf

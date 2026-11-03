@@ -28,6 +28,8 @@ All features compared with the Erica Synths firmware, OpenElixir-02 included. **
 OpenElixir-02 v1.2, everything else from this fork. 
 "Global" = saved with SAVE → Global and in the project file. NRPN n = parameter 128 + n.
 Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.de.md](docs/OVERVIEW.de.md).
+As a supplement to the LXR owners manual (PDF, its layout and parameter tables):
+[docs/OE02-Samples_Manual_Supplement.pdf](docs/OE02-Samples_Manual_Supplement.pdf).
 
 ### Voices
 
