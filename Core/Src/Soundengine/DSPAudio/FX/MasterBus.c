@@ -243,55 +243,109 @@ static inline float mb_exp2(float x)
 	return u.f;
 }
 #define MB_DB_PER_LOG2	6.0205999f
-/* compress l/r, the level detected on dl/dr */
-static inline void mb_compressBand(float* l, float* r, const float dl, const float dr)
+/*----------------------------------------------------------------------------*/
+/* the stages over a whole block (in ITCM: the per sample loop of all stages
+ * together was too large for the flash cache) */
+static float mb_bufL[OUTPUT_DMA_SIZE], mb_bufR[OUTPUT_DMA_SIZE];
+
+IN_ITCM_RAM __attribute__((noinline)) static void mb_blockSat(float* L, float* R, const uint32_t n)
 {
-	const float peak = fmaxf(fabsf(dl), fabsf(dr)) + 1e-9f;
-	float over = MB_DB_PER_LOG2 * mb_log2(peak) - mb.thr;
-	if(over < 0.f) over = 0.f;
-	const float c = over > mb.env ? mb.att : mb.rel;
-	mb.env = over + c * (mb.env - over);
-	const float gr = mb.env * mb.slope;
-	if(gr > mb.grMax) mb.grMax = gr;
-	mb.grSum += gr;
-	const float g = mb_exp2(-gr * (1.f / MB_DB_PER_LOG2)) * mb.makeup;
-	*l += (*l * g - *l) * mb.wet;
-	*r += (*r * g - *r) * mb.wet;
-}
-/* with the split only the band above the crossover is detected and compressed */
-static inline void mb_compress(float* l, float* r)
-{
-	if(!mb.cSplit)
+	const float drive = mb.drive, out = mb.satOut;
+	if(!mb.split)
 	{
-		mb_compressBand(l, r, *l, *r);
+		for(uint32_t i = 0; i < n; i++)
+		{
+			L[i] = mb_softclip(L[i] * drive) * out;
+			R[i] = mb_softclip(R[i] * drive) * out;
+		}
+		return;
+	}
+	for(uint32_t i = 0; i < n; i++)
+	{
+		L[i] = mb_saturate(L[i], 0);
+		R[i] = mb_saturate(R[i], 1);
+	}
+}
+static float mb_det[OUTPUT_DMA_SIZE], mb_loL[OUTPUT_DMA_SIZE], mb_loR[OUTPUT_DMA_SIZE];
+/* the gain computer over a block: level from det, applied to L/R */
+IN_ITCM_RAM __attribute__((noinline)) static void mb_blockGain(float* L, float* R, const float* det, const uint32_t n)
+{
+	float env = mb.env, grMax = mb.grMax, grSum = mb.grSum;
+	const float thr = mb.thr, slope = mb.slope, att = mb.att, rel = mb.rel;
+	const float makeup = mb.makeup, wet = mb.wet;
+	for(uint32_t i = 0; i < n; i++)
+	{
+		float over = MB_DB_PER_LOG2 * mb_log2(det[i] + 1e-9f) - thr;
+		if(over < 0.f) over = 0.f;
+		const float c = over > env ? att : rel;
+		env = over + c * (env - over);
+		const float gr = env * slope;
+		if(gr > grMax) grMax = gr;
+		grSum += gr;
+		const float g = mb_exp2(-gr * (1.f / MB_DB_PER_LOG2)) * makeup;
+		const float k = 1.f + (g - 1.f) * wet;
+		L[i] *= k;
+		R[i] *= k;
+	}
+	mb.env = env;
+	mb.grMax = grMax;
+	mb.grSum = grSum;
+}
+static void mb_blockComp(float* L, float* R, const uint32_t n)
+{
+	float* const det = mb_det;
+	if(mb.cSplit == 0)
+	{
+		for(uint32_t i = 0; i < n; i++)
+			det[i] = fmaxf(fabsf(L[i]), fabsf(R[i]));
+		mb_blockGain(L, R, det, n);
 		return;
 	}
 	if(mb.cSplit == 2)
 	{
 		/* sidechain: only the band above the crossover drives the compressor */
-		const float dL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], *l));
-		const float dR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], *r));
-		mb_compressBand(l, r, dL, dR);
+		for(uint32_t i = 0; i < n; i++)
+		{
+			const float dL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], L[i]));
+			const float dR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], R[i]));
+			det[i] = fmaxf(fabsf(dL), fabsf(dR));
+		}
+		mb_blockGain(L, R, det, n);
 		return;
 	}
-	const float loL = mb_biquad(&mb.clp, mb.cz[1][0], mb_biquad(&mb.clp, mb.cz[0][0], *l));
-	float       hiL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], *l));
-	const float loR = mb_biquad(&mb.clp, mb.cz[1][1], mb_biquad(&mb.clp, mb.cz[0][1], *r));
-	float       hiR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], *r));
-	mb_compressBand(&hiL, &hiR, hiL, hiR);
-	*l = loL + hiL;
-	*r = loR + hiR;
+	/* band split: only the band above the crossover is detected and compressed */
+	for(uint32_t i = 0; i < n; i++)
+	{
+		const float l = L[i], r = R[i];
+		mb_loL[i] = mb_biquad(&mb.clp, mb.cz[1][0], mb_biquad(&mb.clp, mb.cz[0][0], l));
+		mb_loR[i] = mb_biquad(&mb.clp, mb.cz[1][1], mb_biquad(&mb.clp, mb.cz[0][1], r));
+		L[i] = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], l));
+		R[i] = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], r));
+		det[i] = fmaxf(fabsf(L[i]), fabsf(R[i]));
+	}
+	mb_blockGain(L, R, det, n);
+	for(uint32_t i = 0; i < n; i++)
+	{
+		L[i] += mb_loL[i];
+		R[i] += mb_loR[i];
+	}
 }
-static inline void mb_eqProcess(float* l, float* r)
+IN_ITCM_RAM __attribute__((noinline)) static void mb_blockEq(float* L, float* R, const uint32_t n)
 {
 	for(uint8_t b = 0; b < 4; b++)
-		if(mb.eq & (1u << b))
+	{
+		if(!(mb.eq & (1u << b)))
+			continue;
+		const mb_Coef* const c = &mb.eqc[b];
+		float* const zl = mb.ez[b][0];
+		float* const zr = mb.ez[b][1];
+		for(uint32_t i = 0; i < n; i++)
 		{
-			*l = mb_biquad(&mb.eqc[b], mb.ez[b][0], *l);
-			*r = mb_biquad(&mb.eqc[b], mb.ez[b][1], *r);
+			L[i] = mb_biquad(c, zl, L[i]);
+			R[i] = mb_biquad(c, zr, R[i]);
 		}
+	}
 }
-/*----------------------------------------------------------------------------*/
 void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 {
 	if(!mb.valid || memcmp(mb.last, s, MB_NUM_PARAMS) != 0)
@@ -324,31 +378,27 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 	/* the three stages in the order of ORD: 'S', 'C', 'E' */
 	const char* const ord = masterBus_orderName(s[MB_ORD], 0);
 	mb.grSum = 0.f;
+	if(frames > OUTPUT_DMA_SIZE) frames = OUTPUT_DMA_SIZE;
+	float* const L = mb_bufL;
+	float* const R = mb_bufR;
 	for(uint32_t i = 0; i < frames; i++)
 	{
-		float l = mix[2u * i] * (1.f / 32768.f);
-		float r = mix[2u * i + 1u] * (1.f / 32768.f);
-		for(uint8_t k = 0; k < 3; k++)
+		L[i] = mix[2u * i] * (1.f / 32768.f);
+		R[i] = mix[2u * i + 1u] * (1.f / 32768.f);
+	}
+	for(uint8_t k = 0; k < 3; k++)
+	{
+		switch(ord[k])
 		{
-			switch(ord[k])
-			{
-			case 'S':
-				if(sat)
-				{
-					l = mb_saturate(l, 0);
-					r = mb_saturate(r, 1);
-				}
-				break;
-			case 'C':
-				if(mb.comp) mb_compress(&l, &r);
-				break;
-			default:
-				if(mb.eq) mb_eqProcess(&l, &r);
-				break;
-			}
+		case 'S':	if(sat)		mb_blockSat(L, R, frames);	break;
+		case 'C':	if(mb.comp)	mb_blockComp(L, R, frames);	break;
+		default:	if(mb.eq)	mb_blockEq(L, R, frames);	break;
 		}
-		mix[2u * i]      = (int32_t)(l * 32768.f);
-		mix[2u * i + 1u] = (int32_t)(r * 32768.f);
+	}
+	for(uint32_t i = 0; i < frames; i++)
+	{
+		mix[2u * i]      = (int32_t)(L[i] * 32768.f);
+		mix[2u * i + 1u] = (int32_t)(R[i] * 32768.f);
 	}
 	/* adaptive make-up: the average reduction, time constant about 1.5 s */
 	if(mb.comp && frames)
