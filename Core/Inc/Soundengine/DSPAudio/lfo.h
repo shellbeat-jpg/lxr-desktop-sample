@@ -47,8 +47,13 @@ enum
 	LFO_EXP_UP_1,
 	LFO_EXP_DOWN_1,
 	LFO_EXP_TRI_1,
-	NUM_LFO_WAVEFORMS
+	//MOD: the user waves W1..W8 (/SAMPLES/WAVES) as LFO shapes, running and one-shot
+	LFO_USER,
+	LFO_USER_1 = LFO_USER + 8,
+	NUM_LFO_WAVEFORMS = LFO_USER_1 + 8
 };
+//MOD: one-shot waveforms (run one cycle per trigger, then hold)
+#define lfo_isOneShot(w)	(((w) >= LFO_SINE_1 && (w) < LFO_USER) || (w) >= LFO_USER_1)
 
 
 #define LFO_MAX_F 		200 //[Hz]

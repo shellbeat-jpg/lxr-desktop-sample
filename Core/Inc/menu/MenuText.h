@@ -257,7 +257,7 @@ const char retriggerNames[][4]  =
 //-----------------------------------------------------------------
 const char lfoWaveNames[][4]  =
 {
-	{19},		//number of entries
+	{35},		//number of entries
 	{"sin"},
 	{"tri"},
 	{"sup"},
@@ -277,6 +277,9 @@ const char lfoWaveNames[][4]  =
 	{"xu1"},
 	{"xd1"},
 	{"xt1"},
+	//MOD: user waves W1..W8, running and one-shot
+	{"w1"}, {"w2"}, {"w3"}, {"w4"}, {"w5"}, {"w6"}, {"w7"}, {"w8"},
+	{"w1."}, {"w2."}, {"w3."}, {"w4."}, {"w5."}, {"w6."}, {"w7."}, {"w8."},
 };
 //-----------------------------------------------------------------
 const char rollRateNames[][4]  =

@@ -33,6 +33,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 |---|---|---|---|---|
 | Engines [OE] | Any engine freely assignable to each voice | VOICE (SHIFT + KIT) | Kit | NRPN 98 |
 | Samples | Up to 31 WAVs, 5.9 s in total (with `BIGFLASH` ≈ 17.8 s). Start and length parameters in ms with fades, loops with crossfade, declick on retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, samples in flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 100–105 (`STA` / Voice 1–6), NRPN 93, 94, 97 (`LEN` / Voice 1–3) |
+| User waves | Up to 8 WAVs from `SAMPLES/WAVES` as single cycles (1024 points): oscillator waveforms `W1`…`W8` (fixed values after `S1`…`S31`) and LFO shapes `W1`…`W8` (running) / `W1.`…`W8.` (one-shot); numbered on their own. | VOICE (OSC `WAV`, LFO `WAV`) | Kit (number), waves in flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 27–32 (LFO `WAV` / Voice 1–6) |
 | Choke | Voices of the choke group cut each other (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
 
 ### Sequencer / tracks
@@ -78,7 +79,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 
 | Feature | Description | UI | Stored in | MIDI |
 |---|---|---|---|---|
-| Sample import | At boot from `SAMPLES` and `SAMPLES/LOOPS`, only when changed; bad files are reported. Shows `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimental): ≈ 17.8 s instead of 5.9 s. | – (boot) | Flash | – |
+| Sample import | At boot from `SAMPLES`, `SAMPLES/LOOPS` and `SAMPLES/WAVES`, only when changed; bad files are reported. Shows `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimental): ≈ 17.8 s instead of 5.9 s. | – (boot) | Flash | – |
 | Kit management [OE] | Load kits and single voices from any project; "Change Project". | LOAD (+ step) | Project | – |
 | Kit extension block | Sends and `ORD` in the kit; older kits load with defaults. | – | Kit | – |
 | Safe project save [OE] | An interrupted save can't damage the project. | SAVE | Project | – |
@@ -179,6 +180,13 @@ the display (as in the LXR manual). The start screen shows "OE02-Samples" and th
   `DEC` ends the sound; `STA`/`LEN` are the loop points.
 - The loop point is crossfaded with the audio just before `STA`; with `STA` = 0 a short dip avoids
   the click. Drum voices have no gate: a long `DEC` keeps the loop going.
+
+### 3b. User waves (1.2.10)
+
+- Up to 8 single-cycle WAVs in `SAMPLES/WAVES` (16 bit, any length; resampled to 1024 points,
+  numbered on their own: `01SAW.WAV` = `W1`). Oscillator waveforms `W1`…`W8` after the sample
+  slots (fixed values, unused sample slots are skipped), LFO shapes `W1`…`W8` (running) and
+  `W1.`…`W8.` (one-shot). Details: [docs/SAMPLES.md](docs/SAMPLES.md#user-waves-1210).
 
 ### 4. Modulated sample selection (round robin, velocity layers)
 

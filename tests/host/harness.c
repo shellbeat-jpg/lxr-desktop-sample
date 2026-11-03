@@ -149,6 +149,29 @@ int main(){
   RUN("15 BIGFLASH, Bereich nicht lesbar"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1 && sampleFlash_getHeader()->reserved[2]==0,"nicht nutzbar -> 512 KB");
   bigOk=1; system("rm sd/SAMPLES/BIGFLASH");
   RUN("16 BIGFLASH entfernt"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==1,"Signatur aendert sich, Import in 512 KB");
+  /* MOD: user waves from /SAMPLES/WAVES */
+  system("mkdir -p sd/SAMPLES/WAVES");
+  wav("WAVES/2SAW.WAV",1,16,44100,512,0); wav("WAVES/10SIN.WAV",2,16,48000,4096,1); wav("WAVES/1BAD.WAV",1,24,44100,100,0);
+  { const int before=sampleFlash_getCount();
+    RUN("17 Waves dazu (2 gueltig, 1 ungueltig)"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getWaveCount()==2,"2 Waves importiert");
+    CHECK(sampleFlash_getCount()==before,"Samples unveraendert gezaehlt");
+    CHECK(!strcmp(sampleFlash_waveName(0),"2SAW.WAV") && !strcmp(sampleFlash_waveName(1),"10SIN.WAV"),"eigene Nummerierung, Zahlen-Sortierung (2 vor 10)");
+    int okw=1; const char* nm="WAVES/2SAW.WAV"; const int16_t* w=sampleFlash_wave(0);
+    for(int k=0;k<1024&&w;k++){ unsigned long long pp=(unsigned long long)k*512*65536/1024; int i=pp>>16, f=pp&0xFFFF;
+      int ia=i, ib=(i+1)>=512?0:i+1; int a=(ia*37+(int)nm[0]*11)%30000-15000, bb=(ib*37+(int)nm[0]*11)%30000-15000;
+      int16_t e=(int16_t)(a+(((bb-a)*f)>>16)); if(w[k]!=e){okw=0;break;} }
+    CHECK(w && okw,"2SAW: 512 Frames auf 1024 Punkte interpoliert (Ende -> Anfang)");
+    CHECK(sampleFlash_wave(2)==NULL && !strcmp(sampleFlash_waveName(2),""),"nicht vorhandene Wave -> NULL");
+    CHECK(sampleFlash_getHeader()->reserved[0]>=1,"ungueltige Wave als uebersprungen vermerkt");
+    RUN("18 Neustart mit Waves"); CHECK(last==SF_OK_UNCHANGED && eraseCalls==0,"kein erneuter Import");
+    CHECK(sampleFlash_modulatedWave(6+31,1.f/127.f*(6+31+1),6)==6+31+1,"Modulation einer Wave: naechste Wave");
+    CHECK(sampleFlash_modulatedWave(6+31,1.f,6)==6+31+1,"ueber der letzten Wave begrenzt");
+    CHECK(sampleFlash_modulatedWave(6+31,0.f,6)==6+31,"unter W1 begrenzt, nie ein Sample");
+  }
+  system("mkdir -p sd3; mv sd/SAMPLES/*.WAV sd3/ 2>/dev/null; true");
+  RUN("19 nur Waves, keine Samples"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==0 && sampleFlash_getWaveCount()==2 && sampleFlash_getHeader()!=NULL,"gueltig ohne Samples");
+  system("mv sd3/*.WAV sd/SAMPLES/; rm -rf sd3 sd/SAMPLES/WAVES");
+  RUN("20 WAVES-Ordner entfernt"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getWaveCount()==0 && sampleFlash_getCount()>0,"keine Waves mehr, Samples wieder da");
   CHECK(badErase==0,"NIE ein anderer Sektor als 6-11 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}

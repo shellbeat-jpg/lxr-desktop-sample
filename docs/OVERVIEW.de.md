@@ -13,6 +13,7 @@ Waser), alles andere aus OE02-Samples.
 |---|---|---|---|---|
 | Engines [OE] | Jede Voice zur Engine frei zuweisbar | VOICE (SHIFT + KIT) | Kit | NRPN 98 |
 | Samples | Max. 31 WAVs, 5,9 s Gesamtlänge (mit `BIGFLASH` ≈ 17,8 s). Parameter Start und Länge in ms mit Fade, Loops mit Crossfade, Declick beim Retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, Samples im Flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 100–105 (`STA` / Voice 1–6), NRPN 93, 94, 97 (`LEN` / Voice 1–3) |
+| User-Waves | Bis zu 8 WAVs aus `SAMPLES/WAVES` als Single-Cycle (1024 Punkte): Oszillator-Wellenformen `W1`…`W8` (feste Werte nach `S1`…`S31`) und LFO-Formen `W1`…`W8` (durchlaufend) / `W1.`…`W8.` (One-Shot); eigene Nummerierung. | VOICE (OSC `WAV`, LFO `WAV`) | Kit (Nummer), Waves im Flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 27–32 (LFO `WAV` / Voice 1–6) |
 | Choke | Voices der Choke-Gruppe blenden sich gegenseitig aus (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
 
 ## Sequencer / Tracks
@@ -58,7 +59,7 @@ Waser), alles andere aus OE02-Samples.
 
 | Funktion | Beschreibung | UI | Speicherort | MIDI |
 |---|---|---|---|---|
-| Sample-Import | Beim Start aus `SAMPLES` und `SAMPLES/LOOPS`, nur bei Änderungen; fehlerhafte Dateien werden gemeldet. Anzeige `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimentell): ≈ 17,8 s statt 5,9 s. | – (Start) | Flash | – |
+| Sample-Import | Beim Start aus `SAMPLES`, `SAMPLES/LOOPS` und `SAMPLES/WAVES`, nur bei Änderungen; fehlerhafte Dateien werden gemeldet. Anzeige `Samples: N`, `Used x.x/5.9s`. `BIGFLASH` (experimentell): ≈ 17,8 s statt 5,9 s. | – (Start) | Flash | – |
 | Kit-Management [OE] | Kits und einzelne Voices aus beliebigen Projekten laden; „Change Project“. | LOAD (+ Step) | Projekt | – |
 | Kit-Zusatzblock | Sends und `ORD` im Kit; ältere Kits laden mit Standardwerten. | – | Kit | – |
 | Sicheres Projekt-Speichern [OE] | Ein abgebrochenes Speichern kann das Projekt nicht beschädigen. | SAVE | Projekt | – |

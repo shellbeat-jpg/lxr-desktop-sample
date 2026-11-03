@@ -450,6 +450,7 @@ if(sd_card_ok)
 sampleFlash_showStatus(); // MOD: also without SD card, enables playback of stored samples
 lcd_clear();
 menu_setNumSamples(sampleFlash_getCount()); // MOD: samples appear as waveforms s1..sN
+menu_setNumWaves(sampleFlash_getWaveCount()); // MOD: user waves W1..Wn after the 31 sample slots
 
 adc_checkPots();
 adc_checkPots();

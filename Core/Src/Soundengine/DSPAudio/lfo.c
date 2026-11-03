@@ -22,6 +22,7 @@
 #include "Soundengine/DSPAudio/HiHat.h"
 #include "Soundengine/DSPAudio/Snare.h"
 #include "Soundengine/MIDI/valueShaper.h"
+#include "SampleRom/sampleFlash.h"	//MOD: user waves
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo)
 {
@@ -47,6 +48,25 @@ static inline float lfo_expTri(const float x)
 	return y * y * y;
 }
 //-------------------------------------------------------------
+//MOD: a user wave (W1..W8) at phase x (0..2^32): 0..1, 0.5 if it isn't stored
+static float lfo_userWave(const uint8_t k, const uint32_t phase)
+{
+	const int16_t* t = sampleFlash_wave(k);
+	if(t == NULL)
+		return 0.5f;
+	const uint32_t i = phase >> 22;
+	const int32_t a = t[i], b = t[(i + 1u) & (SF_WAVE_POINTS - 1u)];
+	const int32_t s = a + (int32_t)(((int64_t)(b - a) * (phase & 0x3FFFFF)) >> 22);
+	return (s + 32768) * (1.f / 65535.f);
+}
+//MOD: a running user wave (new cycles counted as starts, like the built-in ones)
+__attribute__((noinline)) static float lfo_calcUser(Lfo *lfo, const uint32_t incInt)
+{
+	const uint32_t old = lfo->phase;
+	lfo->phase += incInt;
+	if(lfo->phase < old) { lfo->starts++; lfo->startCause = 0xff; }
+	return lfo_userWave((uint8_t)(lfo->waveform - LFO_USER), lfo->phase);
+}
 //MOD: one-shot waveforms: delay, one cycle, hold
 __attribute__((noinline)) static float lfo_calcOneShot(Lfo *lfo, const uint32_t incInt)
 {
@@ -69,6 +89,8 @@ __attribute__((noinline)) static float lfo_calcOneShot(Lfo *lfo, const uint32_t 
 			lfo->osDone = 1;
 		}
 	}
+	if(w >= LFO_USER_1)
+		return lfo_userWave((uint8_t)(w - LFO_USER_1), lfo->phase);	//MOD: holds its end value after the cycle
 	const float x = lfo->phase / (float)0xffffffff;
 	switch(w)
 	{
@@ -88,9 +110,9 @@ IN_ITCM_RAM float lfo_calc(Lfo *lfo)
 	float inc = lfo->phaseInc*lfo->modNodeValue;
 	uint32_t incInt = inc;
 
-	//MOD: one-shot waveforms (in flash, not in the nearly full ITCM)
+	//MOD: one-shot and user waveforms (in flash, not in the nearly full ITCM)
 	if(lfo->waveform >= LFO_SINE_1)
-		return lfo_calcOneShot(lfo, incInt);
+		return (lfo->waveform >= LFO_USER && lfo->waveform < LFO_USER_1) ? lfo_calcUser(lfo, incInt) : lfo_calcOneShot(lfo, incInt);
 
 	uint32_t oldPhase 		= lfo->phase;
 	lfo->phase 			   += incInt;//lfo->phaseInc*lfo->modNodeValue;
@@ -290,7 +312,7 @@ void lfo_retrigger(uint8_t voice)
 		if(lfo->retrigger == voice+1)
 		{
 			lfo->phase = lfo->phaseOffset;
-			if(lfo->waveform < LFO_SINE_1)
+			if(!lfo_isOneShot(lfo->waveform))
 			{
 				lfo->starts++;	//MOD: restarted
 				lfo->startCause = voice;
@@ -304,7 +326,7 @@ void lfo_retrigger(uint8_t voice)
 		}
 		//MOD: one-shot waveforms start (after the delay = offset) on each trigger
 		//of the retrigger voice, without retrigger of the LFO's own voice
-		if(lfo->waveform >= LFO_SINE_1 && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
+		if(lfo_isOneShot(lfo->waveform) && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
 		{
 			lfo->phase   = 0;
 			lfo->osDone  = 0;

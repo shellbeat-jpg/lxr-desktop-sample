@@ -704,6 +704,18 @@ static uint8_t menu_sampleWaveEditText(const uint16_t parNr, const uint8_t val)
 		return 0;
 	if(val < waveformNames[0][0])
 		return 0;
+	if(osc_isUserWave(val))
+	{
+		//MOD: user wave: "SAW01        W1"
+		const uint8_t k = (uint8_t)(val - OSC_WAVE_USER);
+		const char* n = sampleFlash_waveName(k);
+		char name[9];
+		uint8_t j = 0;
+		while(j < 8 && n[j] && n[j] != '.') { name[j] = n[j]; j++; }
+		name[j] = 0;
+		snprintf(&editDisplayBuffer[1][0], 17, "%-8s     W%-2u", n[0] ? name : "(empty)", (unsigned)(k + 1u));
+		return 1;
+	}
 	const uint8_t slot = (uint8_t)(val - waveformNames[0][0]);
 	const SampleFlashEntry* e = sampleFlash_entry(slot);
 	char name[9];
@@ -2005,6 +2017,22 @@ void menu_setNumSamples(uint8_t num)
 {
 	menu_numSamples = num;
 }
+//MOD: user waves W1..Wn, at fixed values after the 31 sample slots
+static uint8_t menu_numWaves = 0;
+void menu_setNumWaves(uint8_t num)
+{
+	menu_numWaves = num > OSC_NUM_USER_WAVES ? OSC_NUM_USER_WAVES : num;
+}
+//a waveform value in the unused sample slots between the last sample and W1 is
+//moved on in the direction of the change (dir > 0: to W1, else to the last sample)
+static uint8_t menu_waveSkipGap(const uint8_t v, const int16_t dir)
+{
+	const uint8_t names = waveformNames[0][0];
+	const uint8_t lo = (uint8_t)(names + menu_numSamples), hi = (uint8_t)OSC_WAVE_USER;
+	if(!menu_numWaves || v < lo || v >= hi)
+		return v;
+	return dir > 0 ? hi : (uint8_t)(lo - 1u);
+}
 //-----------------------------------------------------------------
 
 //MOD: several targets share the short name "wav": the main oscillator keeps
@@ -3293,7 +3321,8 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 	case MENU_NEXT_PATTERN:
 		return nextPatternNames[0][0];
 	case MENU_WAVEFORM:
-		return (uint8_t)(waveformNames[0][0] + menu_numSamples);
+		//MOD: then the user waves at their fixed values (after the 31 sample slots)
+		return (uint8_t)(menu_numWaves ? OSC_WAVE_USER + menu_numWaves : waveformNames[0][0] + menu_numSamples);
 	case MENU_ROLL_RATES:
 		return rollRateNames[0][0];
 	case MENU_MIDI_ROUTING:
@@ -3360,6 +3389,13 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 	case MENU_WAVEFORM:
 		if(curParmVal < waveformNames[0][0])
 			p=waveformNames[curParmVal + 1];
+		else if(osc_isUserWave(curParmVal))
+		{
+			//MOD: user wave W1..W8
+			buf[0]='W';
+			numtostrpu_2Bytes(&buf[1],(uint8_t)(curParmVal - OSC_WAVE_USER + 1),' ');
+			return;
+		}
 		else
 		{
 			//sample number: 2 digits (3 wrote one byte past the 3-character buffer)
@@ -3931,6 +3967,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 		uint8_t numEntries = getMaxEntriesForMenu(menuId);
 		if(*paramValue >= numEntries)
 			*paramValue = (uint8_t)(numEntries-1);
+		if(menuId == MENU_WAVEFORM)
+			*paramValue = menu_waveSkipGap(*paramValue, inc);	//MOD
 
 	} // menu_paramDtype(paramNr) & 0x0F case DTYPE_MENU
 		break;
@@ -4850,6 +4888,8 @@ static uint8_t limitPotValue(int8_t diff, uint16_t paramNr)
 		uint8_t numEntries=getMaxEntriesForMenu(menuId);
 		//return (uint8_t)(frac * (numEntries-1));
 		if(newValue > (numEntries-1)) newValue = (numEntries-1);
+		if(menuId == MENU_WAVEFORM)
+			newValue = menu_waveSkipGap((uint8_t)newValue, diff);	//MOD
 	}
 
 		break;

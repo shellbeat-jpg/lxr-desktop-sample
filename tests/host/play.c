@@ -139,4 +139,13 @@ int main(){
     int16_t last=o.output; osc_setBaseNote(&o,60); osc_calcUserSampleFreq(&o); calcNextOscSampleBlock(&o,buf,32,1.f,0.f);
     CHECK(o.smpWave==NUM_OSC_WAVEFORMS+1,"naechster Trigger nimmt das neue Sample");
     CHECK(abs(buf[0]-last) < 2000,"Retrigger: kein Sprung (Ausblenden des alten Klangs)"); }
+  /* 13: MOD user wave W1 as oscillator waveform */
+  system("mkdir -p sd/SAMPLES/WAVES"); wav16("WAVES/1SIN.WAV",44100,1024,sine);
+  r=sampleFlash_importAtBoot(); CHECK(r==SF_OK_IMPORTED && sampleFlash_getWaveCount()==1 && sampleFlash_getCount()==2,"Import: 2 Samples + 1 Wave");
+  { OscInfo w; memset(&w,0,sizeof w); w.waveform=OSC_WAVE_USER; w.pitchMod=1; w.modNodeValue=1; w.freq=REAL_FS/256.f;
+    osc_setBaseNote(&w,60); w.freq=REAL_FS/256.f; w.phase=0; static int16_t o2[1024]; render(&w,o2,1024,0,0);
+    const int16_t* t=sampleFlash_wave(0); int ok=1; for(int i=0;i<256;i++) if(abs(o2[i]-t[i*4])>1) ok=0;
+    CHECK(ok,"W1: 256 Ausgabesamples pro Zyklus lesen jeden 4. Punkt");
+    ok=1; for(int i=0;i<256;i++) if(o2[i]!=o2[i+256]) ok=0; CHECK(ok,"W1: Zyklus wiederholt sich (Wrap am Ende)");
+    w.waveform=OSC_WAVE_USER+1; render(&w,o2,64,0,0); ok=1; for(int i=0;i<64;i++) if(o2[i]) ok=0; CHECK(ok,"W2 nicht vorhanden -> Stille"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

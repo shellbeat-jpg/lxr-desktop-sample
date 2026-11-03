@@ -17,9 +17,13 @@
 /* Flash region reserved for samples: sector 6 + sector 7 (single-bank layout). */
 #define SF_REGION_START      ((uint32_t)0x08080000u)
 #define SF_REGION_END        ((uint32_t)0x08100000u)   /* exclusive */
-#define SF_HEADER_SIZE       ((uint32_t)0x00000400u)   /* 1 KB header/table */
+#define SF_HEADER_SIZE       ((uint32_t)0x00000800u)   /* 2 KB: sample table + user wave table */
 #define SF_DATA_START        (SF_REGION_START + SF_HEADER_SIZE)
 #define SF_MAX_SAMPLES       31u
+/* MOD: user waveforms from /SAMPLES/WAVES: single cycles of SF_WAVE_POINTS int16
+ * points (resampled at the import), for the oscillators and the LFOs */
+#define SF_MAX_WAVES         8u
+#define SF_WAVE_POINTS       1024u
 
 #define SF_FLAG_LOOP         0x01u   /* from /SAMPLES/LOOPS: loops between start and end */
 
@@ -43,6 +47,17 @@ typedef struct
 	uint32_t reserved[3];  /* skipped files: [0] not 16 bit, [1] did not fit */
 	SampleFlashEntry entry[SF_MAX_SAMPLES];
 } SampleFlashHeader;     /* 32 + 31*32 = 1024 bytes */
+
+/* MOD: user waveforms, at SF_REGION_START + 1 KB (header "LXRSMP03" only) */
+typedef struct
+{
+	char     magic[8];   /* "LXRWAV01" */
+	uint32_t count;
+	uint32_t offset;     /* absolute flash address of count * SF_WAVE_POINTS int16 */
+	uint32_t checksum;   /* FNV-1a over the points */
+	uint32_t reserved;
+	char     name[SF_MAX_WAVES][16];   /* 8.3 file names */
+} SampleFlashWaves;      /* 32 + 8*16 = 160 bytes */
 
 /* Result codes, also shown on the LCD. */
 typedef enum
@@ -87,6 +102,12 @@ uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves);
  * amount counts the further samples). val [0:1] (LFO, velocity) is quantized
  * evenly onto the range. Returns the modulated value for the handler (w/127). */
 float sampleFlash_rangeValue(uint8_t base, float amount, float val);
+
+/* MOD: user waveforms: number stored, the SF_WAVE_POINTS points of wave k
+ * (NULL if not stored), its file name ("" if not stored) */
+uint8_t sampleFlash_getWaveCount(void);
+const int16_t* sampleFlash_wave(uint8_t k);
+const char* sampleFlash_waveName(uint8_t k);
 
 /* Flash size of the chip in KB (from its flash size register). */
 uint16_t sampleFlash_chipKB(void);

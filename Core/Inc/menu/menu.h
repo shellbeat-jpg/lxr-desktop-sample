@@ -731,6 +731,7 @@ void menu_uiTick();
 //-----------------------------------------------------------------
 //number of user samples in flash
 void menu_setNumSamples(uint8_t num);
+void menu_setNumWaves(uint8_t num);	//MOD: user waves W1..Wn
 //-----------------------------------------------------------------
 /**set all save state parameters to 0*/
 void menu_resetSaveParameters();

@@ -33,6 +33,12 @@ enum OscWaveforms
 	PWM,
 	NUM_OSC_WAVEFORMS
 };
+//MOD: waveform values: the built-in ones, the 31 sample slots S1..S31 (from
+//NUM_OSC_WAVEFORMS), then the user waves W1..W8 at fixed values (OSC_WAVE_USER..),
+//independent of how many samples are stored
+#define OSC_WAVE_USER	(NUM_OSC_WAVEFORMS + 31)
+#define OSC_NUM_USER_WAVES	8
+#define osc_isUserWave(w)	((w) >= OSC_WAVE_USER)
 
 
 #define phaseShift 1000
@@ -120,6 +126,7 @@ void calcPwmBlock(OscInfo* osc, int16_t* buf, uint8_t size ,const float gain, co
 void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm);
 //-----------------------------------------------------------
 void calcUserSampleOscBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,const float gain, const float pwm);
+void calcUserWaveBlock(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, const uint8_t size, const float gain);	//MOD
 //-----------------------------------------------------------
 //int16_t calcSampleOsc(OscInfo* osc);
 //-----------------------------------------------------------

@@ -30,9 +30,13 @@
 #include <string.h>
 #include <stdio.h>
 
-#define SF_MAGIC        "LXRSMP02"
+#define SF_MAGIC        "LXRSMP03"	/* MOD: 03 = with the user wave table */
+#define SF_MAGIC_V2     "LXRSMP02"
+#define SF_WAVE_MAGIC   "LXRWAV01"
 #define SF_FOLDER       "/SAMPLES"
 #define SF_LOOP_FOLDER  "/SAMPLES/LOOPS"
+#define SF_WAVE_FOLDER  "/SAMPLES/WAVES"
+#define SF_WAVES_AT     (SF_REGION_START + 0x400u)
 #define SF_READ_FRAMES  256u
 #define SF_BIG_FILE     "/SAMPLES/BIGFLASH"
 #define SF_BIG_END      ((uint32_t)0x08200000u)           /* sectors 6-11 */
@@ -44,12 +48,12 @@ static void sf_capSeconds(char* out);
 #define SF_CAPACITY     (sf_end - SF_DATA_START)          /* bytes for PCM data */
 
 /* the header must fit into the reserved header area */
-typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= SF_HEADER_SIZE) ? 1 : -1];
+typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= 0x400u && 0x400u + sizeof(SampleFlashWaves) <= SF_HEADER_SIZE) ? 1 : -1];
 
 typedef struct
 {
 	char     name[13];
-	uint8_t  loop;         /* from SF_LOOP_FOLDER */
+	uint8_t  loop;         /* from SF_LOOP_FOLDER; 2 = from SF_WAVE_FOLDER */
 	uint32_t fsize;
 	uint16_t channels;
 	uint32_t rate;
@@ -59,7 +63,10 @@ typedef struct
 } sf_FileInfo;
 
 static sf_FileInfo sf_files[SF_MAX_SAMPLES];
+static sf_FileInfo sf_waveFiles[SF_MAX_WAVES];        /* MOD */
+static uint8_t sf_waveCount = 0;                       /* MOD: files found in SF_WAVE_FOLDER */
 static SampleFlashHeader sf_newHeader;                 /* built in RAM, written last */
+static SampleFlashWaves sf_newWaves;                   /* MOD */
 static int16_t sf_readBuf[SF_READ_FRAMES * 2u];        /* stereo frames */
 static FIL sf_file;
 
@@ -89,11 +96,40 @@ static uint32_t sf_fnv(uint32_t h, const uint8_t* p, uint32_t n)
 	return h;
 }
 /*----------------------------------------------------------------------------*/
+static const SampleFlashWaves* const sf_flashWaves = (const SampleFlashWaves*)SF_WAVES_AT;
+static uint8_t sf_wavesValid(void)
+{
+	return memcmp(((const SampleFlashHeader*)SF_REGION_START)->magic, SF_MAGIC, 8) == 0
+		&& memcmp(sf_flashWaves->magic, SF_WAVE_MAGIC, 8) == 0
+		&& sf_flashWaves->count >= 1u && sf_flashWaves->count <= SF_MAX_WAVES;
+}
 static uint8_t sf_headerValid(const SampleFlashHeader* h)
 {
-	if(memcmp(h->magic, SF_MAGIC, 8) != 0) return 0;
+	if(memcmp(h->magic, SF_MAGIC, 8) == 0)
+	{
+		//MOD: an import of user waves only has no samples
+		if(h->count > SF_MAX_SAMPLES) return 0;
+		return h->count > 0u || sf_wavesValid();
+	}
+	if(memcmp(h->magic, SF_MAGIC_V2, 8) != 0) return 0;	/* before the user waves */
 	if(h->count == 0 || h->count > SF_MAX_SAMPLES) return 0;
 	return 1;
+}
+/*----------------------------------------------------------------------------*/
+/* MOD: user waveforms */
+static uint8_t sf_waveCache = 0;	/* number of valid stored waves, set with sf_cache */
+uint8_t sampleFlash_getWaveCount(void)
+{
+	return sf_waveCache;
+}
+const int16_t* sampleFlash_wave(uint8_t k)
+{
+	if(k >= sf_waveCache) return NULL;
+	return (const int16_t*)(sf_flashWaves->offset + (uint32_t)k * SF_WAVE_POINTS * 2u);
+}
+const char* sampleFlash_waveName(uint8_t k)
+{
+	return k < sf_waveCache ? sf_flashWaves->name[k] : "";
 }
 /*----------------------------------------------------------------------------*/
 const SampleFlashHeader* sampleFlash_getHeader(void)
@@ -117,8 +153,11 @@ uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves)
 		return w >= numOscWaves ? (uint8_t)(numOscWaves - 1u) : w;
 	}
 	int32_t w = (int32_t)(v * 127.f + 0.5f);
-	const int32_t last = (int32_t)numOscWaves + (int32_t)h->count - 1;
-	if(w < (int32_t)numOscWaves) w = numOscWaves;
+	/* MOD: a user wave as base selects among the user waves, a sample among the samples */
+	const int32_t first = base >= numOscWaves + SF_MAX_SAMPLES ? (int32_t)(numOscWaves + SF_MAX_SAMPLES) : (int32_t)numOscWaves;
+	const int32_t last  = first + (int32_t)(first == (int32_t)numOscWaves ? h->count : sf_waveCache) - 1;
+	if(last < first) return base;
+	if(w < first) w = first;
 	if(w > last) w = last;
 	return (uint8_t)w;
 }
@@ -148,9 +187,14 @@ const SampleFlashEntry* sampleFlash_entry(uint8_t slot)
 	if(h == NULL || slot >= h->count) return NULL;
 	return &h->entry[slot];
 }
-static SampleFlashResult sf_finish(SampleFlashResult r)
+static void sf_setCache(void)
 {
 	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
+	sf_waveCache = (sf_cache && sf_wavesValid()) ? (uint8_t)sf_flashWaves->count : 0u;
+}
+static SampleFlashResult sf_finish(SampleFlashResult r)
+{
+	sf_setCache();
 	return r;
 }
 /*----------------------------------------------------------------------------*/
@@ -205,7 +249,7 @@ static uint16_t sf_le16(const uint8_t* b) { return (uint16_t)(b[0] | (b[1] << 8)
 
 static void sf_path(char* path, uint32_t size, const sf_FileInfo* fi)
 {
-	snprintf(path, size, "%s/%s", fi->loop ? SF_LOOP_FOLDER : SF_FOLDER, fi->name);
+	snprintf(path, size, "%s/%s", fi->loop == 2 ? SF_WAVE_FOLDER : fi->loop ? SF_LOOP_FOLDER : SF_FOLDER, fi->name);
 }
 /* returns SF_OK_IMPORTED on success (used as "ok" here) */
 static SampleFlashResult sf_parseWav(sf_FileInfo* fi)
@@ -297,22 +341,36 @@ static int sf_nameCmp(const sf_FileInfo* a, const sf_FileInfo* b)
 	return s ? s : (int)a->loop - (int)b->loop;
 }
 /* add the WAVs of one folder; returns 0 if the folder can't be opened */
-static uint8_t sf_scanDir(const char* folder, uint8_t loop, uint8_t* n)
+static uint8_t sf_scanDirInto(const char* folder, uint8_t loop, uint8_t* n, sf_FileInfo* files, uint8_t max)
 {
 	DIR dir;
 	FILINFO fno;
 	if(f_opendir(&dir, folder) != FR_OK) return 0;
 	while(f_readdir(&dir, &fno) == FR_OK && fno.fname[0])
 	{
-		if(!sf_isWav(&fno) || *n >= SF_MAX_SAMPLES) continue;
-		memset(&sf_files[*n], 0, sizeof(sf_FileInfo));
-		strncpy(sf_files[*n].name, fno.fname, 12);
-		sf_files[*n].fsize = fno.fsize;
-		sf_files[*n].loop  = loop;
+		if(!sf_isWav(&fno) || *n >= max) continue;
+		memset(&files[*n], 0, sizeof(sf_FileInfo));
+		strncpy(files[*n].name, fno.fname, 12);
+		files[*n].fsize = fno.fsize;
+		files[*n].loop  = loop;
 		(*n)++;
 	}
 	f_closedir(&dir);
 	return 1;
+}
+static uint8_t sf_scanDir(const char* folder, uint8_t loop, uint8_t* n)
+{
+	return sf_scanDirInto(folder, loop, n, sf_files, SF_MAX_SAMPLES);
+}
+static void sf_sort(sf_FileInfo* files, uint8_t n)
+{
+	for(uint8_t i = 1; i < n; i++)
+	{
+		sf_FileInfo t = files[i];
+		int8_t j = (int8_t)i - 1;
+		while(j >= 0 && sf_nameCmp(&files[j], &t) > 0) { files[j + 1] = files[j]; j--; }
+		files[j + 1] = t;
+	}
 }
 /* scan /SAMPLES and /SAMPLES/LOOPS, sorted by name; returns count, 0xFF if
  * /SAMPLES is missing */
@@ -321,15 +379,13 @@ static uint8_t sf_scanFolder(uint32_t* signature)
 	uint8_t n = 0;
 	if(!sf_scanDir(SF_FOLDER, 0, &n)) return 0xFF;
 	sf_scanDir(SF_LOOP_FOLDER, 1, &n);   /* optional */
+	/* MOD: the user waves, numbered on their own (W1 = first name) */
+	sf_waveCount = 0;
+	sf_scanDirInto(SF_WAVE_FOLDER, 2, &sf_waveCount, sf_waveFiles, SF_MAX_WAVES);   /* optional */
+	sf_sort(sf_waveFiles, sf_waveCount);
 
 	/* insertion sort -> deterministic slot order */
-	for(uint8_t i = 1; i < n; i++)
-	{
-		sf_FileInfo t = sf_files[i];
-		int8_t j = (int8_t)i - 1;
-		while(j >= 0 && sf_nameCmp(&sf_files[j], &t) > 0) { sf_files[j + 1] = sf_files[j]; j--; }
-		sf_files[j + 1] = t;
-	}
+	sf_sort(sf_files, n);
 
 	uint32_t h = 2166136261u;
 	h = sf_fnv(h, (const uint8_t*)SF_MAGIC, 8);
@@ -338,6 +394,12 @@ static uint8_t sf_scanFolder(uint32_t* signature)
 		h = sf_fnv(h, (const uint8_t*)sf_files[i].name, 13);
 		h = sf_fnv(h, (const uint8_t*)&sf_files[i].loop, 1);
 		h = sf_fnv(h, (const uint8_t*)&sf_files[i].fsize, 4);
+	}
+	for(uint8_t i = 0; i < sf_waveCount; i++)	/* MOD */
+	{
+		h = sf_fnv(h, (const uint8_t*)"W", 1);
+		h = sf_fnv(h, (const uint8_t*)sf_waveFiles[i].name, 13);
+		h = sf_fnv(h, (const uint8_t*)&sf_waveFiles[i].fsize, 4);
 	}
 	*signature = h;
 	return n;
@@ -399,6 +461,55 @@ static SampleFlashResult sf_writeFile(const sf_FileInfo* fi, uint32_t addr, uint
 	return SF_OK_IMPORTED;
 }
 /*----------------------------------------------------------------------------*/
+/* MOD: read one frame (mono) of a wave file through a small window buffer */
+static int16_t sf_waveFrame(const sf_FileInfo* fi, uint32_t i, uint32_t* winStart, uint32_t* winLen, uint8_t* ok)
+{
+	if(i >= fi->frames) i = 0;		/* the cycle wraps to its start */
+	if(i < *winStart || i >= *winStart + *winLen)
+	{
+		UINT br;
+		uint32_t n = fi->frames - i;
+		if(n > SF_READ_FRAMES) n = SF_READ_FRAMES;
+		const uint32_t bytes = n * 2u * fi->channels;
+		if(f_lseek(&sf_file, fi->dataOffset + i * 2u * fi->channels) != FR_OK
+				|| f_read(&sf_file, sf_readBuf, bytes, &br) != FR_OK || br != bytes)
+		{
+			*ok = 0;
+			return 0;
+		}
+		if(fi->channels == 2)
+			for(uint32_t k = 0; k < n; k++)
+				sf_readBuf[k] = (int16_t)(((int32_t)sf_readBuf[2 * k] + sf_readBuf[2 * k + 1]) / 2);
+		*winStart = i;
+		*winLen = n;
+	}
+	return sf_readBuf[i - *winStart];
+}
+/* MOD: a user wave: the whole file resampled onto SF_WAVE_POINTS points (one
+ * cycle, linear interpolation, wrapping to the start), programmed at addr */
+static SampleFlashResult sf_writeWave(const sf_FileInfo* fi, uint32_t addr, uint32_t* checksum)
+{
+	static int16_t pts[SF_WAVE_POINTS];
+	char path[32];
+	sf_path(path, sizeof(path), fi);
+	if(f_open(&sf_file, path, FA_READ | FA_OPEN_EXISTING) != FR_OK) return SF_ERR_READ;
+	uint32_t winStart = 0, winLen = 0;
+	uint8_t ok = 1;
+	for(uint32_t k = 0; k < SF_WAVE_POINTS && ok; k++)
+	{
+		const uint64_t p = (uint64_t)k * fi->frames * 65536u / SF_WAVE_POINTS;	/* 16 bit fraction */
+		const uint32_t i = (uint32_t)(p >> 16);
+		const int32_t f = (int32_t)(p & 0xFFFFu);
+		const int32_t a = sf_waveFrame(fi, i, &winStart, &winLen, &ok);
+		const int32_t b = sf_waveFrame(fi, i + 1u, &winStart, &winLen, &ok);
+		pts[k] = (int16_t)(a + (((b - a) * f) >> 16));
+	}
+	f_close(&sf_file);
+	if(!ok) return SF_ERR_READ;
+	*checksum = sf_fnv(2166136261u, (const uint8_t*)pts, sizeof(pts));
+	return sf_programBytes(addr, pts, sizeof(pts)) ? SF_OK_IMPORTED : SF_ERR_FLASH;
+}
+/*----------------------------------------------------------------------------*/
 static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, uint32_t totalFrames)
 {
 	char l2[17];
@@ -451,10 +562,16 @@ static void sf_fmtSeconds(char* out, uint32_t bytes)
 void sampleFlash_showStatus(void)
 {
 	char l1[17], l2[17];
-	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
+	sf_setCache();
 	const SampleFlashHeader* h = sf_cache;
 	const uint32_t skipped = h ? h->reserved[0] + h->reserved[1] : 0u;
 	if(h == NULL)                   snprintf(l1, sizeof(l1), "Samples: none");
+	else if(sf_waveCache)	/* MOD: "S:12 W:3 skp:1" */
+	{
+		if(skipped && skipped <= 99u)
+		                            snprintf(l1, sizeof(l1), "S:%u W:%u skp:%u", (unsigned)h->count, (unsigned)sf_waveCache, (unsigned)skipped);
+		else                        snprintf(l1, sizeof(l1), "Samples:%u W:%u", (unsigned)h->count, (unsigned)sf_waveCache);
+	}
 	else if(skipped && skipped <= 99u)
 	                                snprintf(l1, sizeof(l1), "Samples:%u skp:%u", (unsigned)h->count, (unsigned)skipped);
 	else                            snprintf(l1, sizeof(l1), "Samples: %u", (unsigned)h->count);
@@ -534,6 +651,24 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 	char skipName[13], fullName[13];
 	memset(skipName, 0, sizeof(skipName));
 	memset(fullName, 0, sizeof(fullName));
+	/* MOD: the user waves come first (fixed size each); unusable ones are skipped */
+	uint8_t waves = 0;
+	for(uint8_t i = 0; i < sf_waveCount; i++)
+	{
+		SampleFlashResult r = sf_parseWav(&sf_waveFiles[i]);
+		if(r == SF_ERR_FORMAT)
+		{
+			if(skipped == 0) strncpy(skipName, sf_waveFiles[i].name, 12);
+			skipped++;
+			continue;
+		}
+		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_waveFiles[i].name, 0, 0); return sf_finish(r); }
+		if(waves != i) sf_waveFiles[waves] = sf_waveFiles[i];
+		waves++;
+	}
+	const uint32_t waveBytes = (uint32_t)waves * SF_WAVE_POINTS * 2u;
+	needed = waveBytes;
+	wanted = waveBytes;
 	for(uint8_t i = 0; i < count; i++)
 	{
 		SampleFlashResult r = sf_parseWav(&sf_files[i]);
@@ -571,7 +706,7 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		snprintf(l1, sizeof(l1), "Full(%ss) skip:", s);
 		sf_showSkipped(l1, full, fullName);
 	}
-	if(kept == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
+	if(kept == 0 && waves == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
 	count = kept;
 
 	/* 2. erase - code runs from flash, so the CPU stalls ~1-2 s per sector */
@@ -584,11 +719,31 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		if(!sf_eraseSector(FLASH_SECTOR_6 + s)) res = SF_ERR_FLASH;
 	}
 
-	/* 3. program the PCM data */
+	/* 3. program the PCM data (MOD: the user waves first) */
 	memset(&sf_newHeader, 0, sizeof(sf_newHeader));
+	memset(&sf_newWaves, 0, sizeof(sf_newWaves));
 	uint32_t addr = SF_DATA_START;
 	uint32_t totalFrames = 0;
 	const char* failName = "";
+	sf_newWaves.offset = addr;
+	uint32_t waveCs[SF_MAX_WAVES];
+	for(uint8_t i = 0; i < waves && res == SF_OK_IMPORTED; i++)
+	{
+		uint32_t cs = 0;
+		char l2[17];
+		snprintf(l2, sizeof(l2), "%-12.12s", sf_waveFiles[i].name);
+		sf_lcd("Import waves", l2);
+		res = sf_writeWave(&sf_waveFiles[i], addr, &cs);
+		waveCs[i] = cs;
+		failName = sf_waveFiles[i].name;
+		strncpy(sf_newWaves.name[i], sf_waveFiles[i].name, 12);
+		addr += SF_WAVE_POINTS * 2u;
+	}
+	if(waves && res == SF_OK_IMPORTED)
+	{
+		sf_newWaves.count = waves;
+		memcpy(sf_newWaves.magic, SF_WAVE_MAGIC, 8);
+	}
 	for(uint8_t i = 0; i < count && res == SF_OK_IMPORTED; i++)
 	{
 		uint32_t cs = 0;
@@ -610,6 +765,13 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 	{
 		sf_invalidateCache();
 		sf_lcd("Verifying...", "");
+		for(uint8_t i = 0; i < waves; i++)	/* MOD: the user waves */
+		{
+			const uint8_t* p = (const uint8_t*)(sf_newWaves.offset + (uint32_t)i * SF_WAVE_POINTS * 2u);
+			if(sf_fnv(2166136261u, p, SF_WAVE_POINTS * 2u) != waveCs[i]) { res = SF_ERR_VERIFY; failName = sf_newWaves.name[i]; break; }
+		}
+		if(waves)
+			sf_newWaves.checksum = sf_fnv(2166136261u, (const uint8_t*)sf_newWaves.offset, waveBytes);
 		for(uint8_t i = 0; i < count; i++)
 		{
 			const SampleFlashEntry* e = &sf_newHeader.entry[i];
@@ -631,7 +793,8 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		sf_newHeader.reserved[2] = ((sf_end == SF_BIG_END && SF_DATA_START + needed > SF_REGION_END) ? 1u : 0u)
 		                         | (sf_end == SF_BIG_END ? 2u : 0u);
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
-		if(!sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
+		if((waves && !sf_programBytes(SF_WAVES_AT, &sf_newWaves, (sizeof(SampleFlashWaves) + 3u) & ~3u)) ||
+		   !sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))
 		{
 			res = SF_ERR_FLASH;
@@ -650,7 +813,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	uint32_t signature = 0;
 	uint8_t count = sf_scanFolder(&signature);
 	if(count == 0xFF) return sf_finish(SF_NO_FOLDER);   /* feature not used, old samples stay usable */
-	if(count == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
+	if(count == 0 && sf_waveCount == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
 
 	/* the big flash request is part of the signature: adding or removing
 	 * BIGFLASH imports again */

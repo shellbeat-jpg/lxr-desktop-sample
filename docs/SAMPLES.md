@@ -6,6 +6,8 @@ both taken unchanged from [OpenElixir-02 v1.2](https://github.com/tunefish777/op
 
 ## Importing samples
 
+(User waves for oscillators and LFOs: see [User waves](#user-waves-1210).)
+
 1. Create the folder `SAMPLES` in the top folder of the SD card and copy WAV files into it. Loop
    samples go into the subfolder `SAMPLES/LOOPS`.
 2. Switch the LXR-02 on normally (without holding the encoder). If the folder changed since the
@@ -92,6 +94,28 @@ sound. Drum voices have no gate, so a long decay keeps the loop going.
   quarter of the loop). With start 0 there is no audio before it: then a short fade out/in (32
   frames) avoids the click.
 - The fade-in at a later start happens only once, not on every repeat.
+
+## User waves (1.2.10)
+
+Up to 8 single-cycle waveforms from **`SAMPLES/WAVES`**, for the oscillators and the LFOs.
+
+- **Files:** WAV, 16 bit, mono or stereo, any length and rate. Each file is one cycle: at the
+  import it is resampled to 1024 points (linear interpolation, the end leads back to the start).
+  Not 16 bit: skipped and reported.
+- **Numbering on their own:** `W1`…`W8` in the order of the names, numbers by value (`01SAW.WAV` =
+  `W1`), independent of the samples. Samples added or removed don't move the waves, and the
+  other way round. Replace a wave by a file with the same number (`01SAW.WAV` → `01PULSE.WAV`).
+- **Oscillator** (OSC `WAV`): `W1`…`W8` come after the sample slots at fixed values (after all
+  31 slots `S1`…`S31`), so kits keep their wave when samples change; unused sample slots are
+  skipped when turning. The pitch follows the note like the built-in waveforms (no sample start
+  or length); FM works. The edit view shows the file name. LFO/velocity modulation of a wave as
+  base selects among the waves.
+- **LFO** (`WAV`): `W1`…`W8` run like the built-in shapes (`FRQ`, `SNC`, `RTG`, `OFS` as phase),
+  `W1.`…`W8.` are one-shots (one cycle per trigger after the `OFS` delay, then they hold their
+  end value). A wave that isn't stored gives the middle value.
+- **Memory:** 2 KB per wave in the sample flash (8 waves ≈ 0.2 s of sample time). Changes are
+  detected like for the samples; a changed wave imports samples and waves again.
+- **Status:** the start screen shows `Samples:12 W:3`.
 
 ## Modulated sample selection
 

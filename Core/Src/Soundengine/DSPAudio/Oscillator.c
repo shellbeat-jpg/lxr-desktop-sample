@@ -293,7 +293,10 @@ IN_ITCM_RAM void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int1
 			break;
 
 		default:
-			calcUserSampleOscFmBlock(osc,modBuffer,buf,size,gain,pwm);
+			if(osc_isUserWave(osc->waveform))
+				calcUserWaveBlock(osc,modBuffer,buf,size,gain);	//MOD
+			else
+				calcUserSampleOscFmBlock(osc,modBuffer,buf,size,gain,pwm);
 			break;
 
 		}
@@ -417,7 +420,10 @@ IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_
 			break;
 
 		default://sample playback (MOD)
-			calcUserSampleOscBlock(osc,buf,size, gain, pwm);
+			if(osc_isUserWave(osc->waveform))
+				calcUserWaveBlock(osc,NULL,buf,size,gain);	//MOD: user wave
+			else
+				calcUserSampleOscBlock(osc,buf,size, gain, pwm);
 			break;
 		}
 }
@@ -704,6 +710,35 @@ static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, con
 	osc->output = out;
 }
 //------------------------------------------------------------------
+/* MOD: a user wave (one cycle of SF_WAVE_POINTS points from /SAMPLES/WAVES) as
+ * a wavetable: 10 bit index, 22 bit fraction as the built-in tables, wrapping at
+ * the end; modBuffer != NULL: FM like calcFmBlock */
+__attribute__((noinline)) void calcUserWaveBlock(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, const uint8_t size, const float gain)
+{
+	const int16_t* t = sampleFlash_wave((uint8_t)(osc->waveform - OSC_WAVE_USER));
+	if(t == NULL)
+	{
+		memset(buf, 0, size * sizeof(int16_t));
+		osc->output = 0;
+		return;
+	}
+	int16_t out = 0;
+	for(uint8_t i=0;i<size;i++)
+	{
+		uint32_t index = osc->phase;
+		if(modBuffer)
+			index += ((uint32_t)(modBuffer[i]*osc->fmMod))<<19;
+		const uint32_t itg = index >> 22;
+		const uint32_t frac = index & 0x3FFFFF;
+		const int32_t a = t[itg];
+		const int32_t b = t[(itg + 1u) & (SF_WAVE_POINTS - 1u)];
+		out = (int16_t)(a + (int32_t)(((int64_t)(b - a) * frac) >> 22));
+		osc->phase += osc->phaseInc;
+		buf[i] = out * gain;
+	}
+	osc->output = out;
+}
+//------------------------------------------------------------------
 void calcUserSampleOscFmBlock(OscInfo* osc,int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
 {
 	smp_render(osc, modBuffer, buf, size, gain, pwm);
@@ -876,7 +911,10 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 
 		//samples
 		default:
-			osc_calcUserSampleFreq(osc);
+			if(osc_isUserWave(osc->waveform))
+				osc->phaseInc = freq2PhaseIncr1024(osc->freq*osc->pitchMod*osc->modNodeValue);	//MOD: user wave
+			else
+				osc_calcUserSampleFreq(osc);
 			break;
 
 		}
@@ -897,7 +935,7 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 
 	 /* MOD: called on every voice trigger - start position and length are
 	  * applied on the next block (smp_begin), with the current PWM/start value */
-	 if(osc->waveform >= NUM_OSC_WAVEFORMS)
+	 if(osc->waveform >= NUM_OSC_WAVEFORMS && !osc_isUserWave(osc->waveform))
 	 {
 		 osc->phase = SMP_PENDING;
 		 osc->smpFrac = 0;
