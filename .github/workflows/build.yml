@@ -99,6 +99,7 @@ jobs:
         run: |
           cp docs/OVERVIEW.md "build/release/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "build/release/${FW_NAME}_Overview_DE.md"
+          for f in docs/images/*.svg; do cp "$f" "build/release/${FW_NAME}_$(basename "$f")"; done
 
       - name: Publish release
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
@@ -111,3 +112,4 @@ jobs:
           files: |
             build/release/*.img
             build/release/*_Overview_*.md
+            build/release/*.svg

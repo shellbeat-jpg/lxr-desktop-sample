@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 856 220" width="856" height="220" role="img" aria-label="FX3 compressor split CFQ: band split (only the band above is compressed) and sidechain (only the band above drives the compressor)">
+<title>FX3 compressor split CFQ: band split (only the band above is compressed) and sidechain (only the band above drives the compressor)</title>
+<style>
+.bg{fill:#f8fafb}.box{fill:#fff;stroke:#8e9aa8;stroke-width:1.2}.boxA{fill:#fff;stroke:#0c7a74;stroke-width:1.8}
+.boxB{fill:#fff;stroke:#a85f06;stroke-width:1.8}.boxM{fill:#fff;stroke:#7b3db3;stroke-width:2}
+.t{fill:#19222d;font-family:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;font-weight:600}
+.s,.lab{fill:#5d6a79;font-family:"IBM Plex Mono",Menlo,Consolas,monospace;font-size:11px}
+.col{fill:#5d6a79;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.12em}
+.labA{fill:#0c7a74;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labB{fill:#a85f06;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labM{fill:#7b3db3;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.ttl{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+.w{fill:none;stroke:#19222d;stroke-width:1.6}.wA{fill:none;stroke:#0c7a74;stroke-width:1.8}
+.wB{fill:none;stroke:#a85f06;stroke-width:1.8}.wM{fill:none;stroke:#7b3db3;stroke-width:1.8}
+.dash{stroke-dasharray:5 4}.mk{fill:#19222d}.mkA{fill:#0c7a74}.mkB{fill:#a85f06}.mkM{fill:#7b3db3}
+.dot{fill:#19222d}.sum{fill:#fff;stroke:#19222d;stroke-width:1.4}
+.plus{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+</style>
+<defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="856" height="220" rx="6"/>
+<g transform="translate(16,16)"><text class="ttl" x="10" y="14">CSM = SPL · band split</text><g transform="translate(0,20)">
+          <text class="lab" x="10" y="89">in</text>
+          <line class="w" x1="30" y1="85" x2="68" y2="85" marker-end="url(#ar5)"/>
+          <rect class="box" x="70" y="55" width="80" height="60" rx="4"/>
+          <text class="t" x="110" y="80" text-anchor="middle">Crossover</text>
+          <text class="s" x="110" y="98" text-anchor="middle">CFQ · 24 dB</text>
+          <path class="w" d="M150 70 H180 V40 H330 V75" marker-end="url(#ar5)"/>
+          <text class="lab" x="190" y="34">low band, unchanged</text>
+          <path class="wM" d="M150 100 H180 V130 H208" marker-end="url(#arM5)"/>
+          <text class="lab" x="160" y="150">high</text>
+          <rect class="boxM" x="210" y="110" width="100" height="40" rx="4"/>
+          <text class="t" x="260" y="127" text-anchor="middle">Compressor</text>
+          <text class="s" x="260" y="142" text-anchor="middle">detect + gain</text>
+          <path class="wM" d="M310 130 H330 V93" marker-end="url(#arM5)"/>
+          <circle class="sum" cx="330" cy="85" r="8"/>
+          <text class="plus" x="330" y="89.5" text-anchor="middle">+</text>
+          <line class="w" x1="338" y1="85" x2="388" y2="85" marker-end="url(#ar5)"/>
+          <text class="lab" x="356" y="78">out</text>
+        </g></g><g transform="translate(436,16)"><text class="ttl" x="10" y="14">CSM = SC · sidechain</text><g transform="translate(0,20)">
+          <text class="lab" x="10" y="49">in</text>
+          <line class="w" x1="30" y1="45" x2="248" y2="45" marker-end="url(#ar6)"/>
+          <circle class="dot" cx="80" cy="45" r="3.5"/>
+          <text class="lab" x="120" y="38">whole signal</text>
+          <rect class="boxM" x="250" y="25" width="80" height="40" rx="4"/>
+          <text class="t" x="290" y="50" text-anchor="middle">Gain ×</text>
+          <line class="w" x1="330" y1="45" x2="388" y2="45" marker-end="url(#ar6)"/>
+          <text class="lab" x="350" y="38">out</text>
+          <path class="wM" d="M80 45 V125 H108" marker-end="url(#arM6)"/>
+          <rect class="boxM" x="110" y="105" width="80" height="40" rx="4"/>
+          <text class="t" x="150" y="122" text-anchor="middle">High pass</text>
+          <text class="s" x="150" y="137" text-anchor="middle">CFQ</text>
+          <line class="wM" x1="190" y1="125" x2="228" y2="125" marker-end="url(#arM6)"/>
+          <rect class="boxM" x="230" y="105" width="80" height="40" rx="4"/>
+          <text class="t" x="270" y="129" text-anchor="middle">Detector</text>
+          <path class="wM dash" d="M290 105 V67" marker-end="url(#arM6)"/>
+          <text class="labM" x="298" y="92">controls</text>
+        </g></g>
+</svg>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1256 210" width="1256" height="210" role="img" aria-label="Order of the FX slots (ORD): A>B, B>A, A+B, A>+">
+<title>Order of the FX slots (ORD): A>B, B>A, A+B, A>+</title>
+<style>
+.bg{fill:#f8fafb}.box{fill:#fff;stroke:#8e9aa8;stroke-width:1.2}.boxA{fill:#fff;stroke:#0c7a74;stroke-width:1.8}
+.boxB{fill:#fff;stroke:#a85f06;stroke-width:1.8}.boxM{fill:#fff;stroke:#7b3db3;stroke-width:2}
+.t{fill:#19222d;font-family:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;font-weight:600}
+.s,.lab{fill:#5d6a79;font-family:"IBM Plex Mono",Menlo,Consolas,monospace;font-size:11px}
+.col{fill:#5d6a79;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.12em}
+.labA{fill:#0c7a74;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labB{fill:#a85f06;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labM{fill:#7b3db3;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.ttl{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+.w{fill:none;stroke:#19222d;stroke-width:1.6}.wA{fill:none;stroke:#0c7a74;stroke-width:1.8}
+.wB{fill:none;stroke:#a85f06;stroke-width:1.8}.wM{fill:none;stroke:#7b3db3;stroke-width:1.8}
+.dash{stroke-dasharray:5 4}.mk{fill:#19222d}.mkA{fill:#0c7a74}.mkB{fill:#a85f06}.mkM{fill:#7b3db3}
+.dot{fill:#19222d}.sum{fill:#fff;stroke:#19222d;stroke-width:1.4}
+.plus{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+</style>
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1256" height="210" rx="6"/>
+<g transform="translate(16,16)"><text class="ttl" x="10" y="14">A&gt;B · default</text><g transform="translate(0,22)">B: Slot A speist Slot B, Slot B geht auf den OUT von Slot A.">
+          <text class="lab" x="10" y="44">IN A</text>
+          <line class="wA" x1="44" y1="40" x2="88" y2="40" marker-end="url(#arA1)"/>
+          <rect class="boxA" x="90" y="22" width="70" height="36" rx="4"/><text class="t" x="125" y="45" text-anchor="middle">A</text>
+          <text class="lab" x="10" y="124">IN B</text>
+          <line class="wB" x1="44" y1="120" x2="88" y2="120" marker-end="url(#arB1)"/>
+          <rect class="boxB" x="90" y="102" width="70" height="36" rx="4"/><text class="t" x="125" y="125" text-anchor="middle">B</text>
+          <line class="wA" x1="125" y1="58" x2="125" y2="100" marker-end="url(#arA1)"/>
+          <path class="wB" d="M160 120 H200 V80 H232" marker-end="url(#arB1)"/>
+          <text class="t" x="238" y="85">OUT A</text>
+        </g></g><g transform="translate(326,16)"><text class="ttl" x="10" y="14">B&gt;A</text><g transform="translate(0,22)">A: Slot B speist Slot A, Slot A geht auf seinen OUT.">
+          <text class="lab" x="10" y="44">IN A</text>
+          <line class="wA" x1="44" y1="40" x2="88" y2="40" marker-end="url(#arA2)"/>
+          <rect class="boxA" x="90" y="22" width="70" height="36" rx="4"/><text class="t" x="125" y="45" text-anchor="middle">A</text>
+          <text class="lab" x="10" y="124">IN B</text>
+          <line class="wB" x1="44" y1="120" x2="88" y2="120" marker-end="url(#arB2)"/>
+          <rect class="boxB" x="90" y="102" width="70" height="36" rx="4"/><text class="t" x="125" y="125" text-anchor="middle">B</text>
+          <line class="wB" x1="125" y1="102" x2="125" y2="60" marker-end="url(#arB2)"/>
+          <path class="wA" d="M160 40 H200 V80 H232" marker-end="url(#arA2)"/>
+          <text class="t" x="238" y="85">OUT A</text>
+        </g></g><g transform="translate(636,16)"><text class="ttl" x="10" y="14">A+B · parallel</text><g transform="translate(0,22)">
+          <text class="lab" x="10" y="44">IN A</text>
+          <line class="wA" x1="44" y1="40" x2="88" y2="40" marker-end="url(#arA3)"/>
+          <rect class="boxA" x="90" y="22" width="70" height="36" rx="4"/><text class="t" x="125" y="45" text-anchor="middle">A</text>
+          <text class="lab" x="10" y="124">IN B</text>
+          <line class="wB" x1="44" y1="120" x2="88" y2="120" marker-end="url(#arB3)"/>
+          <rect class="boxB" x="90" y="102" width="70" height="36" rx="4"/><text class="t" x="125" y="125" text-anchor="middle">B</text>
+          <line class="wA" x1="160" y1="40" x2="232" y2="40" marker-end="url(#arA3)"/>
+          <text class="t" x="238" y="45">OUT A</text>
+          <line class="wB" x1="160" y1="120" x2="232" y2="120" marker-end="url(#arB3)"/>
+          <text class="t" x="238" y="125">OUT B</text>
+        </g></g><g transform="translate(946,16)"><text class="ttl" x="10" y="14">A&gt;+ · send/return</text><g transform="translate(0,22)">+: Slot A auf seinen OUT und zusätzlich in Slot B, Slot B auf seinen OUT.">
+          <text class="lab" x="10" y="44">IN A</text>
+          <line class="wA" x1="44" y1="40" x2="88" y2="40" marker-end="url(#arA4)"/>
+          <rect class="boxA" x="90" y="22" width="70" height="36" rx="4"/><text class="t" x="125" y="45" text-anchor="middle">A</text>
+          <text class="lab" x="10" y="124">IN B</text>
+          <line class="wB" x1="44" y1="120" x2="88" y2="120" marker-end="url(#arB4)"/>
+          <rect class="boxB" x="90" y="102" width="70" height="36" rx="4"/><text class="t" x="125" y="125" text-anchor="middle">B</text>
+          <line class="wA" x1="160" y1="40" x2="232" y2="40" marker-end="url(#arA4)"/>
+          <circle class="dot" cx="196" cy="40" r="3.5"/>
+          <path class="wA" d="M196 40 V80 H125 V100" marker-end="url(#arA4)"/>
+          <text class="t" x="238" y="45">OUT A</text>
+          <line class="wB" x1="160" y1="120" x2="232" y2="120" marker-end="url(#arB4)"/>
+          <text class="t" x="238" y="125">OUT B</text>
+        </g></g>
+</svg>

@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 410" width="1520" height="410" role="img" aria-label="OE02-Samples 1.2.10 FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks">
+<title>OE02-Samples 1.2.10 FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks</title>
+<style>
+.bg{fill:#f8fafb}.box{fill:#fff;stroke:#8e9aa8;stroke-width:1.2}.boxA{fill:#fff;stroke:#0c7a74;stroke-width:1.8}
+.boxB{fill:#fff;stroke:#a85f06;stroke-width:1.8}.boxM{fill:#fff;stroke:#7b3db3;stroke-width:2}
+.t{fill:#19222d;font-family:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;font-weight:600}
+.s,.lab{fill:#5d6a79;font-family:"IBM Plex Mono",Menlo,Consolas,monospace;font-size:11px}
+.col{fill:#5d6a79;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.12em}
+.labA{fill:#0c7a74;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labB{fill:#a85f06;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.labM{fill:#7b3db3;font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600}
+.ttl{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+.w{fill:none;stroke:#19222d;stroke-width:1.6}.wA{fill:none;stroke:#0c7a74;stroke-width:1.8}
+.wB{fill:none;stroke:#a85f06;stroke-width:1.8}.wM{fill:none;stroke:#7b3db3;stroke-width:1.8}
+.dash{stroke-dasharray:5 4}.mk{fill:#19222d}.mkA{fill:#0c7a74}.mkB{fill:#a85f06}.mkM{fill:#7b3db3}
+.dot{fill:#19222d}.sum{fill:#fff;stroke:#19222d;stroke-width:1.4}
+.plus{fill:#19222d;font-family:Menlo,Consolas,monospace;font-size:13px;font-weight:600}
+</style>
+<defs><marker id="ar0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arA0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkA" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arB0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkB" d="M0 0 L10 5 L0 10 z"/></marker><marker id="arM0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mkM" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1520" height="410" rx="6"/>
+<g transform="translate(0,-20)">
+
+      <!-- Spaltenköpfe -->
+      <text class="col" x="20" y="40">VOICE (×6)</text>
+      <text class="col" x="440" y="40">ROUTING</text>
+      <text class="col" x="610" y="40">FX BUS</text>
+      <text class="col" x="900" y="40">SUMS</text>
+      <text class="col" x="1040" y="40">MASTER</text>
+      <text class="col" x="1250" y="40">OUTPUT</text>
+
+      <!-- Voice-Kette -->
+      <rect class="box" x="20" y="127" width="130" height="56" rx="4"/>
+      <text class="t" x="85" y="151" text-anchor="middle">Voice 1–6</text>
+      <text class="s" x="85" y="170" text-anchor="middle">Engine · VOL</text>
+      <line class="w" x1="150" y1="155" x2="198" y2="155" marker-end="url(#ar0)"/>
+      <circle class="dot" cx="172" cy="155" r="3.5"/>
+      <rect class="box" x="200" y="127" width="80" height="56" rx="4"/>
+      <text class="t" x="240" y="151" text-anchor="middle">Fader</text>
+      <text class="s" x="240" y="170" text-anchor="middle">Hardware</text>
+      <line class="w" x1="280" y1="155" x2="328" y2="155" marker-end="url(#ar0)"/>
+      <circle class="dot" cx="304" cy="155" r="3.5"/>
+      <rect class="box" x="330" y="127" width="70" height="56" rx="4"/>
+      <text class="t" x="365" y="160" text-anchor="middle">PAN</text>
+      <line class="w" x1="400" y1="155" x2="438" y2="155" marker-end="url(#ar0)"/>
+
+      <!-- OUT-Wahl -->
+      <rect class="box" x="440" y="110" width="90" height="160" rx="4"/>
+      <text class="t" x="485" y="132" text-anchor="middle">OUT</text>
+      <text class="lab" x="522" y="159" text-anchor="end">St1…R2</text>
+      <text class="labA" x="522" y="209" text-anchor="end">FX</text>
+      <text class="labB" x="522" y="254" text-anchor="end">FXB</text>
+
+      <!-- Sends: Abgriff PRE (vor dem Fader) oder POST (nach dem Fader, Standard) -->
+      <path class="w dash" d="M172 155 V362 H188" marker-end="url(#ar0)"/>
+      <text class="lab" x="160" y="250" text-anchor="end">PRE ON</text>
+      <path class="w" d="M304 155 V328" marker-end="url(#ar0)"/>
+      <text class="lab" x="312" y="250">PRE OFF</text>
+      <text class="s" x="312" y="264">(default)</text>
+      <rect class="box" x="190" y="330" width="150" height="64" rx="4"/>
+      <text class="t" x="265" y="355" text-anchor="middle">Sends SNA · SNB</text>
+      <text class="s" x="265" y="376" text-anchor="middle">per voice, with PAN</text>
+
+      <!-- Wege in Slot A -->
+      <path class="wA" d="M530 205 H590 V297"/>
+      <path class="wA" d="M340 345 H590 V313"/>
+      <text class="labA" x="350" y="339">SNA</text>
+      <circle class="sum" cx="590" cy="305" r="8"/>
+      <text class="plus" x="590" y="309.5" text-anchor="middle">+</text>
+      <line class="wA" x1="598" y1="305" x2="618" y2="305" marker-end="url(#arA0)"/>
+
+      <!-- Wege in Slot B -->
+      <path class="wB" d="M530 250 H565 V377"/>
+      <path class="wB" d="M340 385 H557"/>
+      <text class="labB" x="350" y="379">SNB</text>
+      <circle class="sum" cx="565" cy="385" r="8"/>
+      <text class="plus" x="565" y="389.5" text-anchor="middle">+</text>
+      <line class="wB" x1="573" y1="385" x2="618" y2="385" marker-end="url(#arB0)"/>
+
+      <!-- Input-Gain -->
+      <rect class="boxA" x="620" y="285" width="66" height="40" rx="4"/>
+      <text class="t" x="653" y="303" text-anchor="middle">IN A</text>
+      <text class="s" x="653" y="318" text-anchor="middle">⇧+K1</text>
+      <rect class="boxB" x="620" y="365" width="66" height="40" rx="4"/>
+      <text class="t" x="653" y="383" text-anchor="middle">IN B</text>
+      <text class="s" x="653" y="398" text-anchor="middle">⇧+K2</text>
+      <line class="wA" x1="686" y1="305" x2="718" y2="305" marker-end="url(#arA0)"/>
+      <line class="wB" x1="686" y1="385" x2="718" y2="385" marker-end="url(#arB0)"/>
+
+      <!-- Slots -->
+      <rect class="boxA" x="720" y="275" width="130" height="60" rx="4"/>
+      <text class="t" x="785" y="295" text-anchor="middle">FX1 · Slot A</text>
+      <text class="s" x="785" y="311" text-anchor="middle">DRV RNG CMP DEL</text>
+      <text class="s" x="785" y="326" text-anchor="middle">D/W ⇧+K3 · kit</text>
+      <rect class="boxB" x="720" y="355" width="130" height="60" rx="4"/>
+      <text class="t" x="785" y="375" text-anchor="middle">FX2 · Slot B</text>
+      <text class="s" x="785" y="391" text-anchor="middle">DRV RNG CMP DEL</text>
+      <text class="s" x="785" y="406" text-anchor="middle">D/W ⇧+K4 · global</text>
+      <line class="wA" x1="785" y1="335" x2="785" y2="353" marker-end="url(#arA0)"/>
+      <text class="labA" x="793" y="348">ORD A&gt;B</text>
+
+      <!-- Rückweg Kette zu St1 (OUT von Slot A) -->
+      <path class="wB" d="M850 385 H880 V243 H898" marker-end="url(#arB0)"/>
+      <text class="labB" x="888" y="330">OUT</text>
+      <text class="labB" x="888" y="344">Slot A</text>
+
+      <!-- Direkter Weg zu den Summen -->
+      <path class="w" d="M530 155 H898" marker-end="url(#ar0)"/>
+      <path class="w" d="M860 155 V228 H898" marker-end="url(#ar0)"/>
+      <circle class="dot" cx="860" cy="155" r="3.5"/>
+
+      <!-- Summen -->
+      <rect class="box" x="900" y="130" width="100" height="50" rx="4"/>
+      <text class="t" x="950" y="152" text-anchor="middle">Σ St2</text>
+      <text class="s" x="950" y="170" text-anchor="middle">L2 · R2</text>
+      <rect class="box" x="900" y="205" width="100" height="50" rx="4"/>
+      <text class="t" x="950" y="227" text-anchor="middle">Σ St1</text>
+      <text class="s" x="950" y="245" text-anchor="middle">L1 · R1</text>
+
+      <!-- FX3 -->
+      <line class="wM" x1="1000" y1="230" x2="1038" y2="230" marker-end="url(#arM0)"/>
+      <rect class="boxM" x="1040" y="195" width="170" height="70" rx="4"/>
+      <text class="t" x="1125" y="218" text-anchor="middle">FX3 · Master St1</text>
+      <text class="s" x="1125" y="236" text-anchor="middle">SAT · COMP · EQ</text>
+      <text class="s" x="1125" y="252" text-anchor="middle">order ORD · kit</text>
+      <line class="wM" x1="1210" y1="230" x2="1248" y2="230" marker-end="url(#arM0)"/>
+      <line class="w" x1="1000" y1="155" x2="1248" y2="155" marker-end="url(#ar0)"/>
+      <text class="lab" x="1125" y="148" text-anchor="middle">no FX3</text>
+
+      <!-- DJ-Filter, Limiter, Buchsen -->
+      <rect class="box" x="1250" y="120" width="90" height="150" rx="4"/>
+      <text class="t" x="1295" y="188" text-anchor="middle">DJ filter</text>
+      <text class="s" x="1295" y="206" text-anchor="middle">DJ · RES</text>
+      <text class="s" x="1295" y="221" text-anchor="middle">(PERF)</text>
+      <line class="w" x1="1340" y1="155" x2="1368" y2="155" marker-end="url(#ar0)"/>
+      <line class="w" x1="1340" y1="230" x2="1368" y2="230" marker-end="url(#ar0)"/>
+      <rect class="box" x="1370" y="135" width="60" height="40" rx="4"/>
+      <text class="t" x="1400" y="160" text-anchor="middle">LIM</text>
+      <rect class="box" x="1370" y="210" width="60" height="40" rx="4"/>
+      <text class="t" x="1400" y="235" text-anchor="middle">LIM</text>
+      <line class="w" x1="1430" y1="155" x2="1468" y2="155" marker-end="url(#ar0)"/>
+      <line class="w" x1="1430" y1="230" x2="1468" y2="230" marker-end="url(#ar0)"/>
+      <text class="t" x="1474" y="160">St2</text>
+      <text class="t" x="1474" y="235">St1</text>
+    </g>
+</svg>

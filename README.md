@@ -74,7 +74,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 | Second FX slot | FX2 = project FX. FX routing `ORD`: `A>B`, `B>A`, `A+B` (parallel), `A>+` (A to its output and into B). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
 | Routing and sends | `OUT` = `FX` / `FXB`: 100 % into slot A / B. `SNA` / `SNB` = send into A / B besides the output, both at once if wanted. Meant for `OUT` = `St1` … `R2`; with `FX` / `FXB` they raise the level in the same slot or also feed the other one. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT` / Voice 1–6) |
 | Delay tempo sync | `1/4` … `1/32T`, dotted, triplets and the track grids | FX (setup `SYA` / `SYB`) | Global | – |
-| Master bus FX3 | Last on `St1`: saturation `SAT` with split `FRQ` (24 dB/oct, only above 40 Hz … 10 kHz) compressor with split `CFQ` (release `AUT` = 1/16 note, auto make-up `AMU` static / adaptive) and EQ (shelves, 2 mids); `ORD` = order of the three. | FX (SHIFT + FX, 3× for FX3), PERF (`SAT`, `FRQ`) | Kit | – |
+| Master bus FX3 | Last on `St1`: saturation `SAT` with split `FRQ` (24 dB/oct, only above 40 Hz … 10 kHz) and bias `BIA` (even harmonics, level dependent), compressor with split `CFQ` as band split or sidechain (`CSM`; release `AUT` = 1/16 note, auto make-up `AMU` static / adaptive) and EQ (shelves, 2 mids); `ORD` = order of the three. | FX (SHIFT + FX, 3× for FX3), PERF (`SAT`, `FRQ`) | Kit | – |
 | FX knobs | SHIFT + knob 1 / 2 = input gain FX1 / FX2, knob 3 / 4 = mix FX1 / FX2. | SHIFT + knobs (all pages) | Input gain: Global | – |
 | Pre-fader sends | `SNA` / `SNB` before the volume fader: the fader only sets the dry signal (`OFF` = after it, as before). | CONFIG (`PRE`) | Global | – |
 
@@ -299,11 +299,18 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 
 ### 9b. Master bus FX3 and FX knobs (1.2.10)
 
+![FX signal flow](docs/images/fx-signal-flow.svg)
+
+Signal flow of the FX (more diagrams: [docs/SAMPLES.md](docs/SAMPLES.md#fx-signal-flow)).
+
+
 - SHIFT + FX three times = `FX3`, the master bus of `St1` (last in the chain, stored in the kit):
   saturation `SAT` with split `FRQ` (24 dB/oct, only the band above 40 Hz … 10 kHz is saturated)
   and a compressor with its own split `CFQ` (`TRE`, `RAT`, `ATK`, `DEC` with `AUT` = 1/16 note),
   EQ (low/high shelf, two mids with frequency, gain and Q), order `ORD` of the three stages,
-  output `AMU` = auto make-up (static / adaptive), `GAI`, `D/W`. `SAT` and `FRQ` also on the PERF page after the DJ filter.
+  output `AMU` = auto make-up (static / adaptive), `GAI`, `D/W`, saturation bias `BIA` (even
+  harmonics on loud signals). `CFQ` works as band split or sidechain filter (`CSM`). `SAT` and
+  `FRQ` also on the PERF page after the DJ filter.
 - SHIFT + knob 1 / 2 = input gain FX1 / FX2 (global), SHIFT + knob 3 / 4 = mix FX1 / FX2.
 - Pre-fader sends (CONFIG `PRE`, global): `SNA`/`SNB` before the volume fader, the fader only sets
   the dry signal. Details: [docs/SAMPLES.md](docs/SAMPLES.md#master-bus-fx3-and-fx-knobs-1210).

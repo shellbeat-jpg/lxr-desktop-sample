@@ -353,6 +353,27 @@ Variations: `NOW` (restarts between the steps), track 4 on `1/16T`, `PRB` < 100 
   the same time. Each target is controlled by one source only: tracks that are already the
   target of a trigger or an LFO start are skipped when choosing a target. Stored in the pattern.
 
+## FX signal flow
+
+From the voice to the jacks, with the default slot order `A>B` (⇧ = SHIFT, K1 … K4 = the four
+parameter knobs):
+
+![FX signal flow](images/fx-signal-flow.svg)
+
+- `VOL` is part of the engine and always acts on output and sends. The fader acts on both with
+  `PRE` `OFF` (default), with `PRE` `ON` only on the output. `OUT` = `FX`/`FXB` always keeps it.
+- With `A>B` slot B is an insert after slot A: with the mix of FX2 at 100 % the direct sound of
+  FX1 is gone, it is only heard inside FX2's effect. `A>+` keeps it.
+- FX3 only sits on `St1` (and follows it to the `St2` jacks without a cable in `St1`).
+
+The order of the FX slots (`ORD` on the FX1 page):
+
+![Order of the FX slots](images/fx-slot-order.svg)
+
+The crossover `CFQ` of the FX3 compressor, as band split or sidechain filter (`CSM`):
+
+![FX3 compressor split](images/fx3-split.svg)
+
 ## Second FX slot (1.2.8)
 
 Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with the same effects:
@@ -497,6 +518,6 @@ relies on the verify after writing.
 Tested on the device: sample import and playback, the skipping of invalid files, start and length
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
-samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.8 were tried on the device
-before their release. Host tests (Linux, gcc) for import and playback:
+samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.10 were tried on the device
+before their release; of 1.2.10 not yet: the FX routing `A>+` and the pre-fader sends (`PRE`). Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.
