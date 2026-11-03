@@ -56,6 +56,7 @@ Waser), everything else from OE02-Samples.
 | Delay tempo sync | `1/4` … `1/32T`, dotted, triplets and the track grids | FX (setup `SYA` / `SYB`) | Global | – |
 | Master bus FX3 | Last on `St1`: saturation `SAT` with split `FRQ` (24 dB/oct, only above 40 Hz … 2 kHz) and compressor; order `ORD` `S>C` / `C>S`. | FX (SHIFT + FX, 3× for FX3) | Kit | – |
 | FX knobs | SHIFT + knob 1 / 2 = input gain FX1 / FX2, knob 3 / 4 = mix FX1 / FX2. | SHIFT + knobs (all pages) | Input gain: Global | – |
+| Pre-fader sends | `SNA` / `SNB` before the volume fader: the fader only sets the dry signal (`OFF` = after it, as before). | CONFIG (`PRE`) | Global | – |
 
 ## Load / save
 

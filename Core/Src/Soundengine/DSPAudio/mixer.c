@@ -29,6 +29,7 @@
 #include "Preset/KitEngines.h"
 #include "Soundengine/CpuMeter.h"
 #include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3
+#include "IO/adcPots.h"	//MOD: pre-fader sends
 
 	uint8_t r2_Available;
 	uint8_t l1_Available;
@@ -510,6 +511,33 @@ INDTCM float mixer_limiterGain[2] = {1.f, 1.f};
 
 //1 = the limiter above, 0 = the stock mix (config menu "lim")
 INDTCM uint8_t mixer_limiterOn = 1;
+INDTCM uint8_t mixer_preFader = 0;		//MOD: global PAR_FX_PREFADER
+static float mixer_faderGain[6] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };	//MOD: pre-fader: the fader, smoothed per block
+//MOD: the voice's sends into FX slot A and B (kit data), besides its output
+IN_ITCM_RAM static void mixer_addSends(const uint8_t v, const float panL, const float panR, int16_t* data,
+		int32_t* mix, int32_t* mix2, int16_t* fxA, int16_t* fxB)
+{
+	const float sA = kitEngines[KIT_SEND_OFFSET + v] * (1.f/127.f);
+	if(sA > 0.f)
+		mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sA, panR*sA, data, &mix[0], &mix[1], &mix2[0], &mix2[1], fxA);
+	const float sB = kitEngines[KIT_SENDB_OFFSET + v] * (1.f/127.f);
+	if(sB > 0.f)
+		mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sB, panR*sB, data, &mix[0], &mix[1], &mix2[0], &mix2[1], fxB);
+}
+//MOD: pre-fader: the fader of voice v on its output (the engines leave it out), a
+//linear ramp per block against zipper noise
+IN_ITCM_RAM static void mixer_applyFader(const uint8_t v, int16_t* data)
+{
+	const float target = adc_getFaderVolumeRaw(v);
+	float g = mixer_faderGain[v];
+	const float step = (target - g) * (1.f / OUTPUT_DMA_SIZE);
+	for(uint32_t i = 0; i < OUTPUT_DMA_SIZE; i++)
+	{
+		g += step;
+		data[i] = (int16_t)(data[i] * g);
+	}
+	mixer_faderGain[v] = target;
+}
 
 //the stock mix added every voice and the FX return with 16-bit saturation;
 //saturating the 32-bit sums after each of them gives exactly the same result
@@ -672,17 +700,23 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		uint8_t route = mixer_audioRouting[v];
 		if(route >= MIXER_ROUTING_SEND_A && route < MIXER_ROUTING_SEND_A + 12u)
 			route = (uint8_t)((route - MIXER_ROUTING_SEND_A) % 6u);	//MOD: "1+A" ... of the 1.2.8 tests: the output
+		//MOD: pre-fader: the sends get the voice before its fader, the output after it
+		//(also OUT = FX / FXB: the fader keeps working there). Post-fader (default):
+		//the engines applied the fader already.
+		const uint8_t fadeSlot = voiceSlots[v].u.c.slot;
+		if(mixer_preFader)
+		{
+			mixer_addSends(v, panL, panR, sampleData, &mix[pos], &mix2[pos], fxBusData, fxBusDataB);
+			mixer_applyFader(fadeSlot, sampleData);
+		}
+		else
+			mixer_faderGain[fadeSlot] = adc_getFaderVolumeRaw(fadeSlot);
 		{
 			const uint8_t isFxB = route == MIXER_ROUTING_FX_BUS_B;	//MOD
 			mixer_addDataToOutput(isFxB ? MIXER_ROUTING_FX_BUS : route, panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], isFxB ? fxBusDataB : fxBusData);
 		}
-		//MOD: the voice's sends into FX slot A and B (kit data), besides its output
-		const float sA = kitEngines[KIT_SEND_OFFSET + v] * (1.f/127.f);
-		if(sA > 0.f)
-			mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sA, panR*sA, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], fxBusData);
-		const float sB = kitEngines[KIT_SENDB_OFFSET + v] * (1.f/127.f);
-		if(sB > 0.f)
-			mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sB, panR*sB, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], fxBusDataB);
+		if(!mixer_preFader)
+			mixer_addSends(v, panL, panR, sampleData, &mix[pos], &mix2[pos], fxBusData, fxBusDataB);
 		if(!mixer_limiterOn)
 		{
 			mixer_saturateMix(mix);
@@ -713,10 +747,16 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	cpuMeter_section(CPU_SECTION_FX, meterStart);
 #endif
 
-	//MOD: FX3, the master bus of St1 (kit data); off: unchanged
-	masterBus_process(mix, OUTPUT_DMA_SIZE, &kitEngines[KIT_FX3_OFFSET]);
-	if(!mixer_limiterOn)
-		mixer_saturateMix(mix);
+	//MOD: FX3, the master bus of St1 (kit data); off: unchanged. Without a cable in
+	//St1 the mix routes St1 to the jacks of St2 (mixer_checkOutJackAvailable): FX3
+	//then follows it there.
+	{
+		const uint8_t st1 = mixer_checkOutJackAvailable(MIXER_ROUTING_DAC1_STEREO);
+		int32_t* const bus = (st1 == MIXER_ROUTING_DAC2_STEREO || st1 == MIXER_ROUTING_DAC2_L || st1 == MIXER_ROUTING_DAC2_R) ? mix2 : mix;
+		masterBus_process(bus, OUTPUT_DMA_SIZE, &kitEngines[KIT_FX3_OFFSET]);
+		if(!mixer_limiterOn)
+			mixer_saturateMix(bus);
+	}
 
 	//global DJ filter on the final mix of all outputs (performance page); off: unchanged
 	if(djFilter_process(mix, mix2) && !mixer_limiterOn)

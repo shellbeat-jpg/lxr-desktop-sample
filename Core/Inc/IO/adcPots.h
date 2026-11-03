@@ -43,7 +43,8 @@ void adc_checkPots();
 
 void adc_checkFaders();
 
-float adc_getFaderVolume(uint8_t idx);
+float adc_getFaderVolume(uint8_t idx);	//MOD: for the engines; 1 with pre-fader sends (the mixer applies it)
+float adc_getFaderVolumeRaw(uint8_t idx);
  
 
 

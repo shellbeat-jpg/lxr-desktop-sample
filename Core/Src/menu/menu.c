@@ -287,6 +287,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_SAT, CAT_FX, LONG_FX3_SAT},/*TEXT_FX3_SAT*/
 		{SHORT_FX3_SPLIT, CAT_FX, LONG_FX3_SPLIT},/*TEXT_FX3_SPLIT*/
 		{SHORT_FX3_ORDER, CAT_FX, LONG_FX3_ORDER},/*TEXT_FX3_ORDER*/
+		{SHORT_PREFADER, CAT_GLOBAL, LONG_PREFADER},/*TEXT_PREFADER*/
 
 
 };
@@ -624,6 +625,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FXB_DELAY_TYPE*/	DTYPE_MENU | (MENU_DELAY<<8),
 		/*PAR_FXA_GAIN*/		DTYPE_0B127,	//MOD
 		/*PAR_FXB_GAIN*/		DTYPE_0B127,
+		/*PAR_FX_PREFADER*/		DTYPE_ON_OFF,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -4704,6 +4706,10 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 
 	case PAR_MIXER_LIMITER:
 		mixer_limiterOn = value != 0;
+		break;
+	case PAR_FX_PREFADER:	//MOD
+		if(value > 1) value = activeParameters[paramNr] = 0;
+		mixer_preFader = value;
 		break;
 
 	case PAR_BPM:

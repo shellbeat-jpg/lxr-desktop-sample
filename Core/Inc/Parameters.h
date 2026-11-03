@@ -484,6 +484,8 @@ enum ParamEnums
 	//(0 = older settings: unity)
 	PAR_FXA_GAIN,
 	PAR_FXB_GAIN,
+	//MOD: FX sends SNA / SNB before the volume fader (1) or after it (0, default)
+	PAR_FX_PREFADER,
 
 	NUM_PARAMS	
 };

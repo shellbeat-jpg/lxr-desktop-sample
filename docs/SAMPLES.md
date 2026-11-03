@@ -405,7 +405,9 @@ the DJ filter and the limiter): saturation and a compressor, in either order.
 - Setup page (turn the encoder past `D/W`): `ORD` = `S>C` (saturation, then compressor, default)
   or `C>S`.
 - With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.
-- Only `St1`: voices on `St2`, `L1` … `R2` don't pass through FX3.
+- Only `St1`: voices on `St2`, `L1` … `R2` don't pass through FX3. Without a cable in `St1` the
+  firmware plays `St1` on the jacks of `St2` (stock behaviour): FX3 then works there, on
+  everything that comes out of these jacks.
 
 **SHIFT + knobs** (all pages except LOAD/SAVE): hold SHIFT and turn
 
@@ -420,6 +422,12 @@ The display shows the values for 1.5 s (`In dB A +0 B -6`, `Mix % A 50 B100`). T
 scales everything going into the slot (outputs `FX`/`FXB` and all sends `SNA`/`SNB`), −∞ … +12 dB,
 center = 0 dB; it is kept with the global settings (SAVE → Global) and in the project file. The mix
 of FX1 is stored in the kit, of FX2 with the global settings, as before.
+
+**Pre-fader sends** (CONFIG, second page, `PRE`, global): `OFF` (default) = the sends `SNA`/`SNB`
+come after the voice's volume fader, as before. `ON` = before the fader: the fader only sets the
+dry signal, the voice's level in the effects stays (fader down = only the echo / the effect is
+left). The effect levels are then set with SHIFT + knob 1 / 2 (input) and 3 / 4 (mix). `VOL` on the
+mix page still acts on both. Voices with `OUT` = `FX`/`FXB` keep their fader in either mode.
 
 ## Voice INIT
 

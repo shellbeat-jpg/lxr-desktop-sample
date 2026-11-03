@@ -14,6 +14,7 @@
 #include "IO/adcPots.h"
 #include <string.h>
 #include "menu/menu.h"
+#include "Soundengine/DSPAudio/mixer.h"
 #include "math.h"
 #include "stdlib.h"
 
@@ -279,13 +280,18 @@ void adc_checkFaders()
 #endif
 };
 //------------------------------------------------------------------------
-float adc_getFaderVolume(uint8_t idx)
+float adc_getFaderVolumeRaw(uint8_t idx)
 {
 #if USE_FADER_VOLUME
 	return adc_faderValues[idx];
 #else
 	return 1.f;
 #endif
+}
+//MOD: with pre-fader sends the mixer applies the fader after the sends
+float adc_getFaderVolume(uint8_t idx)
+{
+	return mixer_preFader ? 1.f : adc_getFaderVolumeRaw(idx);
 }
 //------------------------------------------------------------------------
 
