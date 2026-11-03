@@ -268,7 +268,7 @@ The step parameter flam (step mode) has more values after `X2` … `X8`:
 
 On grid tracks the repeats follow the track's own steps. Other firmwares play these steps once.
 
-## Trigger tracks (1.2.9, in test)
+## Trigger tracks and LFO start (1.2.9)
 
 Any track can additionally act on another track. SHIFT + LAST STEP shows the length and the grid
 of the track; **click the encoder** to go on to the trigger mode (`Trg [OFF]`) and, with a mode,
@@ -306,6 +306,22 @@ track's voice (track 7: voice 6) starts track 3 (`OFF`, `T1` … `T7`), then the
   free-running LFOs give starts that drift against the pattern: with `NXT` a cycle of e.g. 17.5
   steps restarts the target alternately after 17 and 18 steps, with `NOW` exactly after each
   cycle, but between the steps of the other tracks.
+
+### Example: generative restarts with three LFOs
+
+A chain of slow modulations; target track 4 (e.g. a 32-step pattern, longer than the LFO cycle,
+so each restart cuts it at another point). Starting values, to be adjusted by ear:
+
+| LFO of | Role | Settings |
+|---|---|---|
+| voice 3 | starts track 4 | `SAW` or `SIN`, `FRQ` medium (cycle about 1–2 bars), `SNC` off, `RTG` off; LAST STEP of track 3: `LFO>[T4]`, `NXT` |
+| voice 2 | varies the rate of LFO 3 | `VOI` 3, `DST` `FRQ`, `RND`, `FRQ` slow (a new value every 2–4 bars), `MOD` 20–40 |
+| voice 1 | varies how much LFO 2 acts | `VOI` 2, `DST` `MOD`, `SIN` or `XTR`, `FRQ` very slow (cycle 16–32 bars), `MOD` 30–50 |
+
+Track 4 then restarts almost evenly for a while, then at irregular, jumping distances; `NXT` keeps
+it in time. Set the modulated values (`FRQ` of LFO 3, `MOD` of LFO 2) to the middle of their
+range so the modulation isn't cut at an end. The voices 1–3 still play their own tracks.
+Variations: `NOW` (restarts between the steps), track 4 on `1/16T`, `PRB` < 100 % on its steps.
 - The track whose page it is plays on as usual; it can have a trigger target and an LFO target at
   the same time. Each target is controlled by one source only: tracks that are already the
   target of a trigger or an LFO start are skipped when choosing a target. Stored in the pattern.

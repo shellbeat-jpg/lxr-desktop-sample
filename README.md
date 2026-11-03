@@ -43,6 +43,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 | Pattern mode | Patterns switch at once on the next step | CONFIG (`IPS`) | Global | – |
 | Grid per track | `1/4` … `1/32T` incl. `1/16.`, `5/64`, `1/32.`: 1/16 tracks keep their timing. Roll `ROL` counts in the track's own steps. | LAST STEP (encoder click), PERF (`ROL`) | Pattern | – |
 | Ratchets and roll locks | Flam `X12`, `X24`, `X4+`/`X4-` (velocity slope); `1/8` … `1/1` repeats the step every 2–16 steps until the next active step. | STEP (`FLM`) | Pattern | – |
+| Trigger tracks | Each active step (any velocity) acts on a target track: `RST` = back to step 1, `MUT` = muted while the step lasts, `CLK` = the target only steps on these impulses. Each target has one source. | LAST STEP (encoder click, `Trg`) | Pattern | – |
 | Uninterrupted playback [OE] | Knobs, menus, loading and saving don't interrupt the audio or the sequencer. | – | – | – |
 
 ### MIDI
@@ -59,6 +60,8 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 |---|---|---|---|---|
 | Sample selection | Target `WAV`: `MOD` = number of further samples; `CYC` = round robin (next sample per trigger). | VOICE (LFO) | Kit | CC 122–127 (`MOD` / Voice 1–6), NRPN 27–32 (`WAV` / Voice 1–6) |
 | New waveforms | `XTR`; one-shots `SI1` … `XT1`, `RN1` (random per trigger), `SQ1` (gate); `OFS` = one-shot delay; `CYC` (`MOD` = number of steps) | VOICE (LFO `WAV`, `OFS`) | Kit | NRPN 27–32 (`WAV` / Voice 1–6), NRPN 57–62 (`OFS` / Voice 1–6) |
+| LFO start | Each start of the waveform of a voice's LFO starts a target track at step 1 (`NXT` = on its next step, `NOW` = at once); it plays to its end and waits. | LAST STEP (encoder click, `LFO>`) | Pattern | – |
+| LFO → LFO | An LFO modulates rate, amount … of any other LFO (before only of LFOs with a higher number). | VOICE (LFO `VOI`, `DST`) | Kit | – |
 | Display | `MOD` shows the target range (`21..127`); distinct target names `WAV` / `FWV` / `CWV`. | VOICE (LFO) | – | – |
 
 ### FX / mixer
@@ -260,10 +263,10 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 
 ### 8a. Step flam: ratchets and roll locks (1.2.8)
 
-- Step flam `X12`, `X24`, `X4+`/`X4-` (velocity ramp) and roll locks `1/8` … `1/1` (repeats every
+- Step flam `X12`, `X24`, `X4+`/`X4-` (velocity slope) and roll locks `1/8` … `1/1` (repeats every
   2 … 16 steps until the next active step). Details: [docs/SAMPLES.md](docs/SAMPLES.md#step-flam-ratchets-and-roll-locks-128).
 
-### 8b. Trigger tracks (1.2.9, in test)
+### 8b. Trigger tracks and LFO start (1.2.9)
 
 - SHIFT + LAST STEP, click the encoder to `Trg`: each active step (any velocity) acts on a target
   track: `RST` = back to step 1, `MUT` = muted while the step lasts, `CLK` = one step on per
@@ -271,7 +274,7 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
 - LFO start (same page, `LFO>[T3]`): each start of the waveform of the LFO of this track's voice
   starts the target track at step 1 (`NXT` = on the next step of its grid, `NOW` = at once); the
   target plays to its end and waits.
-  Details: [docs/SAMPLES.md](docs/SAMPLES.md#trigger-tracks-129-in-test).
+  Details: [docs/SAMPLES.md](docs/SAMPLES.md#trigger-tracks-and-lfo-start-129).
 
 ### 9. Second FX slot (1.2.8)
 

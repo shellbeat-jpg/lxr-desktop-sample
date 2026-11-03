@@ -23,6 +23,7 @@ Waser), alles andere aus OE02-Samples.
 | Pattern-Mode | Pattern wechseln sofort zum nächsten Step | CONFIG (`IPS`) | Global | – |
 | Raster pro Track | `1/4` … `1/32T` inkl. `1/16.`, `5/64`, `1/32.`: 1/16-Tracks mit unverändertem Timing.  Roll `ROL` zählt in den Steps des Tracks. | LAST STEP (Encoder-Klick), PERF (`ROL`) | Pattern | – |
 | Ratchets und Roll-Lock | Flam `X12`, `X24`, `X4+`/`X4-` (Velocity-Slope); `1/8` … `1/1` wiederholt den Step alle 2–16 Steps bis zum nächsten aktiven Step. | STEP (`FLM`) | Pattern | – |
+| Trigger-Tracks | Jeder aktive Step (jede Velocity) wirkt auf einen Ziel-Track: `RST` = zurück auf Step 1, `MUT` = stumm, solange der Step dauert, `CLK` = das Ziel läuft nur mit diesen Impulsen. Jedes Ziel hat nur eine Quelle. | LAST STEP (Encoder-Klick, `Trg`) | Pattern | – |
 | Wiedergabe ohne Unterbrechung [OE] | Regler, Menüs, Laden und Speichern unterbrechen weder Audio noch Sequencer. | – | – | – |
 
 ## MIDI
@@ -39,6 +40,8 @@ Waser), alles andere aus OE02-Samples.
 |---|---|---|---|---|
 | Sample-Auswahl | Ziel `WAV`: `MOD` = Anzahl weiterer Samples; `CYC` = Round Robin (ein Sample pro Trigger weiter). | VOICE (LFO) | Kit | CC 122–127 (`MOD` / Voice 1–6), NRPN 27–32 (`WAV` / Voice 1–6) |
 | Neue Wellenformen | `XTR`; One-Shots `SI1` … `XT1`, `RN1` (Zufall pro Trigger), `SQ1` (Gate); `OFS` = One-Shot-Verzögerung; `CYC` (MOD = Anzahl der Stufen) | VOICE (LFO `WAV`, `OFS`) | Kit | NRPN 27–32 (`WAV` / Voice 1–6), NRPN 57–62 (`OFS` / Voice 1–6) |
+| LFO-Start | Jeder Wellenstart des LFOs einer Voice startet einen Ziel-Track bei Step 1 (`NXT` = beim nächsten Step, `NOW` = sofort); er spielt bis zum Ende und wartet. | LAST STEP (Encoder-Klick, `LFO>`) | Pattern | – |
+| LFO → LFO | Ein LFO moduliert Rate, Amount … jedes anderen LFOs (bisher nur LFOs mit höherer Nummer). | VOICE (LFO `VOI`, `DST`) | Kit | – |
 | Anzeige | `MOD` zeigt den Zielbereich (`21..127`); eindeutige Zielnamen `WAV` / `FWV` / `CWV`. | VOICE (LFO) | – | – |
 
 ## FX / Mixer
