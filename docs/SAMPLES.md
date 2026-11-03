@@ -402,9 +402,10 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
   block; older kits: off).
 - `SAT` saturation (0 = off): soft clipping, up to +24 dB into the curve, level compensated.
   Symmetric, so it adds odd harmonics (3rd, 5th …): edgier, more bite. `BIA` (last FX3 page)
-  shifts the curve's operating point: 0 = symmetric, up to 127 = asymmetric, adding even
-  harmonics (2nd, 4th …: octaves, fuller and warmer). Its DC is removed (high pass about 4 Hz);
-  `BIA` only acts with `SAT` above 0.
+  makes the curve asymmetric depending on the level, like a tube stage: quiet signals stay
+  symmetric and clear, loud ones get even harmonics (2nd, 4th …: octaves, fuller and warmer).
+  `BIA` sets how far the operating point moves (0 = always symmetric). The DC is removed
+  (high pass about 20 Hz); `BIA` only acts with `SAT` above 0.
 - `FRQ` split: `off` = full band, otherwise 40 Hz … 10 kHz, logarithmic (about 16 steps per
   octave, 200 Hz ≈ value 37): a 24 dB/oct crossover (Linkwitz-Riley), only the band above it is
   saturated, the lows stay clean.
