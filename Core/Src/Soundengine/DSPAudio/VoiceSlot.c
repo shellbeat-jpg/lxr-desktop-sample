@@ -157,11 +157,17 @@ static inline float slot_calcPitchModAmount(const uint8_t data2)
 }
 //---------------------------------------------------
 //A role can be a 0-127 setting for one engine and a waveform for another, so
-//clamp: the oscillators write nothing for waveforms >= NUM_OSC_WAVEFORMS.
+//clamp. MOD: the samples S1..S31 and user waves W1..W8 are waveforms of the FM
+//oscillators too (as in the menu; before they were turned into PWM); values above
+//them become the last built-in waveform. A modulation selects among the built-in ones.
 static uint8_t slot_waveform(const uint8_t itg, const float flt, const uint8_t isFloatModulator)
 {
-	const uint8_t wave = isFloatModulator ? NUM_OSC_WAVEFORMS * flt : itg;
-	return wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+	if(isFloatModulator)
+	{
+		const uint8_t wave = NUM_OSC_WAVEFORMS * flt;
+		return wave >= NUM_OSC_WAVEFORMS ? NUM_OSC_WAVEFORMS-1 : wave;
+	}
+	return itg >= OSC_WAVE_USER + OSC_NUM_USER_WAVES ? NUM_OSC_WAVEFORMS-1 : itg;
 }
 //---------------------------------------------------
 //set the coarse tuning (upper byte of midiFreq) of an oscillator

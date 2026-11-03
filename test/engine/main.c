@@ -568,6 +568,58 @@ int main(int argc, char** argv)
 		soundengine_init();
 		return engineTest();
 	}
+	//MOD: --fm: how much the FM amount changes drum 1 (FM mode, SAW modulated by SINE)
+	if(argc == 2 && strcmp(argv[1], "--fm") == 0)
+	{
+		mapPeripherals();
+		for(int i = 0; i < 6; i++) faders[i] = 1.f;
+		setJackSwitches(0xf);
+		soundengine_init();
+		static int16_t ref[400 * OUTPUT_DMA_SIZE * 2];
+		const int mixModes[2] = { 0, 1 };
+		for(int mm = 0; mm < 2; mm++)
+		for(int a = 0; a <= 127; a += 127)
+		{
+			loadKit(0);
+#ifdef HAVE_KIT_ENGINES
+			kitEngines_setStock(kitEngines);
+			kitEngines_apply();
+#endif
+			for(uint8_t v = 0; v < 6; v++) { sendTarget(FRONT_CC_LFO_TARGET, v, 0); sendTarget(FRONT_CC_VELO_TARGET, v, 0); }
+			sendParam(PAR_VOL1, 127);
+			sendParam(PAR_OSC_WAVE_DRUM1, SAW);
+			sendParam(PAR_MOD_WAVE_DRUM1, SINE);
+			sendParam(PAR_MIX_MOD_1, (uint8_t)mixModes[mm]);
+			sendParam(PAR_MOD_EG1, 126);
+			sendParam(PAR_FM_FREQ1, 72);
+			sendParam(PAR_VELOD1, 120);
+			for(int k = 0; k < 4; k++) { int16_t d[OUTPUT_DMA_SIZE*2]; mixer_calcNextSampleBlock(d, engOut2); }
+			int16_t buf[400 * OUTPUT_DMA_SIZE * 2];
+			for(int amt = 0; amt <= 127; amt += 127)
+			{
+				sendParam(PAR_FMAMNT1, (uint8_t)amt);
+				voiceControl_noteOn(0, 60, 127);
+				double e = 0, d = 0;
+				for(int b = 0; b < 400; b++)
+				{
+					mixer_calcNextSampleBlock(engOut, engOut2);
+					for(int i = 0; i < OUTPUT_DMA_SIZE * 2; i++)
+					{
+						const int k = b * OUTPUT_DMA_SIZE * 2 + i;
+						const int s = engOut[i] + engOut2[i];
+						if(amt == 0) ref[k] = (int16_t)(s / 2);
+						else { d += (double)(s/2-ref[k])*(s/2-ref[k]); e += (double)ref[k]*ref[k]; }
+						buf[k] = (int16_t)(s / 2);
+					}
+				}
+				{ int pk=0; for(int k=0;k<400*OUTPUT_DMA_SIZE*2;k++) if(abs(buf[k])>pk) pk=abs(buf[k]); printf("mode %s amount %d: peak %d\n", mm ? "MIX" : "FM", amt, pk); }
+				if(amt) printf("mode %s: FM amount 127 vs 0: relative difference %.3f\n", mm ? "MIX" : "FM", e > 0 ? sqrt(d / e) : -1.0);
+				for(int b = 0; b < 200; b++) mixer_calcNextSampleBlock(engOut, engOut2);
+			}
+			(void)a; break;
+		}
+		return 0;
+	}
 #endif
 	if(argc != 2)
 	{

@@ -88,3 +88,12 @@ uint8_t seq_selectedStep;
 volatile uint32_t systick_ticks;
 uint8_t trigger_dividerClockOut1;
 uint8_t trigger_prescalerClockInput;
+//MOD: sample flash and voice morph (not part of the engine render test)
+#include "SampleRom/sampleFlash.h"
+uint8_t sampleFlash_modulatedWave(uint8_t base, float v, uint8_t numOscWaves) { (void)v; (void)numOscWaves; return base; }
+float sampleFlash_rangeValue(uint8_t base, float amount, float val) { (void)amount; (void)val; return base / 127.f; }
+const SampleFlashEntry* sampleFlash_entry(uint8_t slot) { (void)slot; return 0; }
+const int16_t* sampleFlash_wave(uint8_t k) { (void)k; return 0; }
+uint8_t sampleFlash_getWaveCount(void) { return 0; }
+const char* sampleFlash_waveName(uint8_t k) { (void)k; return ""; }
+void voiceMorph_tick(void) { }
