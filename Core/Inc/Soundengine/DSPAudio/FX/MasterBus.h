@@ -33,6 +33,12 @@ enum
 /* process the St1 sum in place (interleaved L/R, 32 bit, 16 bit full scale) */
 void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* settings);
 
+/* status for the FX3 edit view: blocks processed (counts while audio runs), 1 = the
+ * bus worked on the last block, gain reduction of the compressor in dB (>= 0) */
+extern volatile uint32_t masterBus_blocks;
+extern volatile uint8_t  masterBus_active;
+extern volatile float    masterBus_grDb;
+
 /* display helpers: crossover in Hz (0 = off) */
 uint32_t masterBus_crossoverHz(uint8_t v);
 

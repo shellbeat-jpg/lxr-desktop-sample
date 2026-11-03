@@ -1506,6 +1506,15 @@ void menu_uiTick()
 	}
 #endif
 
+	//MOD: FX3 edit view: refresh the status 4 times per second
+	{
+		static uint32_t fx3Timer = 0;
+		if(menu_activePage == FX3_PAGE && editModeActive && (display_refresh_state == 0) && (systick_ticks - fx3Timer > 250))
+		{
+			fx3Timer = systick_ticks;
+			menu_repaint();
+		}
+	}
 	if(menu_fxKnobShown && (systick_ticks - menu_fxKnobTimer > 1500))	//MOD
 	{
 		menu_fxKnobShown = 0;
@@ -2253,6 +2262,14 @@ void menu_repaintGeneric()
 				menu_fx3Text(parNr, *menu_sendLevel(parNr), t, 1);
 				const size_t n = strlen(t) > 16 ? 16 : strlen(t);
 				memcpy(&editDisplayBuffer[1][16 - n], t, n);
+				//status on the left: "--" = no audio blocks, "byp" = off, "on" + reduction
+				static uint32_t lastBlocks = 0;
+				char st[8];
+				if(masterBus_blocks == lastBlocks)	snprintf(st, sizeof(st), "--");
+				else if(!masterBus_active)			snprintf(st, sizeof(st), "byp");
+				else								snprintf(st, sizeof(st), "on%d", -(int)(masterBus_grDb + 0.5f));
+				lastBlocks = masterBus_blocks;
+				memcpy(&editDisplayBuffer[1][0], st, strlen(st) < (size_t)(16 - n - 1) ? strlen(st) : (size_t)(16 - n - 1));
 			}
 			else if(menu_sendLevel(parNr))
 			{

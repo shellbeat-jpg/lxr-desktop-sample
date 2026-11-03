@@ -29,6 +29,10 @@ static struct
 	float    env;					/* dB over the threshold */
 } mb;
 
+volatile uint32_t masterBus_blocks = 0;
+volatile uint8_t  masterBus_active = 0;
+volatile float    masterBus_grDb = 0.f;
+
 /*----------------------------------------------------------------------------*/
 uint32_t masterBus_crossoverHz(uint8_t v)
 {
@@ -125,11 +129,15 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 	if(!mb.valid || memcmp(mb.last, s, MB_NUM_PARAMS) != 0)
 		mb_update(s);
 	const uint8_t sat = s[MB_SAT] != 0;
+	masterBus_blocks++;
 	if(!sat && !mb.comp)
 	{
 		mb.env = 0.f;
+		masterBus_active = 0;
+		masterBus_grDb = 0.f;
 		return;		/* off: the sum stays bit for bit as it was */
 	}
+	masterBus_active = 1;
 	const uint8_t compFirst = s[MB_ORD] != 0;
 	for(uint32_t i = 0; i < frames; i++)
 	{
@@ -145,4 +153,5 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 		mix[2u * i]      = (int32_t)(l * 32768.f);
 		mix[2u * i + 1u] = (int32_t)(r * 32768.f);
 	}
+	masterBus_grDb = mb.comp ? mb.env * mb.slope : 0.f;
 }
