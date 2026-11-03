@@ -299,6 +299,7 @@ enum NamesEnum
 	TEXT_PREFADER,		//MOD: FX sends before the volume fader
 	TEXT_FX3_AUTOGAIN,	//MOD: FX3 auto make-up gain
 	TEXT_FX3_CSPLIT,	//MOD: FX3 compressor split
+	TEXT_FX3_CSMODE,	//MOD: FX3 compressor split mode
 
 
 	NUM_NAMES
@@ -431,7 +432,8 @@ enum shortNamesEnum
 	SHORT_FX3_ORDER,
 	SHORT_PREFADER,
 	SHORT_FX3_AUTOGAIN,
-	SHORT_FX3_CSPLIT
+	SHORT_FX3_CSPLIT,
+	SHORT_FX3_CSMODE
 
 	
 };
@@ -584,7 +586,8 @@ enum longNamesEnum
 	LONG_FX3_ORDER,
 	LONG_PREFADER,
 	LONG_FX3_AUTOGAIN,
-	LONG_FX3_CSPLIT
+	LONG_FX3_CSPLIT,
+	LONG_FX3_CSMODE
 	
 };
 

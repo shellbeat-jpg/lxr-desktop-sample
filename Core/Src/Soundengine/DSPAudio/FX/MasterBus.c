@@ -28,7 +28,7 @@ static struct
 	float    thr, slope, att, rel, makeup, wet;
 	uint16_t relBpm;				/* tempo the auto release was made for (0 = fixed) */
 	uint8_t  comp;
-	uint8_t  cSplit;
+	uint8_t  cSplit;				/* 0 = off, 1 = band split, 2 = sidechain */
 	mb_Coef  clp, chp;				/* compressor crossover */
 	float    cz[4][2][2];
 	float    env;					/* dB over the threshold */
@@ -104,7 +104,7 @@ static void mb_update(const uint8_t* s)
 		mb.rel = expf(-1000.f / ((20.f + 980.f * lr * lr) * REAL_FS));
 	}
 	(void)l;
-	const uint8_t cSplit = s[MB_CFQ] != 0;
+	const uint8_t cSplit = s[MB_CFQ] == 0 ? 0 : s[MB_CSM] ? 2 : 1;
 	if(cSplit)
 	{
 		const float fc = (float)masterBus_crossoverHz(s[MB_CFQ]);
@@ -139,9 +139,10 @@ static inline float mb_saturate(const float x, const uint8_t ch)
 	const float hi = mb_biquad(&mb.hp, mb.z[3][ch], mb_biquad(&mb.hp, mb.z[2][ch], x));
 	return lo + mb_softclip(hi * mb.drive) * mb.satOut;
 }
-static inline void mb_compressBand(float* l, float* r)
+/* compress l/r, the level detected on dl/dr */
+static inline void mb_compressBand(float* l, float* r, const float dl, const float dr)
 {
-	const float peak = fmaxf(fabsf(*l), fabsf(*r)) + 1e-9f;
+	const float peak = fmaxf(fabsf(dl), fabsf(dr)) + 1e-9f;
 	float over = 20.f * log10f(peak) - mb.thr;
 	if(over < 0.f) over = 0.f;
 	const float c = over > mb.env ? mb.att : mb.rel;
@@ -156,14 +157,22 @@ static inline void mb_compress(float* l, float* r)
 {
 	if(!mb.cSplit)
 	{
-		mb_compressBand(l, r);
+		mb_compressBand(l, r, *l, *r);
+		return;
+	}
+	if(mb.cSplit == 2)
+	{
+		/* sidechain: only the band above the crossover drives the compressor */
+		const float dL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], *l));
+		const float dR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], *r));
+		mb_compressBand(l, r, dL, dR);
 		return;
 	}
 	const float loL = mb_biquad(&mb.clp, mb.cz[1][0], mb_biquad(&mb.clp, mb.cz[0][0], *l));
 	float       hiL = mb_biquad(&mb.chp, mb.cz[3][0], mb_biquad(&mb.chp, mb.cz[2][0], *l));
 	const float loR = mb_biquad(&mb.clp, mb.cz[1][1], mb_biquad(&mb.clp, mb.cz[0][1], *r));
 	float       hiR = mb_biquad(&mb.chp, mb.cz[3][1], mb_biquad(&mb.chp, mb.cz[2][1], *r));
-	mb_compressBand(&hiL, &hiR);
+	mb_compressBand(&hiL, &hiR, hiL, hiR);
 	*l = loL + hiL;
 	*r = loR + hiR;
 }

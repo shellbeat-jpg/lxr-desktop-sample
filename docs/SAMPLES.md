@@ -401,15 +401,18 @@ the DJ filter and the limiter): saturation and a compressor, in either order.
   octave, 200 Hz ≈ value 37): a 24 dB/oct crossover (Linkwitz-Riley), only the band above it is
   saturated, the lows stay clean.
 - Compressor (feed-forward, stereo linked, peak, hard knee; level and gain computed in dB, attack
-  and release as exponential curves): `CFQ` split as `FRQ` (only the band above it is detected
-  and compressed, the lows pass unchanged), `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
+  and release as exponential curves): `CFQ` crossover as `FRQ` (`off` = full band), `CSM` what it
+  does: `SPL` = band split (only the band above it is detected and compressed, the lows pass
+  unchanged), `SC` = sidechain filter (only the band above it drives the compressor, the whole
+  signal is compressed: the bass no longer pumps the mix), `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
   (0 = off), `ATK` attack 0.1 … 100 ms, `DEC` release: `AUT` (first value) = follows the tempo,
   a 1/16 note (125 ms at 120 BPM), otherwise 20 … 1000 ms.
-- `ORD` = `S>C` (saturation, then compressor, default) or `C>S`.
-- Output (turn the encoder on to the next page): `AMU` = auto make-up gain (adds half the
+- Next page (turn the encoder on): `ORD` = `S>C` (saturation, then compressor, default) or
+  `C>S`; output: `AMU` = auto make-up gain (adds half the
   reduction a 0 dBFS peak gets, from `TRE` and `RAT`), `GAI` make-up 0 … +24 dB on top, `D/W` mix
   of the compressor (parallel compression, 127 = fully compressed).
-- Page order: `SAT` `FRQ` `CFQ` `TRE` | `RAT` `ATK` `DEC` `ORD` | `AMU` `GAI` `D/W`.
+- Page order: `SAT` `FRQ` `CFQ` `CSM` | `TRE` `RAT` `ATK` `DEC` | `ORD` `AMU` `GAI` `D/W`.
+- With band split, `AMU`/`GAI` and `D/W` act on the compressed band only.
 - PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
   `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
 - With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.

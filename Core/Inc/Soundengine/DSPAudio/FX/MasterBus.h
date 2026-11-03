@@ -30,6 +30,8 @@ enum
 	MB_ORD,		/* 0 = saturation then compressor, 1 = the other way round */
 	MB_AMU,		/* 1 = auto make-up gain (half the reduction at 0 dBFS), plus GAI */
 	MB_CFQ,		/* compressor split: 0 = full band, else as MB_FRQ */
+	MB_CSM,		/* what CFQ does: 0 = band split (only the band above is compressed),
+				   1 = sidechain (the band above is detected, everything compressed) */
 	MB_NUM_PARAMS
 };
 

@@ -401,6 +401,7 @@ enum ParamEnums
 	PAR_FX3_ORD,
 	PAR_FX3_AMU,	//auto make-up gain on/off
 	PAR_FX3_CFQ,	//compressor split
+	PAR_FX3_CSM,	//compressor split mode: band split / sidechain
 
 	
 	//#########################################

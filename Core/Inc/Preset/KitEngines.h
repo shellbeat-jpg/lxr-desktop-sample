@@ -42,7 +42,7 @@
 #define KIT_SENDB_OFFSET		(2*NUM_VOICE_SLOTS + 1)
 //MOD: FX3 (master bus of St1, MasterBus.h): 9 settings, part "FX3"
 #define KIT_FX3_OFFSET			(3*NUM_VOICE_SLOTS + 1)
-#define KIT_FX3_SIZE			11
+#define KIT_FX3_SIZE			12
 #define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
