@@ -39,6 +39,8 @@ enum
 	MB_E1F, MB_E1G, MB_E1Q,		/* mid 1: frequency, gain, Q */
 	MB_E2F, MB_E2G, MB_E2Q,		/* mid 2 */
 	MB_EQH,		/* high shelf gain (8 kHz) */
+	MB_BIA,		/* saturation bias: 0 = symmetric (odd harmonics), up to 127 = asymmetric
+				   (even harmonics added) */
 	MB_NUM_PARAMS
 };
 

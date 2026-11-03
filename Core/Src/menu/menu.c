@@ -299,6 +299,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_E2G, CAT_FX, LONG_FX3_E2G},/*TEXT_FX3_E2G*/
 		{SHORT_FX3_E2Q, CAT_FX, LONG_FX3_E2Q},/*TEXT_FX3_E2Q*/
 		{SHORT_FX3_EQH, CAT_FX, LONG_FX3_EQH},/*TEXT_FX3_EQH*/
+		{SHORT_FX3_BIA, CAT_FX, LONG_FX3_BIA},/*TEXT_FX3_BIA*/
 
 
 };
@@ -588,6 +589,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FX_SENDB1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD (+AMU, CFQ, CSM)
 		/*PAR_FX3_EQL..EQH*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
+		/*PAR_FX3_BIA*/			DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -1049,7 +1051,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
 	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
-	if(p >= PAR_FX3_SAT && p <= PAR_FX3_EQH)	//MOD: FX3 settings (MasterBus.h order)
+	if(p >= PAR_FX3_SAT && p <= PAR_FX3_BIA)	//MOD: FX3 settings (MasterBus.h order)
 		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
 	return 0;
 }
@@ -1057,7 +1059,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 //value with its unit; returns 0 for other parameters
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
-	if(p < PAR_FX3_SAT || p > PAR_FX3_EQH)
+	if(p < PAR_FX3_SAT || p > PAR_FX3_BIA)
 		return 0;
 	char t[12];
 	const float f = v / 127.f;
@@ -1111,6 +1113,7 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 		break;
 	}
 	case PAR_FX3_CSM:	snprintf(t, sizeof(t), isLong ? (v ? "sidechain" : "band split") : (v ? " sc" : "spl"));	break;
+	case PAR_FX3_BIA:	snprintf(t, sizeof(t), v ? (isLong ? "%u %% even" : "%u") : (isLong ? "0 symmetric" : "%u"), (unsigned)((v * 100u + 63u) / 127u));	break;
 	case PAR_FX3_AMU:	snprintf(t, sizeof(t), v == 2 ? (isLong ? "adaptive" : "ada") : v ? (isLong ? "static" : "fix") : "off");	break;
 	case PAR_FX3_THR:	snprintf(t, sizeof(t), isLong ? "%d dB" : "%d", (int)(-48.f + 48.f * f - 0.5f * (v < 127)));	break;
 	case PAR_FX3_RAT:
@@ -2310,7 +2313,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_EQH)
+			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_BIA)
 			{
 				//MOD: FX3 value with its unit, right aligned
 				char t[17];
@@ -3943,7 +3946,7 @@ static void menu_encoderChangeParameter(int8_t inc)
 	{
 		uint8_t* s = menu_sendLevel(paramNr);
 		const int16_t v = (int16_t)*s + inc;
-		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_EQH) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT)) : 127;	//MOD
+		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_BIA) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT)) : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;

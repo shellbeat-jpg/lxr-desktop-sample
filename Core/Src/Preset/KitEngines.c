@@ -24,9 +24,9 @@
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT,
-		0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64 };	//MOD: FX3 off (kitEngines_fx3Defaults)
+		0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0 };	//MOD: FX3 off (kitEngines_fx3Defaults)
 //MOD: FX3 defaults: no saturation, full band, threshold 0 dB, ratio 1:1 (off), no gain, 100 % wet
-static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64 };	//EQ flat: mids 300 Hz / 3 kHz, Q 1
+static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0 };	//EQ flat: mids 300 Hz / 3 kHz, Q 1
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
@@ -99,7 +99,7 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= 9)
 		{
 			//MOD: FX3 settings (ORD and AMU 0/1, the others 0..127); the first test
-			//builds wrote 9 to 12 bytes: the missing ones keep their default
+			//builds wrote 9 to 20 bytes: the missing ones keep their default
 			for(uint8_t k=0;k<KIT_FX3_SIZE;k++)
 			{
 				const uint8_t max = masterBus_maxValue(k);

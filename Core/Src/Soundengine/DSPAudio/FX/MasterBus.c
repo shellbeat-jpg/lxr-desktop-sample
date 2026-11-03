@@ -21,6 +21,8 @@ static struct
 	uint8_t  valid;
 	/* saturation */
 	float    drive, satOut;
+	float    bias, biasOff;				/* asymmetry: operating point, its output (removed) */
+	float    dc[2][2];					/* DC blocker after the saturation [channel][x, y] */
 	uint8_t  split;
 	mb_Coef  lp, hp;				/* 2nd order Butterworth, applied twice = LR4 */
 	float    z[4][2][2];			/* [lp1, lp2, hp1, hp2][channel][state] */
@@ -140,11 +142,24 @@ static inline float mb_biquad(const mb_Coef* c, float* z, const float x)
 	z[1] = c->b2 * x - c->a2 * y;
 	return y;
 }
+static inline float mb_softclip(float x);
 static void mb_update(const uint8_t* s)
 {
 	const float sat = s[MB_SAT] / 127.f;
 	mb.drive  = 1.f + 15.f * sat * sat;		/* up to +24 dB into the curve */
 	mb.satOut = 1.f / sqrtf(mb.drive);
+	/* bias: the curve is used around b instead of 0 (even harmonics); its offset is
+	 * subtracted and the small-signal gain at b (the slope) compensated */
+	{
+		const float b = 0.9f * s[MB_BIA] / 127.f;
+		const float b2 = b * b, den = 27.f + 9.f * b2;
+		const float slope = ((27.f + 3.f * b2) * den - 18.f * b2 * (27.f + b2)) / (den * den);
+		if((b != 0.f) != (mb.bias != 0.f))
+			memset(mb.dc, 0, sizeof(mb.dc));
+		mb.bias = b;
+		mb.biasOff = mb_softclip(b);
+		mb.satOut /= sqrtf(slope);	/* half (in dB): full compensation was too loud at high drive */
+	}
 	const uint8_t split = s[MB_FRQ] != 0;
 	if(split)
 	{
@@ -214,10 +229,10 @@ static inline float mb_softclip(float x)
 static inline float mb_saturate(const float x, const uint8_t ch)
 {
 	if(!mb.split)
-		return mb_softclip(x * mb.drive) * mb.satOut;
+		return (mb_softclip(x * mb.drive + mb.bias) - mb.biasOff) * mb.satOut;
 	const float lo = mb_biquad(&mb.lp, mb.z[1][ch], mb_biquad(&mb.lp, mb.z[0][ch], x));
 	const float hi = mb_biquad(&mb.hp, mb.z[3][ch], mb_biquad(&mb.hp, mb.z[2][ch], x));
-	return lo + mb_softclip(hi * mb.drive) * mb.satOut;
+	return lo + (mb_softclip(hi * mb.drive + mb.bias) - mb.biasOff) * mb.satOut;
 }
 /* fast log2 / exp2 for the compressor (per sample): error below 0.01 dB in level,
  * 0.1 % in gain. The library functions cost several hundred cycles each. */
@@ -250,13 +265,13 @@ static float mb_bufL[OUTPUT_DMA_SIZE], mb_bufR[OUTPUT_DMA_SIZE];
 
 IN_ITCM_RAM __attribute__((noinline)) static void mb_blockSat(float* L, float* R, const uint32_t n)
 {
-	const float drive = mb.drive, out = mb.satOut;
+	const float drive = mb.drive, out = mb.satOut, bias = mb.bias, off = mb.biasOff;
 	if(!mb.split)
 	{
 		for(uint32_t i = 0; i < n; i++)
 		{
-			L[i] = mb_softclip(L[i] * drive) * out;
-			R[i] = mb_softclip(R[i] * drive) * out;
+			L[i] = (mb_softclip(L[i] * drive + bias) - off) * out;
+			R[i] = (mb_softclip(R[i] * drive + bias) - off) * out;
 		}
 		return;
 	}
@@ -264,6 +279,27 @@ IN_ITCM_RAM __attribute__((noinline)) static void mb_blockSat(float* L, float* R
 	{
 		L[i] = mb_saturate(L[i], 0);
 		R[i] = mb_saturate(R[i], 1);
+	}
+}
+/* with bias: the asymmetric curve shifts the wave centre with the level; a DC
+ * blocker (one pole at about 4 Hz) removes it */
+static void mb_blockDc(float* L, float* R, const uint32_t n)
+{
+	const float k = 0.9994f;
+	float* const bufs[2] = { L, R };
+	for(uint8_t ch = 0; ch < 2; ch++)
+	{
+		float x1 = mb.dc[ch][0], y1 = mb.dc[ch][1];
+		float* const p = bufs[ch];
+		for(uint32_t i = 0; i < n; i++)
+		{
+			const float x = p[i];
+			y1 = x - x1 + k * y1;
+			x1 = x;
+			p[i] = y1;
+		}
+		mb.dc[ch][0] = x1;
+		mb.dc[ch][1] = y1;
 	}
 }
 static float mb_det[OUTPUT_DMA_SIZE], mb_loL[OUTPUT_DMA_SIZE], mb_loR[OUTPUT_DMA_SIZE];
@@ -390,7 +426,13 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 	{
 		switch(ord[k])
 		{
-		case 'S':	if(sat)		mb_blockSat(L, R, frames);	break;
+		case 'S':
+			if(sat)
+			{
+				mb_blockSat(L, R, frames);
+				if(mb.bias != 0.f) mb_blockDc(L, R, frames);
+			}
+			break;
 		case 'C':	if(mb.comp)	mb_blockComp(L, R, frames);	break;
 		default:	if(mb.eq)	mb_blockEq(L, R, frames);	break;
 		}

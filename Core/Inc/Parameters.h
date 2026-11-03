@@ -410,6 +410,7 @@ enum ParamEnums
 	PAR_FX3_E2G,
 	PAR_FX3_E2Q,
 	PAR_FX3_EQH,
+	PAR_FX3_BIA,	//saturation bias (even harmonics)
 
 	
 	//#########################################

@@ -401,6 +401,10 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
 - **SHIFT + FX three times** (FX1 → FX2 → FX3, then FX1 again). Stored in the kit (kit extra
   block; older kits: off).
 - `SAT` saturation (0 = off): soft clipping, up to +24 dB into the curve, level compensated.
+  Symmetric, so it adds odd harmonics (3rd, 5th …): edgier, more bite. `BIA` (last FX3 page)
+  shifts the curve's operating point: 0 = symmetric, up to 127 = asymmetric, adding even
+  harmonics (2nd, 4th …: octaves, fuller and warmer). Its DC is removed (high pass about 4 Hz);
+  `BIA` only acts with `SAT` above 0.
 - `FRQ` split: `off` = full band, otherwise 40 Hz … 10 kHz, logarithmic (about 16 steps per
   octave, 200 Hz ≈ value 37): a 24 dB/oct crossover (Linkwitz-Riley), only the band above it is
   saturated, the lows stay clean.
@@ -421,7 +425,7 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
   the character); `GAI` make-up 0 … +24 dB on top, `D/W` mix of the compressor (parallel
   compression, 127 = fully compressed).
 - Page order: `SAT` `FRQ` `CFQ` `CSM` | `TRE` `RAT` `ATK` `DEC` | `LO` `F1` `G1` `Q1` |
-  `F2` `G2` `Q2` `HI` | `ORD` `AMU` `GAI` `D/W`.
+  `F2` `G2` `Q2` `HI` | `ORD` `AMU` `GAI` `D/W` `BIA`.
 - With band split, `AMU`/`GAI` and `D/W` act on the compressed band only.
 - PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
   `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
