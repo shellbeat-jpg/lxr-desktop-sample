@@ -101,6 +101,9 @@ Up to 8 single-cycle waveforms from **`SAMPLES/WAVES`**, for the oscillators and
 
 - **Files:** WAV, 16 bit, mono or stereo, any length and rate. Each file is one cycle: at the
   import it is resampled to 1024 points (linear interpolation, the end leads back to the start).
+  Stereo: only the left channel is used (a sum of channels with different phases could cancel).
+  Best: one cycle starting and ending at a zero crossing, rising in the same direction, no DC
+  offset; a jump between end and start adds a buzzing overtone.
   Not 16 bit: skipped and reported.
 - **Numbering on their own:** `W1`…`W8` in the order of the names, numbers by value (`01SAW.WAV` =
   `W1`), independent of the samples. Samples added or removed don't move the waves, and the

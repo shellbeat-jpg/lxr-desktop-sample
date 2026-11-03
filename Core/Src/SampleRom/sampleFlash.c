@@ -461,7 +461,8 @@ static SampleFlashResult sf_writeFile(const sf_FileInfo* fi, uint32_t addr, uint
 	return SF_OK_IMPORTED;
 }
 /*----------------------------------------------------------------------------*/
-/* MOD: read one frame (mono) of a wave file through a small window buffer */
+/* MOD: read one frame of a wave file through a small window buffer; stereo:
+ * the left channel only (a sum of channels with different phases could cancel) */
 static int16_t sf_waveFrame(const sf_FileInfo* fi, uint32_t i, uint32_t* winStart, uint32_t* winLen, uint8_t* ok)
 {
 	if(i >= fi->frames) i = 0;		/* the cycle wraps to its start */
@@ -479,7 +480,7 @@ static int16_t sf_waveFrame(const sf_FileInfo* fi, uint32_t i, uint32_t* winStar
 		}
 		if(fi->channels == 2)
 			for(uint32_t k = 0; k < n; k++)
-				sf_readBuf[k] = (int16_t)(((int32_t)sf_readBuf[2 * k] + sf_readBuf[2 * k + 1]) / 2);
+				sf_readBuf[k] = sf_readBuf[2 * k];
 		*winStart = i;
 		*winLen = n;
 	}

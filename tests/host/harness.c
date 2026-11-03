@@ -161,6 +161,11 @@ int main(){
       int ia=i, ib=(i+1)>=512?0:i+1; int a=(ia*37+(int)nm[0]*11)%30000-15000, bb=(ib*37+(int)nm[0]*11)%30000-15000;
       int16_t e=(int16_t)(a+(((bb-a)*f)>>16)); if(w[k]!=e){okw=0;break;} }
     CHECK(w && okw,"2SAW: 512 Frames auf 1024 Punkte interpoliert (Ende -> Anfang)");
+    okw=1; nm="WAVES/10SIN.WAV"; w=sampleFlash_wave(1);
+    for(int k=0;k<1024&&w;k++){ unsigned long long pp=(unsigned long long)k*4096*65536/1024; int i=pp>>16, f=pp&0xFFFF;
+      int ib=(i+1)>=4096?0:i+1; int a=(i*37+(int)nm[0]*11)%30000-15000, bb=(ib*37+(int)nm[0]*11)%30000-15000;
+      int16_t e=(int16_t)(a+(((bb-a)*f)>>16)); if(w[k]!=e){okw=0;break;} }
+    CHECK(w && okw,"10SIN stereo: nur der linke Kanal (keine Summe)");
     CHECK(sampleFlash_wave(2)==NULL && !strcmp(sampleFlash_waveName(2),""),"nicht vorhandene Wave -> NULL");
     CHECK(sampleFlash_getHeader()->reserved[0]>=1,"ungueltige Wave als uebersprungen vermerkt");
     RUN("18 Neustart mit Waves"); CHECK(last==SF_OK_UNCHANGED && eraseCalls==0,"kein erneuter Import");
