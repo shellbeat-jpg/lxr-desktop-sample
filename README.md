@@ -71,7 +71,7 @@ Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.
 |---|---|---|---|---|
 | Limiter [OE] | 32-bit mix with a limiter on each output. | CONFIG (`LIM`) | Global | – |
 | DJ filter [OE] | LP/HP filter | PERF (`DJ`, `RES`) | not saved | – |
-| Second FX slot | FX2 = project FX. FX routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
+| Second FX slot | FX2 = project FX. FX routing `ORD`: `A>B`, `B>A`, `A+B` (parallel), `A>+` (A to its output and into B). | FX (SHIFT + FX, twice for FX2) | FX1 and `ORD`: kit, FX2: global | NRPN 106–117 (FX1) |
 | Routing and sends | `OUT` = `FX` / `FXB`: 100 % into slot A / B. `SNA` / `SNB` = send into A / B besides the output, both at once if wanted. Meant for `OUT` = `St1` … `R2`; with `FX` / `FXB` they raise the level in the same slot or also feed the other one. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT` / Voice 1–6) |
 | Delay tempo sync | `1/4` … `1/32T`, dotted, triplets and the track grids | FX (setup `SYA` / `SYB`) | Global | – |
 | Master bus FX3 | Last on `St1`: saturation `SAT` with split `FRQ` (24 dB/oct, only above 40 Hz … 10 kHz) compressor with split `CFQ` (release `AUT` = 1/16 note, auto make-up `AMU` static / adaptive) and EQ (shelves, 2 mids); `ORD` = order of the three. | FX (SHIFT + FX, 3× for FX3), PERF (`SAT`, `FRQ`) | Kit | – |
@@ -293,7 +293,7 @@ Details: [docs/SAMPLES.md](docs/SAMPLES.md#performance-and-sequencer-additions-1
   (100 %). Sends: `SNA` (into A) and `SNB` (into B) on the AEG page, besides the voice's output
   (0..127, default 0, stored in the kit). Meant for `OUT` = `St1` … `R2`; with `OUT` = `FX`/`FXB`
   they raise the level in the same slot or also feed the other one.
-- On the FX pages, scrolled past the last effect parameter: FX routing `ORD` (FX1 page, stored in the kit: `A>B`, `B>A`, `A+B`), delay tempo sync `SYA`/`SYB`
+- On the FX pages, scrolled past the last effect parameter: FX routing `ORD` (FX1 page, stored in the kit: `A>B`, `B>A`, `A+B`, `A>+`), delay tempo sync `SYA`/`SYB`
   (`1/4` … `1/32T`, dotted, triplets and the step grids). Details:
   [docs/SAMPLES.md](docs/SAMPLES.md#second-fx-slot-128).
 

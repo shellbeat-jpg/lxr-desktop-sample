@@ -380,6 +380,10 @@ Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with 
     `OUT` of slot A. With slot B `OFF` everything sounds as before.
   - `B>A`: slot B, then slot A (to the `OUT` of slot A).
   - `A+B`: side by side, each slot to its own `OUT`.
+  - `A>+` (1.2.10): send/return chain: slot A to its own `OUT` and into slot B, slot B to its own
+    `OUT`. Unlike `A>B` the effect of slot A stays audible when slot B is fully wet.
+  - Note for `A>B`: slot B is an insert after slot A. With the mix of slot B at 100 % the direct
+    sound of slot A is gone, it is only heard inside slot B's effect (e.g. in its echoes).
 - **Delay tempo sync** (setup page): `SYA` for slot A, `SYB` for slot B: `OFF`
   (free time and range as before), then from long to short `1/4`, `1/8.`, `1/4T`, `1/8`, `1/16.`,
   `1/8T`, `5/64` (shown `564`), `1/16`, `1/32.`, `1/16T`, `1/32`, `1/32T` (the step grids and 1/8.). Follows the tempo (also external clock). The delay is at most about 0.74 s

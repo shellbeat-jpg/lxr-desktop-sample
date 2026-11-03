@@ -19,6 +19,7 @@
 #include "Soundengine/Sequencer/sequencer.h"
 #include <string.h>
 #include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3 setting order
+#include "Soundengine/FxBus.h"	//MOD: FXBUS_NUM_MODES
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
@@ -94,7 +95,7 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 				engines[offset + slot] = t[4+slot] > 127 ? KIT_SEND_DEFAULT : t[4+slot];
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
-			engines[KIT_FXMODE_OFFSET] = t[4] < 3 ? t[4] : 0;
+			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;
 		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= 9)
 		{
 			//MOD: FX3 settings (ORD and AMU 0/1, the others 0..127); the first test

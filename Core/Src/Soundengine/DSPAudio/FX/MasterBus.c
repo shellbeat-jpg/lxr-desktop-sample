@@ -219,18 +219,42 @@ static inline float mb_saturate(const float x, const uint8_t ch)
 	const float hi = mb_biquad(&mb.hp, mb.z[3][ch], mb_biquad(&mb.hp, mb.z[2][ch], x));
 	return lo + mb_softclip(hi * mb.drive) * mb.satOut;
 }
+/* fast log2 / exp2 for the compressor (per sample): error below 0.01 dB in level,
+ * 0.1 % in gain. The library functions cost several hundred cycles each. */
+static inline float mb_log2(const float x)
+{
+	union { float f; uint32_t i; } u = { x };
+	const float e = (float)((int32_t)((u.i >> 23) & 0xFF) - 127);
+	u.i = (u.i & 0x007FFFFFu) | 0x3F800000u;		/* mantissa 1 .. 2 */
+	const float m = u.f;
+	/* 3rd order fit of log2(m) on 1 .. 2 */
+	return e + ((0.15392465f * m - 1.02955839f) * m + 3.010851f) * m - 2.13388663f;
+}
+static inline float mb_exp2(float x)
+{
+	if(x < -60.f) return 0.f;
+	if(x > 30.f) x = 30.f;
+	const float fl = floorf(x);
+	const float f = x - fl;
+	/* 3rd order fit of 2^f on 0 .. 1 */
+	const float p = ((0.07902041f * f + 0.22412837f) * f + 0.69683624f) * f + 0.99981246f;
+	union { float f; uint32_t i; } u = { p };
+	u.i += (uint32_t)((int32_t)fl << 23);
+	return u.f;
+}
+#define MB_DB_PER_LOG2	6.0205999f
 /* compress l/r, the level detected on dl/dr */
 static inline void mb_compressBand(float* l, float* r, const float dl, const float dr)
 {
 	const float peak = fmaxf(fabsf(dl), fabsf(dr)) + 1e-9f;
-	float over = 20.f * log10f(peak) - mb.thr;
+	float over = MB_DB_PER_LOG2 * mb_log2(peak) - mb.thr;
 	if(over < 0.f) over = 0.f;
 	const float c = over > mb.env ? mb.att : mb.rel;
 	mb.env = over + c * (mb.env - over);
 	const float gr = mb.env * mb.slope;
 	if(gr > mb.grMax) mb.grMax = gr;
 	mb.grSum += gr;
-	const float g = powf(10.f, -mb.env * mb.slope / 20.f) * mb.makeup;
+	const float g = mb_exp2(-gr * (1.f / MB_DB_PER_LOG2)) * mb.makeup;
 	*l += (*l * g - *l) * mb.wet;
 	*r += (*r * g - *r) * mb.wet;
 }

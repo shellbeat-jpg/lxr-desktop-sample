@@ -69,6 +69,7 @@ enum FxBusModeEnum
 	FXBUS_MODE_A_B,		//A then B
 	FXBUS_MODE_B_A,		//B then A
 	FXBUS_MODE_PARALLEL,	//side by side
+	FXBUS_MODE_A_BPLUS,	//A to its output and into B (send/return: B to its own output)
 	FXBUS_NUM_MODES
 };
 #define FXBUS_NUM_SYNC	13	//off, then the delay time from long to short (FxBus.c)

@@ -1032,7 +1032,7 @@ static void menu_lfoRangeText(const uint16_t parNr, const uint8_t amount)
 	memcpy(&editDisplayBuffer[1][0], buf, strlen(buf));
 }
 //MOD: FX slot order and delay sync: shown as names
-static const char menu_fxModeNames[FXBUS_NUM_MODES][4] = { "A>B", "B>A", "A+B" };
+static const char menu_fxModeNames[FXBUS_NUM_MODES][4] = { "A>B", "B>A", "A+B", "A>+" };
 static const char menu_fxSyncNames[FXBUS_NUM_SYNC][4]  = { "off", "1/4", "8.", "4T", "1/8", "16.", "8T", "564", "16", "32.", "16T", "32", "32T" };
 static const char menu_fxSyncLong[FXBUS_NUM_SYNC][6]   = { "off", "1/4", "1/8.", "1/4T", "1/8", "1/16.", "1/8T", "5/64", "1/16", "1/32.", "1/16T", "1/32", "1/32T" };
 //number of values of PAR_FX_MODE / PAR_FXA_SYNC / PAR_FXB_SYNC, 0 for other parameters

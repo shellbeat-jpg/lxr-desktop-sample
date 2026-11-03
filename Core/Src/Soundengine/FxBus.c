@@ -145,6 +145,27 @@ static void FxBus_processInto(FxBus* b, int16_t *in, int16_t *next, uint32_t siz
 		next[i] = (int16_t)__SSAT(next[i] + tmp[i], 16);
 	}
 }
+//MOD: A>B+: slot A to its own output and into the input of slot B
+static void FxBus_processIntoAndOut(FxBus* b, int16_t *in, int16_t *next, int32_t* out, uint32_t size, uint8_t channels)
+{
+	int32_t tmp[OUTPUT_DMA_SIZE*2];
+	memset(tmp, 0, sizeof(tmp));
+	FxBus_processSlot(b, in, tmp, tmp+1, size, 2);
+	for(uint32_t i=0;i<size*2;i++)
+	{
+		next[i] = (int16_t)__SSAT(next[i] + tmp[i], 16);
+	}
+	if(channels == 2)
+	{
+		for(uint32_t i=0;i<size*2;i++)
+			out[i] += tmp[i];
+	}
+	else
+	{
+		for(uint32_t i=0;i<size;i++)
+			out[i*2] += tmp[i*2];	//mono out: left channel
+	}
+}
 //------------------------------------------------------------------------------
 void FxBus_setSync(FxBus* b, const uint8_t sync)
 {
@@ -199,6 +220,14 @@ void FxBus_process(int16_t *fxBuffer, int16_t *fxBufferB, int32_t* outL,int32_t*
 	case FXBUS_MODE_B_A:
 		FxBus_processInto(&fxBusB, fxBufferB, fxBuffer, size);
 		FxBus_processSlot(&fxBus, fxBuffer, out, out2, size, channels);
+		break;
+	case FXBUS_MODE_A_BPLUS:
+	{
+		FxBus_processIntoAndOut(&fxBus, fxBuffer, fxBufferB, out, size, channels);
+		int32_t *outB, *outB2;
+		const uint8_t channelsB = FxBus_outputs(fxBusB.audioRouting, outL, outR, outL2, outR2, &outB, &outB2);
+		FxBus_processSlot(&fxBusB, fxBufferB, outB, outB2, size, channelsB);
+	}
 		break;
 	case FXBUS_MODE_PARALLEL:
 	{
