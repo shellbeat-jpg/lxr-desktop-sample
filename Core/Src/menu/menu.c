@@ -2267,8 +2267,24 @@ void menu_repaintGeneric()
 				char st[8];
 				if(masterBus_blocks == lastBlocks)	snprintf(st, sizeof(st), "--");
 				else if(!masterBus_active)			snprintf(st, sizeof(st), "byp");
-				else								snprintf(st, sizeof(st), "on%d", -(int)(masterBus_grDb + 0.5f));
+				else								snprintf(st, sizeof(st), "on%d%c", -(int)(masterBus_grDb + 0.5f), masterBus_onDac2 ? 'B' : 'A');
+				//top left: peaks of the sums of DAC 1 / DAC 2 in dBFS (-99 = silent)
+				{
+					int pk[2];
+					for(int k = 0; k < 2; k++)
+					{
+						const int32_t p = masterBus_peak[k];
+						pk[k] = p <= 0 ? -99 : (int)(20.f * log10f(p / 32768.f) + (p >= 32768 ? 0.5f : -0.5f));
+						if(pk[k] < -99) pk[k] = -99;
+						if(pk[k] > 99) pk[k] = 99;
+					}
+					char hd[12];
+					snprintf(hd, sizeof(hd), "%d/%d", pk[0], pk[1]);
+					memset(&editDisplayBuffer[0][0], ' ', 8);
+					memcpy(&editDisplayBuffer[0][0], hd, strlen(hd) > 8 ? 8 : strlen(hd));
+				}
 				lastBlocks = masterBus_blocks;
+				masterBus_grDb = 0.f;	//peak hold until the next refresh
 				memcpy(&editDisplayBuffer[1][0], st, strlen(st) < (size_t)(16 - n - 1) ? strlen(st) : (size_t)(16 - n - 1));
 			}
 			else if(menu_sendLevel(parNr))

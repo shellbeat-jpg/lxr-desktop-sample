@@ -38,6 +38,10 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* settings);
 extern volatile uint32_t masterBus_blocks;
 extern volatile uint8_t  masterBus_active;
 extern volatile float    masterBus_grDb;
+/* diagnostics (mixer): peaks of the two DAC sums before FX3 (16 bit = full scale,
+ * the highest of about 0.25 s), 1 = FX3 runs on the second sum (St1 routed to St2) */
+extern volatile int32_t  masterBus_peak[2];
+extern volatile uint8_t  masterBus_onDac2;
 
 /* display helpers: crossover in Hz (0 = off) */
 uint32_t masterBus_crossoverHz(uint8_t v);

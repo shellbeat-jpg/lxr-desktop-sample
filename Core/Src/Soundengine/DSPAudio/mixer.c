@@ -752,7 +752,19 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	//then follows it there.
 	{
 		const uint8_t st1 = mixer_checkOutJackAvailable(MIXER_ROUTING_DAC1_STEREO);
-		int32_t* const bus = (st1 == MIXER_ROUTING_DAC2_STEREO || st1 == MIXER_ROUTING_DAC2_L || st1 == MIXER_ROUTING_DAC2_R) ? mix2 : mix;
+		const uint8_t onDac2 = st1 == MIXER_ROUTING_DAC2_STEREO || st1 == MIXER_ROUTING_DAC2_L || st1 == MIXER_ROUTING_DAC2_R;
+		int32_t* const bus = onDac2 ? mix2 : mix;
+		//diagnostics for the FX3 edit view: peak of both sums, decaying
+		static uint16_t peakAge = 0;
+		if(++peakAge > 100) { peakAge = 0; masterBus_peak[0] = masterBus_peak[1] = 0; }
+		for(uint32_t i = 0; i < OUTPUT_DMA_SIZE*2; i++)
+		{
+			const int32_t a = mix[i] < 0 ? -mix[i] : mix[i];
+			const int32_t b = mix2[i] < 0 ? -mix2[i] : mix2[i];
+			if(a > masterBus_peak[0]) masterBus_peak[0] = a;
+			if(b > masterBus_peak[1]) masterBus_peak[1] = b;
+		}
+		masterBus_onDac2 = onDac2;
 		masterBus_process(bus, OUTPUT_DMA_SIZE, &kitEngines[KIT_FX3_OFFSET]);
 		if(!mixer_limiterOn)
 			mixer_saturateMix(bus);
