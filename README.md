@@ -1,4 +1,4 @@
-# OpenElixir-02 + Samples
+# OE02-Samples+
 
 A fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) for the Erica Synths
 LXR-02 that adds user samples and single-cycle waves from the SD card (as oscillator and LFO

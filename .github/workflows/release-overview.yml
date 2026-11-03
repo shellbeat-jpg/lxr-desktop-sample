@@ -10,6 +10,10 @@ on:
       tag:
         description: Release tag (e.g. v1.2.8)
         required: true
+      notes_only:
+        description: Only update title and text (no assets; for older releases)
+        type: boolean
+        default: false
 
 env:
   FW_NAME: OE02-Samples          # file names (no "+")
@@ -26,7 +30,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
+          NOTES_ONLY: ${{ inputs.notes_only }}
         run: |
+          if [ "$NOTES_ONLY" = "true" ]; then
+            gh release edit "$TAG" --title "$DISPLAY_NAME $TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"
+            exit 0
+          fi
           mkdir -p out
           cp docs/OVERVIEW.md "out/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "out/${FW_NAME}_Overview_DE.md"
