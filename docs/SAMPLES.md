@@ -392,7 +392,7 @@ Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with 
 ## Master bus FX3 and FX knobs (1.2.10)
 
 A third FX slot, fixed at the end of the chain on the stereo output `St1` (after FX1/FX2, before
-the DJ filter and the limiter): saturation and a compressor, in either order.
+the DJ filter and the limiter): saturation, a compressor and an EQ, in any order.
 
 - **SHIFT + FX three times** (FX1 → FX2 → FX3, then FX1 again). Stored in the kit (kit extra
   block; older kits: off).
@@ -407,15 +407,22 @@ the DJ filter and the limiter): saturation and a compressor, in either order.
   signal is compressed: the bass no longer pumps the mix), `TRE` threshold −48 … 0 dB, `RAT` ratio 1:1 … 20:1
   (0 = off), `ATK` attack 0.1 … 100 ms, `DEC` release: `AUT` (first value) = follows the tempo,
   a 1/16 note (125 ms at 120 BPM), otherwise 20 … 1000 ms.
-- Next page (turn the encoder on): `ORD` = `S>C` (saturation, then compressor, default) or
-  `C>S`; output: `AMU` = auto make-up gain (adds half the
-  reduction a 0 dBFS peak gets, from `TRE` and `RAT`), `GAI` make-up 0 … +24 dB on top, `D/W` mix
-  of the compressor (parallel compression, 127 = fully compressed).
-- Page order: `SAT` `FRQ` `CFQ` `CSM` | `TRE` `RAT` `ATK` `DEC` | `ORD` `AMU` `GAI` `D/W`.
+- EQ (next page): `LO` low shelf 100 Hz, `F1` `G1` `Q1` mid 1, `F2` `G2` `Q2` mid 2, `HI` high
+  shelf 8 kHz. Gains −15 … +15 dB (64 = 0 dB, a band at 0 dB is off), frequencies 20 Hz …
+  16 kHz, Q 0.3 … 8 (both logarithmic). Defaults: mids at 300 Hz and 3 kHz, Q 1.
+- Last page: `ORD` = order of the three stages: `SCE` (saturation, compressor, EQ; default),
+  `CSE`, `ESC`, `ECS`, `SEC`, `CES`. Output: `AMU` = auto make-up gain: `OFF`, `FIX` (adds half the
+  reduction a 0 dBFS peak gets, from `TRE` and `RAT`), `ADA` (adaptive: follows the average
+  reduction, about 1.5 s, so compressed and dry signal are about as loud and `D/W` only changes
+  the character); `GAI` make-up 0 … +24 dB on top, `D/W` mix of the compressor (parallel
+  compression, 127 = fully compressed).
+- Page order: `SAT` `FRQ` `CFQ` `CSM` | `TRE` `RAT` `ATK` `DEC` | `LO` `F1` `G1` `Q1` |
+  `F2` `G2` `Q2` `HI` | `ORD` `AMU` `GAI` `D/W`.
 - With band split, `AMU`/`GAI` and `D/W` act on the compressed band only.
 - PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
   `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
-- With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.
+- With `SAT`, `RAT` and `GAI` at 0 and all EQ gains at 0 dB the bus is off and the sum stays
+  unchanged.
 - Edit view: top left the peak levels of `St1` / `St2` before FX3 in dBFS (`-99` = silent), bottom
   left the state: `byp` = off, `on-4A` = on, highest gain reduction 4 dB, on `St1` (`B` = FX3
   follows `St1` to the `St2` jacks).

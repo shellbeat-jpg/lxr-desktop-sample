@@ -54,7 +54,7 @@ Waser), alles andere aus OE02-Samples.
 | Zweiter FX-Slot | FX2 = Projekt-FX. FX-Routing `ORD`: `A>B`, `B>A`, `A+B` (parallel). | FX (SHIFT + FX, 2× für FX2) | FX1 und `ORD`: Kit, FX2: Global | NRPN 106–117 (FX1) |
 | Routing und Sends | `OUT` = `FX` / `FXB`: 100 % in Slot A / B. `SNA` / `SNB` = Send in A / B zusätzlich zum Ausgang, beide gleichzeitig möglich. Sinnvoll bei `OUT` = `St1` … `R2`; bei `FX` / `FXB` erhöhen sie den Anteil im selben Slot bzw. füttern zusätzlich den anderen. | VOICE (MIX `OUT`, AEG `SNA` / `SNB`) | Kit | NRPN 87–92 (`OUT` / Voice 1–6) |
 | Delay-Tempo-Sync | `1/4` … `1/32T`, punktiert, Triolen und die Track-Raster | FX (Setup `SYA` / `SYB`) | Global | – |
-| Master-Bus FX3 | Zuletzt auf `St1`: Sättigung `SAT` mit Split `FRQ` (24 dB/Okt., nur oberhalb 40 Hz … 10 kHz) und Kompressor mit Split `CFQ` (Release `AUT` = 1/16-Note, Auto-Make-up `AMU`); Reihenfolge `ORD` `S>C` / `C>S`. | FX (SHIFT + FX, 3× für FX3), PERF (`SAT`, `FRQ`) | Kit | – |
+| Master-Bus FX3 | Zuletzt auf `St1`: Sättigung `SAT` mit Split `FRQ` (24 dB/Okt., nur oberhalb 40 Hz … 10 kHz) Kompressor mit Split `CFQ` (Release `AUT` = 1/16-Note, Auto-Make-up `AMU` statisch / adaptiv) und EQ (Shelves, 2 Mitten); `ORD` = Reihenfolge der drei. | FX (SHIFT + FX, 3× für FX3), PERF (`SAT`, `FRQ`) | Kit | – |
 | FX-Regler | SHIFT + Regler 1 / 2 = Input-Gain FX1 / FX2, Regler 3 / 4 = Mix FX1 / FX2. | SHIFT + Regler (alle Seiten) | Input-Gain: Global | – |
 | Pre-Fader-Sends | `SNA` / `SNB` vor dem Volume-Fader: Der Fader regelt nur das trockene Signal (`OFF` = danach, wie bisher). | CONFIG (`PRE`) | Global | – |
 

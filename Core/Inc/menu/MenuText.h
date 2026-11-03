@@ -528,6 +528,14 @@ const char shortNames[][4]  =
 	{"amu"},	//MOD: FX3 auto make-up
 	{"cfq"},	//MOD: FX3 compressor split
 	{"csm"},	//MOD: FX3 compressor split mode
+	{"lo"},
+	{"f1"},
+	{"g1"},
+	{"q1"},
+	{"f2"},
+	{"g2"},
+	{"q2"},
+	{"hi"},
 
 };
 //-----------------------------------------------------------------
@@ -683,6 +691,14 @@ const char longNames[][16] =
 	{"Auto gain"},	//MOD
 	{"Comp split"},	//MOD
 	{"CFQ mode"},	//MOD
+	{"Low shelf"},
+	{"Mid 1 freq"},
+	{"Mid 1 gain"},
+	{"Mid 1 Q"},
+	{"Mid 2 freq"},
+	{"Mid 2 gain"},
+	{"Mid 2 Q"},
+	{"High shelf"},
 };
 
 

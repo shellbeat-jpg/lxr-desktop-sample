@@ -402,6 +402,14 @@ enum ParamEnums
 	PAR_FX3_AMU,	//auto make-up gain on/off
 	PAR_FX3_CFQ,	//compressor split
 	PAR_FX3_CSM,	//compressor split mode: band split / sidechain
+	PAR_FX3_EQL,	//EQ: low shelf, mid 1, mid 2, high shelf
+	PAR_FX3_E1F,
+	PAR_FX3_E1G,
+	PAR_FX3_E1Q,
+	PAR_FX3_E2F,
+	PAR_FX3_E2G,
+	PAR_FX3_E2Q,
+	PAR_FX3_EQH,
 
 	
 	//#########################################

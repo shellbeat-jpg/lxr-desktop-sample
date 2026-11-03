@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 
-/* the settings, in this order in the kit data (0..127 each, ORD 0..1) */
+/* the settings, in this order in the kit data (0..127 each, limits: masterBus_maxValue) */
 enum
 {
 	MB_SAT,		/* saturation, 0 = off */
@@ -27,11 +27,18 @@ enum
 	MB_REL,		/* release: 0 = auto (tempo: a 1/16 note), else 20 .. 1000 ms */
 	MB_GAI,		/* make-up gain 0 .. +24 dB */
 	MB_MIX,		/* compressor wet (parallel compression), 127 = 100 % */
-	MB_ORD,		/* 0 = saturation then compressor, 1 = the other way round */
-	MB_AMU,		/* 1 = auto make-up gain (half the reduction at 0 dBFS), plus GAI */
+	MB_ORD,		/* order of saturation (S), compressor (C) and EQ (E), MB_ORD_x */
+	MB_AMU,		/* auto make-up gain, plus GAI: 0 = off, 1 = static (half the reduction
+				   of a 0 dBFS peak), 2 = adaptive (the average reduction, ~1.5 s) */
 	MB_CFQ,		/* compressor split: 0 = full band, else as MB_FRQ */
 	MB_CSM,		/* what CFQ does: 0 = band split (only the band above is compressed),
 				   1 = sidechain (the band above is detected, everything compressed) */
+	/* EQ: gains 64 = 0 dB (0..127 = -15 .. +15 dB), frequencies 20 Hz .. 16 kHz
+	 * (logarithmic), Q 0.3 .. 8 (logarithmic) */
+	MB_EQL,		/* low shelf gain (100 Hz) */
+	MB_E1F, MB_E1G, MB_E1Q,		/* mid 1: frequency, gain, Q */
+	MB_E2F, MB_E2G, MB_E2Q,		/* mid 2 */
+	MB_EQH,		/* high shelf gain (8 kHz) */
 	MB_NUM_PARAMS
 };
 
@@ -48,7 +55,17 @@ extern volatile float    masterBus_grDb;
 extern volatile int32_t  masterBus_peak[2];
 extern volatile uint8_t  masterBus_onDac2;
 
-/* display helpers: crossover in Hz (0 = off) */
+/* the orders (MB_ORD); the first two are the values of the 1.2.10 tests */
+enum { MB_ORD_SCE, MB_ORD_CSE, MB_ORD_ESC, MB_ORD_ECS, MB_ORD_SEC, MB_ORD_CES, MB_ORD_COUNT };
+
+/* display helpers: crossover in Hz (0 = off), EQ values */
 uint32_t masterBus_crossoverHz(uint8_t v);
+float    masterBus_eqGainDb(uint8_t v);
+float    masterBus_eqFreqHz(uint8_t v);
+float    masterBus_eqQ(uint8_t v);
+/* "SCE" ... (3 characters) or "Sat>Comp>EQ" ... */
+const char* masterBus_orderName(uint8_t v, uint8_t isLong);
+/* highest value of setting k (127, 1 for switches ...) */
+uint8_t  masterBus_maxValue(uint8_t k);
 
 #endif /* INC_SOUNDENGINE_DSPAUDIO_FX_MASTERBUS_H_ */
