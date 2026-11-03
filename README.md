@@ -144,7 +144,7 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 ## What this fork adds
 
 Full user guide: [docs/SAMPLES.md](docs/SAMPLES.md). Menu names below are the short names shown on
-the display (as in the LXR manual). The start screen shows "OE02-Samples" and the version.
+the display (as in the LXR manual). The start screen shows "OE02-Samples+" and the version.
 
 ### 1. Getting samples onto the device
 
@@ -336,7 +336,7 @@ page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
 2. Switch the LXR-02 off, insert the card, hold the encoder button and switch it on; keep holding it
    until "LXR Updater" appears.
 3. Wait for "Update OK!", then remove the image from the card. The start screen shows
-   "OE02-Samples" and the version.
+   "OE02-Samples+" and the version.
 4. Put your WAV files into `SAMPLES` (loops into `SAMPLES/LOOPS`) and switch on normally: they are
    imported at the first start. A firmware update erases the samples; keep `SAMPLES` on the card and
    they are imported again.

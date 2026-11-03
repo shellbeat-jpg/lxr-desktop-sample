@@ -10,7 +10,8 @@ on:
 
 env:
   # name of the firmware (project() in CMakeLists.txt): names the build outputs
-  FW_NAME: OE02-Samples
+  FW_NAME: OE02-Samples          # file names (no "+")
+  DISPLAY_NAME: OE02-Samples+    # release titles
   # Arm GNU Toolchain used for the build. The ITCM is nearly full, so the
   # compiler version matters: change all three values together.
   # Releases: https://gitlab.arm.com/tooling/gnu-toolchains-for-arm (branch releases/<version>)
@@ -106,7 +107,7 @@ jobs:
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ env.FW_NAME }} ${{ github.ref_name }}
+          name: ${{ env.DISPLAY_NAME }} ${{ github.ref_name }}
           body_path: .github/releases/${{ github.ref_name }}.md
           prerelease: ${{ startsWith(github.ref_name, 'v0.') }}
           fail_on_unmatched_files: true

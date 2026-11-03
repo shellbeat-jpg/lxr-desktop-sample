@@ -12,7 +12,8 @@ on:
         required: true
 
 env:
-  FW_NAME: OE02-Samples
+  FW_NAME: OE02-Samples          # file names (no "+")
+  DISPLAY_NAME: OE02-Samples+    # release titles
 
 jobs:
   attach:
@@ -33,5 +34,5 @@ jobs:
           cp docs/OE02-Samples_Manual_Supplement.pdf out/
           gh release upload "$TAG" out/*.md out/*.svg out/*.pdf --clobber -R "$GITHUB_REPOSITORY"
           if [ -f ".github/releases/$TAG.md" ]; then
-            gh release edit "$TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --title "$DISPLAY_NAME $TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"
           fi

@@ -1,9 +1,9 @@
-# Overview: OE02-Samples and OpenElixir-02
+# Overview: OE02-Samples+ and OpenElixir-02
 
 [Deutsch](OVERVIEW.de.md)
 
 Everything new compared with the Erica Synths firmware. **[OE]** = from OpenElixir-02 v1.2 (Moritz
-Waser), everything else from OE02-Samples.
+Waser), everything else from OE02-Samples+.
 "Global" = saved with SAVE → Global and in the project file. NRPN n = parameter 128 + n
 (computed, not measured on the device). Details: [SAMPLES.md](SAMPLES.md).
 

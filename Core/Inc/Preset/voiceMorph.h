@@ -1,7 +1,7 @@
 /*
  * voiceMorph.h
  *
- * MOD (OE02-Samples): morph the sound of one voice towards another active
+ * MOD (OE02-Samples+): morph the sound of one voice towards another active
  * voice, like the kit morph but between two voices of the active kit.
  * Performance page: "vmv" selects the pair (source > target), "vmo" the
  * amount (0 = the source as set, 127 = the target's values). Not saved.

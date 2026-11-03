@@ -1,4 +1,4 @@
-# Session Handoff: OE02-Samples (LXR-02 custom firmware)
+# Session Handoff: OE02-Samples+ (LXR-02 custom firmware)
 
 Nov 3, 2026
 
@@ -8,7 +8,7 @@ v1.2.9 is released and marked Latest; both branches are at commit `123b352`.
 
 | Item | Value |
 | --- | --- |
-| Project | Custom firmware "OE02-Samples" for the Erica Synths LXR-02: a fork of OpenElixir-02 v1.2 by Moritz Waser (GPL-3) with user samples and sequencer, FX and modulation features |
+| Project | Custom firmware "OE02-Samples+" for the Erica Synths LXR-02: a fork of OpenElixir-02 v1.2 by Moritz Waser (GPL-3) with user samples and sequencer, FX and modulation features |
 | Repo | `github.com/shellbeat-jpg/lxr-desktop-sample`; branches `oe-samples` and `main` stay identical (push `oe-samples oe-samples:main`) |
 | Commit identity | `shellbeat-jpg` / `307613755+shellbeat-jpg@users.noreply.github.com` |
 | Build | `cmake --build build/release` → `build/release/LXR_OE02-Samples_V<version>.img`; the version comes from `project(VERSION)` in `CMakeLists.txt` |

@@ -1,9 +1,9 @@
-# Übersicht: OE02-Samples und OpenElixir-02
+# Übersicht: OE02-Samples+ und OpenElixir-02
 
 [English](OVERVIEW.md)
 
 Alle Neuerungen gegenüber der Erica-Synths-Firmware. **[OE]** = aus OpenElixir-02 v1.2 (Moritz
-Waser), alles andere aus OE02-Samples.
+Waser), alles andere aus OE02-Samples+.
 „Global“ = gespeichert mit SAVE → Global und in der Projektdatei. NRPN n = Parameter 128 + n
 (errechnet, nicht am Gerät nachgemessen). Details: [SAMPLES.md](SAMPLES.md).
 

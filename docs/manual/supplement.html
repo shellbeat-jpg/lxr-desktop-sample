@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>OE02-Samples 1.2.10 – Supplement to the LXR Owners Manual</title>
+<title>OE02-Samples+ 1.2.10 – Supplement to the LXR Owners Manual</title>
 <!--
   Source of docs/OE02-Samples_Manual_Supplement.pdf. Build: node docs/manual/build.mjs
   (needs Node and Playwright with Chromium). Layout after the LXR owners manual:
@@ -109,8 +109,8 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page cover" data-nofoot>
   <div class="in">
     <div>
-      <div class="brand"><span class="n">OE02-SAMPLES</span><span class="t">Supplement</span><span class="r"></span></div>
-      <div class="sub">to the LXR Owners Manual · firmware 1.2.10 · for the Erica Synths LXR-02</div>
+      <div class="brand"><span class="n">OE02-SAMPLES+</span><span class="t">Custom firmware</span><span class="r"></span></div>
+      <div class="sub">Version 1.2.10 · supplement to the LXR owners manual · for the LXR-02</div>
     </div>
     <div class="mid">
       <div><b>Samples &amp; waves</b>31 WAV samples and 8 single-cycle waves from the SD card, as oscillator and LFO waveforms, with start, length and loops.</div>
@@ -119,7 +119,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <div><b>Morph &amp; more</b>Kit morph per voice and from the mod wheel, voice morph, choke group, voice INIT templates.</div>
     </div>
     <div class="foot">
-      <p>Not an official Erica Synths or Sonic Potions document; not affiliated with or approved by Erica Synths. OE02-Samples is a fork of OpenElixir-02 1.2 (Moritz Waser), which is based on the LXR firmware. Install it at your own risk. Licence: GPL-3.0.</p>
+      <p>Not an official Erica Synths or Sonic Potions document; not affiliated with or approved by Erica Synths. OE02-Samples+ is a fork of OpenElixir-02 1.2 (Moritz Waser), which is based on the LXR firmware. Install it at your own risk. Licence: GPL-3.0.</p>
       <p>github.com/shellbeat-jpg/lxr-desktop-sample<br>November 2026</p>
     </div>
   </div>
@@ -138,8 +138,8 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; Intro</h1>
-      <p>This supplement describes what the firmware <b>OE02-Samples 1.2.10</b> adds to the LXR-02 and to its owners manual. Everything that is not mentioned here works as described in the manual.</p>
-      <p>OE02-Samples is built on <b>OpenElixir-02 1.2</b> by Moritz Waser. Features that come from OpenElixir-02 are marked <span class="oe">OE</span>; everything else is new in OE02-Samples. The chapters follow the order of the manual: memory, voices, sequencer, performance mode, effects, global settings and MIDI.</p>
+      <p>This supplement describes what the firmware <b>OE02-Samples+ 1.2.10</b> adds to the LXR-02 and to its owners manual. Everything that is not mentioned here works as described in the manual.</p>
+      <p>OE02-Samples+ is built on <b>OpenElixir-02 1.2</b> by Moritz Waser. Features that come from OpenElixir-02 are marked <span class="oe">OE</span>; everything else is new in OE02-Samples+. The chapters follow the order of the manual: memory, voices, sequencer, performance mode, effects, global settings and MIDI.</p>
       <h2 data-toc>1.1. Reading the tables</h2>
       <p>As in the manual, the parameter tables list the <b>displayed name</b> (the three letters on the display), the full name and what the parameter does. The edit view (click the encoder) shows the full name and the value with its unit.</p>
       <p>Button combinations are written with the label printed below the step button, for example <b>SHIFT + FX</b> (step button 15) or <b>SHIFT + LAST STEP</b> (step button 14).</p>
@@ -683,7 +683,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li><b>docs/ENGINES.md</b>: the voice engines <span class="oe">OE</span>.</li>
       </ul>
       <p>github.com/shellbeat-jpg/lxr-desktop-sample</p>
-      <p class="note">OE02-Samples is free software under the GNU General Public License 3.0. It is a fork of OpenElixir-02 1.2 by Moritz Waser, based on the LXR firmware by Julian Schmidt (Sonic Potions) and Erica Synths. Fonts: Barlow, SIL Open Font License.</p>
+      <p class="note">OE02-Samples+ is free software under the GNU General Public License 3.0. It is a fork of OpenElixir-02 1.2 by Moritz Waser, based on the LXR firmware by Julian Schmidt (Sonic Potions) and Erica Synths. Fonts: Barlow, SIL Open Font License.</p>
     </div>
   </div>
 </section>
@@ -698,7 +698,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     if (p.hasAttribute('data-nofoot')) return;
     if (n % 2 === 0) p.classList.add('even');
     const f = document.createElement('footer');
-    f.innerHTML = '<span>OE02-Samples 1.2.10 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
+    f.innerHTML = '<span>OE02-Samples+ 1.2.10 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
     p.appendChild(f);
   });
   const toc = document.getElementById('toc');
