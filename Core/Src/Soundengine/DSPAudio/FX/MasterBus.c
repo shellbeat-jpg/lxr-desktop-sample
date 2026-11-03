@@ -11,6 +11,7 @@
 #include "Soundengine/config.h"
 #include <math.h>
 #include <string.h>
+#include "Soundengine/Sequencer/sequencer.h"	/* seq_getBpm: auto release */
 
 typedef struct { float b0, b1, b2, a1, a2; } mb_Coef;
 
@@ -25,6 +26,7 @@ static struct
 	float    z[4][2][2];			/* [lp1, lp2, hp1, hp2][channel][state] */
 	/* compressor */
 	float    thr, slope, att, rel, makeup, wet;
+	uint16_t relBpm;				/* tempo the auto release was made for (0 = fixed) */
 	uint8_t  comp;
 	float    env;					/* dB over the threshold */
 	float    grMax;					/* highest reduction of this block (display) */
@@ -40,7 +42,7 @@ volatile uint8_t  masterBus_onDac2 = 0;
 uint32_t masterBus_crossoverHz(uint8_t v)
 {
 	if(v == 0) return 0;
-	return (uint32_t)(40.f * powf(50.f, (float)(v - 1u) / 126.f) + 0.5f);
+	return (uint32_t)(40.f * powf(250.f, (float)(v - 1u) / 126.f) + 0.5f);
 }
 /* RBJ cookbook, Q = 1/sqrt(2) (Butterworth) */
 static void mb_butter(mb_Coef* c, const float fc, const uint8_t high)
@@ -92,8 +94,17 @@ static void mb_update(const uint8_t* s)
 	mb.slope = 1.f - 1.f / ratio;
 	const float a = s[MB_ATK] / 127.f, l = s[MB_REL] / 127.f;
 	mb.att = expf(-1000.f / ((0.1f + 100.f * a * a) * REAL_FS));
-	mb.rel = expf(-1000.f / ((20.f + 980.f * l * l) * REAL_FS));
-	mb.makeup = powf(10.f, (24.f * s[MB_GAI] / 127.f) / 20.f);
+	mb.relBpm = 0;
+	if(s[MB_REL])
+	{
+		const float lr = (s[MB_REL] - 1u) / 126.f;
+		mb.rel = expf(-1000.f / ((20.f + 980.f * lr * lr) * REAL_FS));
+	}
+	(void)l;
+	float gainDb = 24.f * s[MB_GAI] / 127.f;
+	if(s[MB_AMU])
+		gainDb += -mb.thr * mb.slope * 0.5f;	/* auto: half the reduction of a 0 dBFS peak */
+	mb.makeup = powf(10.f, gainDb / 20.f);
 	mb.wet = s[MB_MIX] / 127.f;
 	mb.comp = s[MB_RAT] != 0 || s[MB_GAI] != 0;
 	memcpy(mb.last, s, MB_NUM_PARAMS);
@@ -142,6 +153,18 @@ void masterBus_process(int32_t* mix, uint32_t frames, const uint8_t* s)
 		return;		/* off: the sum stays bit for bit as it was */
 	}
 	masterBus_active = 1;
+	if(mb.comp && s[MB_REL] == 0)
+	{
+		/* auto release: the time constant follows the tempo, a 1/16 note (4/4) */
+		uint16_t bpm = seq_getBpm();
+		if(bpm < 20) bpm = 20;
+		if(bpm != mb.relBpm)
+		{
+			mb.relBpm = bpm;
+			const float ms = 60000.f / bpm / 4.f;
+			mb.rel = expf(-1000.f / (ms * REAL_FS));
+		}
+	}
 	const uint8_t compFirst = s[MB_ORD] != 0;
 	for(uint32_t i = 0; i < frames; i++)
 	{

@@ -19,14 +19,15 @@
 enum
 {
 	MB_SAT,		/* saturation, 0 = off */
-	MB_FRQ,		/* crossover: 0 = full band, else 40 Hz .. 2 kHz */
+	MB_FRQ,		/* crossover: 0 = full band, else 40 Hz .. 10 kHz (logarithmic) */
 	MB_THR,		/* compressor threshold -48 .. 0 dB */
 	MB_RAT,		/* ratio 1:1 .. 20:1 (0 = compressor off) */
 	MB_ATK,		/* attack 0.1 .. 100 ms */
-	MB_REL,		/* release 20 .. 1000 ms */
+	MB_REL,		/* release: 0 = auto (tempo: a 1/16 note), else 20 .. 1000 ms */
 	MB_GAI,		/* make-up gain 0 .. +24 dB */
 	MB_MIX,		/* compressor wet (parallel compression), 127 = 100 % */
 	MB_ORD,		/* 0 = saturation then compressor, 1 = the other way round */
+	MB_AMU,		/* 1 = auto make-up gain (half the reduction at 0 dBFS), plus GAI */
 	MB_NUM_PARAMS
 };
 

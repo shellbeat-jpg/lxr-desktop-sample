@@ -525,6 +525,7 @@ const char shortNames[][4]  =
 	{"frq"},
 	{"ord"},
 	{"pre"},	//MOD: pre-fader sends
+	{"amu"},	//MOD: FX3 auto make-up
 
 };
 //-----------------------------------------------------------------
@@ -677,6 +678,7 @@ const char longNames[][16] =
 	{"Sat split"},
 	{"Order"},
 	{"PreFader Snd"},	//MOD
+	{"Auto gain"},	//MOD
 };
 
 

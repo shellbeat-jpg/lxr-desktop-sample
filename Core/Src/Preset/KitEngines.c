@@ -18,13 +18,14 @@
 #include "Preset/PresetManager.h"
 #include "Soundengine/Sequencer/sequencer.h"
 #include <string.h>
+#include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3 setting order
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT,
-		0, 0, 127, 0, 20, 40, 0, 127, 0 };	//MOD: FX3 off (kitEngines_fx3Defaults)
+		0, 0, 127, 0, 20, 40, 0, 127, 0, 0 };	//MOD: FX3 off (kitEngines_fx3Defaults)
 //MOD: FX3 defaults: no saturation, full band, threshold 0 dB, ratio 1:1 (off), no gain, 100 % wet
-static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0 };
+static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0, 0 };
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
@@ -94,10 +95,15 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < 3 ? t[4] : 0;
-		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= KIT_FX3_SIZE)
+		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= 9)
 		{
-			for(uint8_t k=0;k<KIT_FX3_SIZE;k++)	//MOD: FX3 settings (ORD 0/1, the others 0..127)
-				engines[KIT_FX3_OFFSET + k] = t[4+k] > (k == KIT_FX3_SIZE-1 ? 1 : 127) ? kitEngines_fx3Defaults[k] : t[4+k];
+			//MOD: FX3 settings (ORD and AMU 0/1, the others 0..127); the first test
+			//builds wrote 9 bytes (no AMU): the missing ones keep their default
+			for(uint8_t k=0;k<KIT_FX3_SIZE;k++)
+			{
+				const uint8_t max = (k == MB_ORD || k == MB_AMU) ? 1 : 127;
+				engines[KIT_FX3_OFFSET + k] = (k >= n || t[4+k] > max) ? kitEngines_fx3Defaults[k] : t[4+k];
+			}
 		}
 		else if(!((t[0] >= 'A' && t[0] <= 'Z' && t[1] >= 'A' && t[1] <= 'Z') && ((t[2] >= 'A' && t[2] <= 'Z') || (t[2] >= '0' && t[2] <= '9'))))
 			break;	//not a part: data that isn't ours

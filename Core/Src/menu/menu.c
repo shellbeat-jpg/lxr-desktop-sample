@@ -288,6 +288,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_SPLIT, CAT_FX, LONG_FX3_SPLIT},/*TEXT_FX3_SPLIT*/
 		{SHORT_FX3_ORDER, CAT_FX, LONG_FX3_ORDER},/*TEXT_FX3_ORDER*/
 		{SHORT_PREFADER, CAT_GLOBAL, LONG_PREFADER},/*TEXT_PREFADER*/
+		{SHORT_FX3_AUTOGAIN, CAT_FX, LONG_FX3_AUTOGAIN},/*TEXT_FX3_AUTOGAIN*/
 
 
 };
@@ -575,7 +576,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_STEP_SHIFT*/		DTYPE_MENU | (MENU_STEP_SHIFT<<8),
 		/*PAR_FX_SEND1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
 		/*PAR_FX_SENDB1-6*/		DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
-		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD
+		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD (+AMU)
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -1037,7 +1038,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
 	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
-	if(p >= PAR_FX3_SAT && p <= PAR_FX3_ORD)	//MOD: FX3 settings (MasterBus.h order)
+	if(p >= PAR_FX3_SAT && p <= PAR_FX3_AMU)	//MOD: FX3 settings (MasterBus.h order)
 		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
 	return 0;
 }
@@ -1045,7 +1046,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 //value with its unit; returns 0 for other parameters
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
-	if(p < PAR_FX3_SAT || p > PAR_FX3_ORD)
+	if(p < PAR_FX3_SAT || p > PAR_FX3_AMU)
 		return 0;
 	char t[12];
 	const float f = v / 127.f;
@@ -1060,6 +1061,7 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 		break;
 	}
 	case PAR_FX3_ORD:	snprintf(t, sizeof(t), isLong ? (v ? "Comp>Sat" : "Sat>Comp") : (v ? "C>S" : "S>C"));	break;
+	case PAR_FX3_AMU:	snprintf(t, sizeof(t), v ? (isLong ? "on" : " on") : "off");	break;
 	case PAR_FX3_THR:	snprintf(t, sizeof(t), isLong ? "%d dB" : "%d", (int)(-48.f + 48.f * f - 0.5f * (v < 127)));	break;
 	case PAR_FX3_RAT:
 	{
@@ -1078,8 +1080,10 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 	}
 	case PAR_FX3_REL:
 	{
-		const unsigned ms = (unsigned)(20.f + 980.f * f * f + 0.5f);
-		if(isLong)			snprintf(t, sizeof(t), "%u ms", ms);
+		const float lr = v ? (v - 1u) / 126.f : 0.f;
+		const unsigned ms = (unsigned)(20.f + 980.f * lr * lr + 0.5f);
+		if(!v)				snprintf(t, sizeof(t), isLong ? "auto 1/16" : "aut");
+		else if(isLong)		snprintf(t, sizeof(t), "%u ms", ms);
 		else if(ms < 1000)	snprintf(t, sizeof(t), "%u", ms);
 		else				snprintf(t, sizeof(t), "1s");
 		break;
@@ -2255,7 +2259,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_ORD)
+			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_AMU)
 			{
 				//MOD: FX3 value with its unit, right aligned
 				char t[17];
@@ -3888,7 +3892,7 @@ static void menu_encoderChangeParameter(int8_t inc)
 	{
 		uint8_t* s = menu_sendLevel(paramNr);
 		const int16_t v = (int16_t)*s + inc;
-		const int16_t max = paramNr == PAR_FX3_ORD ? 1 : 127;	//MOD
+		const int16_t max = (paramNr == PAR_FX3_ORD || paramNr == PAR_FX3_AMU) ? 1 : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;
