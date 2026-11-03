@@ -519,5 +519,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.10 were tried on the device
-before their release; of 1.2.10 not yet: the FX routing `A>+` and the pre-fader sends (`PRE`). Host tests (Linux, gcc) for import and playback:
+before their release. Host tests (Linux, gcc) for import and playback:
 `sh tests/host/run.sh`.
