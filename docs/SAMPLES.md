@@ -405,6 +405,9 @@ the DJ filter and the limiter): saturation and a compressor, in either order.
 - Setup page (turn the encoder past `D/W`): `ORD` = `S>C` (saturation, then compressor, default)
   or `C>S`.
 - With `SAT`, `RAT` and `GAI` at 0 the bus is off and the sum stays unchanged.
+- Edit view: top left the peak levels of `St1` / `St2` before FX3 in dBFS (`-99` = silent), bottom
+  left the state: `byp` = off, `on-4A` = on, highest gain reduction 4 dB, on `St1` (`B` = FX3
+  follows `St1` to the `St2` jacks).
 - Only `St1`: voices on `St2`, `L1` … `R2` don't pass through FX3. Without a cable in `St1` the
   firmware plays `St1` on the jacks of `St2` (stock behaviour): FX3 then works there, on
   everything that comes out of these jacks.

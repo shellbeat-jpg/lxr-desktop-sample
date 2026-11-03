@@ -747,20 +747,21 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	cpuMeter_section(CPU_SECTION_FX, meterStart);
 #endif
 
-	//MOD: FX3, the master bus of St1 (kit data); off: unchanged. Without a cable in
-	//St1 the mix routes St1 to the jacks of St2 (mixer_checkOutJackAvailable): FX3
-	//then follows it there.
+	//MOD: FX3, the master bus of St1 (kit data); off: unchanged. Note the stock
+	//naming: DAC1 (St1) is summed in mix2, DAC2 (St2) in mix (mixer_addDataToOutput).
+	//Without a cable in St1 the mix routes St1 to the jacks of St2
+	//(mixer_checkOutJackAvailable): FX3 then follows it there.
 	{
 		const uint8_t st1 = mixer_checkOutJackAvailable(MIXER_ROUTING_DAC1_STEREO);
 		const uint8_t onDac2 = st1 == MIXER_ROUTING_DAC2_STEREO || st1 == MIXER_ROUTING_DAC2_L || st1 == MIXER_ROUTING_DAC2_R;
-		int32_t* const bus = onDac2 ? mix2 : mix;
+		int32_t* const bus = onDac2 ? mix : mix2;
 		//diagnostics for the FX3 edit view: peak of both sums, decaying
 		static uint16_t peakAge = 0;
 		if(++peakAge > 100) { peakAge = 0; masterBus_peak[0] = masterBus_peak[1] = 0; }
 		for(uint32_t i = 0; i < OUTPUT_DMA_SIZE*2; i++)
 		{
-			const int32_t a = mix[i] < 0 ? -mix[i] : mix[i];
-			const int32_t b = mix2[i] < 0 ? -mix2[i] : mix2[i];
+			const int32_t a = mix2[i] < 0 ? -mix2[i] : mix2[i];	//St1
+			const int32_t b = mix[i] < 0 ? -mix[i] : mix[i];		//St2
 			if(a > masterBus_peak[0]) masterBus_peak[0] = a;
 			if(b > masterBus_peak[1]) masterBus_peak[1] = b;
 		}
