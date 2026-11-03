@@ -423,6 +423,8 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
   `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
 - With `SAT`, `RAT` and `GAI` at 0 and all EQ gains at 0 dB the bus is off and the sum stays
   unchanged.
+- CPU: the CPU meter build (`cmake -DLXR_CPU_METER=ON`) shows FX3 as `M` on its second page
+  (SHIFT + PROJECT), in percent of an audio block.
 - Edit view: top left the peak levels of `St1` / `St2` before FX3 in dBFS (`-99` = silent), bottom
   left the state: `byp` = off, `on-4A` = on, highest gain reduction 4 dB, on `St1` (`B` = FX3
   follows `St1` to the `St2` jacks).

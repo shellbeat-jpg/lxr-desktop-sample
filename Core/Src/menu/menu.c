@@ -1664,13 +1664,14 @@ static void menu_repaintCpuMeter()
 	}
 	if(menu_cpuMeterShown == 2)
 	{
-		//peak per section: drum voices 1-3, snare, cymbal, hi-hat, FX bus, rest of the mixer
+		//peak per section: drum voices 1-3, snare, cymbal, hi-hat, master bus FX3 (M),
+		//FX bus (FX1/FX2), rest of the mixer
 		unsigned pk[CPU_NUM_SECTIONS];
 		for(uint8_t i=0;i<CPU_NUM_SECTIONS;i++)
 		{
 			pk[i] = CPU_METER_MIN(cpuMeter.sectionPeak[i] * 100 / block, 99u);
 		}
-		snprintf(&editDisplayBuffer[0][0], 17, "D%2u %2u %2u S%2u   ", pk[0], pk[1], pk[2], pk[3]);
+		snprintf(&editDisplayBuffer[0][0], 17, "D%2u %2u %2uS%2u M%2u", pk[0], pk[1], pk[2], pk[3], pk[CPU_SECTION_FX3]);
 		snprintf(&editDisplayBuffer[1][0], 17, "C%2u H%2u fx%2u o%2u", pk[4], pk[5], pk[CPU_SECTION_FX], pk[CPU_SECTION_OTHER]);
 		return;
 	}

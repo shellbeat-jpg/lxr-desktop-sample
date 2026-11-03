@@ -52,6 +52,7 @@ enum
 {
 	CPU_SECTION_VOICE1,	//voices 1-6 (CPU_SECTION_VOICE1 + voice index)
 	CPU_SECTION_FX = 6,
+	CPU_SECTION_FX3,	//MOD: master bus FX3 (MasterBus.c)
 	CPU_SECTION_OTHER,	//rest of mixer_calcNextSampleBlock()
 	CPU_NUM_SECTIONS
 };

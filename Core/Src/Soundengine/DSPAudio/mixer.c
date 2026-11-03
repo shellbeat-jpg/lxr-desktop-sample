@@ -766,7 +766,13 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 			if(b > masterBus_peak[1]) masterBus_peak[1] = b;
 		}
 		masterBus_onDac2 = onDac2;
+#if CPU_METER
+		meterStart = DWT->CYCCNT;
+#endif
 		masterBus_process(bus, OUTPUT_DMA_SIZE, &kitEngines[KIT_FX3_OFFSET]);
+#if CPU_METER
+		cpuMeter_section(CPU_SECTION_FX3, meterStart);
+#endif
 		if(!mixer_limiterOn)
 			mixer_saturateMix(bus);
 	}
