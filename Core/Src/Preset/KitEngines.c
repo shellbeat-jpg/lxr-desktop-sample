@@ -25,7 +25,7 @@ uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENG
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT,
 		0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0,	//MOD: FX3 off (kitEngines_fx3Defaults)
-		0, KIT_T7_COARSE_ZERO };	//MOD: track 7 as track 6
+		0, KIT_T7_COARSE_ZERO, 0, 0, 0 };	//MOD: track 7 as track 6
 //MOD: FX3 defaults: no saturation, full band, threshold 0 dB, ratio 1:1 (off), no gain, 100 % wet
 static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0 };	//EQ flat: mids 300 Hz / 3 kHz, Q 1
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
@@ -44,6 +44,9 @@ void kitEngines_setStock(uint8_t* engines)
 	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
 	engines[KIT_T7_OFFSET] = 0;		//MOD: track 7 as track 6
 	engines[KIT_T7_OFFSET + 1] = KIT_T7_COARSE_ZERO;
+	engines[KIT_T7_OFFSET + KIT_T7_SENDA] = 0;
+	engines[KIT_T7_OFFSET + KIT_T7_SENDB] = 0;
+	engines[KIT_T7_OFFSET + KIT_T7_PAN] = 0;
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -73,7 +76,7 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o[0] = 'F'; o[1] = 'X'; o[2] = '3'; o[3] = KIT_FX3_SIZE;	//MOD: FX3 settings
 	memcpy(&o[4], &engines[KIT_FX3_OFFSET], KIT_FX3_SIZE);
 	o += 4 + KIT_FX3_SIZE;
-	o[0] = 'T'; o[1] = 'R'; o[2] = '7'; o[3] = KIT_T7_SIZE;	//MOD: track 7 waveform and pitch
+	o[0] = 'T'; o[1] = 'R'; o[2] = '7'; o[3] = KIT_T7_SIZE;	//MOD: track 7 waveform, pitch, sends, pan
 	memcpy(&o[4], &engines[KIT_T7_OFFSET], KIT_T7_SIZE);
 	return KIT_DATA_BLOCK_SIZE;
 }
@@ -100,10 +103,12 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 			for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
 				engines[offset + slot] = t[4+slot] > 127 ? KIT_SEND_DEFAULT : t[4+slot];
 		}
-		else if(t[0] == 'T' && t[1] == 'R' && t[2] == '7' && n >= KIT_T7_SIZE)	//MOD: track 7
+		else if(t[0] == 'T' && t[1] == 'R' && t[2] == '7' && n >= 2)	//MOD: track 7 (1.2.11 tests: 2 bytes)
 		{
 			engines[KIT_T7_OFFSET] = t[4] <= 127 ? t[4] : 0;
 			engines[KIT_T7_OFFSET + 1] = t[5] <= 2 * KIT_T7_COARSE_ZERO ? t[5] : KIT_T7_COARSE_ZERO;
+			for(uint8_t k = KIT_T7_SENDA; k < KIT_T7_SIZE; k++)
+				engines[KIT_T7_OFFSET + k] = (k < n && t[4+k] <= 128) ? t[4+k] : 0;
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;

@@ -513,16 +513,49 @@ INDTCM float mixer_limiterGain[2] = {1.f, 1.f};
 INDTCM uint8_t mixer_limiterOn = 1;
 INDTCM uint8_t mixer_preFader = 0;		//MOD: global PAR_FX_PREFADER
 static float mixer_faderGain[6] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };	//MOD: pre-fader: the fader, smoothed per block
-//MOD: the voice's sends into FX slot A and B (kit data), besides its output
+//MOD: the send levels of the last block, per FX slot and voice (ramps)
+static float mixer_sendGain[2][NUM_VOICE_SLOTS];
+//MOD: a send whose level changed (knob, track 6/7 switch): a linear ramp over the
+//block against clicks. Rare, so in flash.
+__attribute__((noinline)) static void mixer_addSendRamp(const float g0, const float g1, const float panL, const float panR,
+		const int16_t* data, int32_t* mix, int32_t* mix2, int16_t* fx)
+{
+	static int16_t ramp[OUTPUT_DMA_SIZE];
+	const float step = (g1 - g0) * (1.f / OUTPUT_DMA_SIZE);
+	float g = g0;
+	for(uint32_t i = 0; i < OUTPUT_DMA_SIZE; i++)
+	{
+		g += step;
+		ramp[i] = (int16_t)(data[i] * g);
+	}
+	mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL, panR, ramp, &mix[0], &mix[1], &mix2[0], &mix2[1], fx);
+}
+IN_ITCM_RAM static inline void mixer_addSend(float* last, const float s, const float panL, const float panR, int16_t* data,
+		int32_t* mix, int32_t* mix2, int16_t* fx)
+{
+	if(s != *last)
+	{
+		mixer_addSendRamp(*last, s, panL, panR, data, mix, mix2, fx);
+		*last = s;
+	}
+	else if(s > 0.f)
+		mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*s, panR*s, data, &mix[0], &mix[1], &mix2[0], &mix2[1], fx);
+}
+//MOD: the voice's sends into FX slot A and B (kit data), besides its output.
+//Slot 6 takes those of track 7 while it plays a trigger of track 7 (if set).
 IN_ITCM_RAM static void mixer_addSends(const uint8_t v, const float panL, const float panR, int16_t* data,
 		int32_t* mix, int32_t* mix2, int16_t* fxA, int16_t* fxB)
 {
-	const float sA = kitEngines[KIT_SEND_OFFSET + v] * (1.f/127.f);
-	if(sA > 0.f)
-		mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sA, panR*sA, data, &mix[0], &mix[1], &mix2[0], &mix2[1], fxA);
-	const float sB = kitEngines[KIT_SENDB_OFFSET + v] * (1.f/127.f);
-	if(sB > 0.f)
-		mixer_addDataToOutput(MIXER_ROUTING_FX_BUS, panL*sB, panR*sB, data, &mix[0], &mix[1], &mix2[0], &mix2[1], fxB);
+	uint8_t a = kitEngines[KIT_SEND_OFFSET + v];
+	uint8_t b = kitEngines[KIT_SENDB_OFFSET + v];
+	if(v == NUM_VOICE_SLOTS-1 && slot_t7Playing)
+	{
+		const uint8_t* t = &kitEngines[KIT_T7_OFFSET];
+		if(t[KIT_T7_SENDA]) a = (uint8_t)(t[KIT_T7_SENDA] - 1u);
+		if(t[KIT_T7_SENDB]) b = (uint8_t)(t[KIT_T7_SENDB] - 1u);
+	}
+	mixer_addSend(&mixer_sendGain[0][v], a * (1.f/127.f), panL, panR, data, mix, mix2, fxA);
+	mixer_addSend(&mixer_sendGain[1][v], b * (1.f/127.f), panL, panR, data, mix, mix2, fxB);
 }
 //MOD: pre-fader: the fader of voice v on its output (the engines leave it out), a
 //linear ramp per block against zipper noise

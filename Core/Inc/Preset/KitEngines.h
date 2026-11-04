@@ -43,8 +43,11 @@
 //MOD: FX3 (master bus of St1, MasterBus.h): 9 settings, part "FX3"
 #define KIT_FX3_OFFSET			(3*NUM_VOICE_SLOTS + 1)
 #define KIT_FX3_SIZE			21
-#define KIT_T7_OFFSET			(KIT_FX3_OFFSET + KIT_FX3_SIZE)	//MOD: track 7: waveform + 1 (0 = as track 6), coarse offset + 24
-#define KIT_T7_SIZE				2
+#define KIT_T7_OFFSET			(KIT_FX3_OFFSET + KIT_FX3_SIZE)	//MOD: track 7: waveform + 1 (0 = as track 6), coarse offset + 24,
+#define KIT_T7_SIZE				5	//send A, send B and pan + 1 (0 = as track 6), part "TR7"
+#define KIT_T7_SENDA			2
+#define KIT_T7_SENDB			3
+#define KIT_T7_PAN				4
 #define KIT_T7_COARSE_ZERO		24
 #define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE)
 #define KIT_SEND_DEFAULT		0

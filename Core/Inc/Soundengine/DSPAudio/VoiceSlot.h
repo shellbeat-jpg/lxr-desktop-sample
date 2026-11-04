@@ -82,6 +82,8 @@ void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size);
 //MOD: fade out (~2 ms) every slot that plays a loop sample, until its next trigger;
 //on sequencer stop (with the amp decay at 127 a loop never ends by itself)
 void slot_stopLoops(void);
+//MOD: 1 while slot 6 plays a trigger of track 7 (the mixer takes its sends then)
+extern uint8_t slot_t7Playing;
 
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);

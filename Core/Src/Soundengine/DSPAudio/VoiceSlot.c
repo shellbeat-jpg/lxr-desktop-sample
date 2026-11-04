@@ -100,6 +100,7 @@ void slot_setEngine(const uint8_t slot, const uint8_t engine)
 #define SLOT_CHOKE_FADE		96		//samples (~2 ms)
 #define SLOT_CHOKE_OFF		(-1)	//not choked
 uint8_t slot_chokeGroup = 0;
+uint8_t slot_t7Playing = 0;	//MOD: track 7 sends
 static int16_t slot_choke[NUM_VOICE_SLOTS] = { SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF };
 
 void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size)
@@ -177,6 +178,15 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	if(slot == NUM_VOICE_SLOTS-1)
 	{
 		s->u.c.oscVolEg.decay = s->decay[second];
+		slot_t7Playing = second;
+		//MOD: track 7's own pan (the engines took the voice's pan at the trigger)
+		const uint8_t pan = kitEngines[KIT_T7_OFFSET + KIT_T7_PAN];
+		if(second && pan)
+		{
+			const float p = (float)(pan - 1u);
+			s->u.c.triggeredPanL = sqrtf((127.f - p) / 127.f);
+			s->u.c.triggeredPanR = sqrtf(p / 127.f);
+		}
 	}
 }
 //---------------------------------------------------

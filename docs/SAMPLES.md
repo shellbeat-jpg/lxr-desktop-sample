@@ -484,19 +484,23 @@ dry signal, the voice's level in the effects stays (fader down = only the echo /
 left). The effect levels are then set with SHIFT + knob 1 / 2 (input) and 3 / 4 (mix). `VOL` on the
 mix page still acts on both. Voices with `OUT` = `FX`/`FXB` keep their fader in either mode.
 
-## Track 7: own waveform and pitch (1.2.11)
+## Track 7: own waveform, pitch, sends and pan (1.2.11)
 
 Tracks 6 and 7 play one voice (slot 6, the hi-hats by default). Besides its own amp decay,
-track 7 can now have its own waveform and pitch: on the OSC page of track 7
+track 7 can now have its own waveform, pitch, sends and pan. On the pages of track 7
 
 | Displayed name | Name | Description |
 |---|---|---|
 | `WV7` | Track 7 wave | `=T6` = the waveform of track 6 (default), else any waveform, sample or wave for the triggers of track 7 |
-| `CO7` | Track 7 coarse | −24 … +24 semitones on top of the voice's pitch for the triggers of track 7 (0 = as track 6) |
+| `CO7` | Track 7 coarse | OSC page: −24 … +24 semitones on top of the voice's pitch for the triggers of track 7 (0 = as track 6) |
+| `SA7`, `SB7` | Track 7 send A/B | AEG page, in place of `SND`/`SNB`: `=T6` = the sends of track 6 (default), else 0 … 127 into FX slot A/B for the triggers of track 7 |
+| `PN7` | Track 7 pan | MIX page, in place of `PAN`: `=T6` = the pan of track 6 (default), else −63 … +64 for the triggers of track 7 |
 
 Example: closed and open hi-hat samples on one voice: `WAV` = the closed one (track 6), `WV7` =
-the open one (track 7). Both still cut each other (one voice). Everything else is shared: filter,
-LFO, start and length, volume, outputs and sends. With the FM hi-hat engine `CO7` shifts the
+the open one (track 7), with `SA7` only the open one into the reverb. Both still cut each other
+(one voice). The voice takes the sends and pan of the track that triggered last; the sends ramp
+over one audio block (about 1 ms) when they change, the tails already in the FX ring out.
+Everything else is shared: filter, LFO, start and length, volume (fader) and outputs. With the FM hi-hat engine `CO7` shifts the
 carrier only, which changes the timbre more than the pitch. Stored in the kit (part `TR7`).
 
 ## Voice INIT

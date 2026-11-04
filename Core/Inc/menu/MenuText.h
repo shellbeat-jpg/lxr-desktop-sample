@@ -539,6 +539,9 @@ const char shortNames[][4]  =
 	{"bia"},	//MOD: FX3 saturation bias
 	{"wv7"},	//MOD: track 7 waveform
 	{"co7"},	//MOD: track 7 coarse
+	{"sa7"},	//MOD: track 7 send A
+	{"sb7"},	//MOD: track 7 send B
+	{"pn7"},	//MOD: track 7 pan
 
 };
 //-----------------------------------------------------------------
@@ -705,6 +708,9 @@ const char longNames[][16] =
 	{"Sat bias"},	//MOD
 	{"Trk7 wave"},	//MOD
 	{"Trk7 coarse"},	//MOD
+	{"Trk7 send A"},	//MOD
+	{"Trk7 send B"},	//MOD
+	{"Trk7 pan"},	//MOD
 };
 
 

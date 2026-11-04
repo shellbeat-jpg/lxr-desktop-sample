@@ -302,6 +302,9 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_BIA, CAT_FX, LONG_FX3_BIA},/*TEXT_FX3_BIA*/
 		{SHORT_T7_WAVE, CAT_OSC, LONG_T7_WAVE},/*TEXT_T7_WAVE*/
 		{SHORT_T7_COARSE, CAT_OSC, LONG_T7_COARSE},/*TEXT_T7_COARSE*/
+		{SHORT_T7_SENDA, CAT_FX, LONG_T7_SENDA},/*TEXT_T7_SENDA*/
+		{SHORT_T7_SENDB, CAT_FX, LONG_T7_SENDB},/*TEXT_T7_SENDB*/
+		{SHORT_T7_PAN, CAT_VOICE, LONG_T7_PAN},/*TEXT_T7_PAN*/
 
 
 };
@@ -594,6 +597,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FX3_BIA*/			DTYPE_0B127,
 		/*PAR_T7_WAVE*/			DTYPE_0B127,
 		/*PAR_T7_COARSE*/		DTYPE_0B127,
+		/*PAR_T7_SENDA..PAN*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -1057,7 +1061,7 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
 	if(p >= PAR_FX3_SAT && p <= PAR_FX3_BIA)	//MOD: FX3 settings (MasterBus.h order)
 		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
-	if(p == PAR_T7_WAVE || p == PAR_T7_COARSE)	//MOD: track 7
+	if(p >= PAR_T7_WAVE && p <= PAR_T7_PAN)	//MOD: track 7
 		return &kitEngines[KIT_T7_OFFSET + (p - PAR_T7_WAVE)];
 	return 0;
 }
@@ -1078,6 +1082,13 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 		const int semi = (int)v - KIT_T7_COARSE_ZERO;
 		snprintf(out, 12, isLong ? "%+d semi" : "%+d", semi);
 		if(!semi) strcpy(out, isLong ? "as track 6" : "  0");
+		return 1;
+	}
+	if(p >= PAR_T7_SENDA && p <= PAR_T7_PAN)	//MOD: track 7 sends and pan, value + 1
+	{
+		if(!v) { strcpy(out, isLong ? "as track 6" : "=t6"); return 1; }
+		if(p == PAR_T7_PAN)	snprintf(out, 12, "%+3d", (int)v - 1 - 63);
+		else				snprintf(out, 12, "%3d", (int)v - 1);
 		return 1;
 	}
 	if(p < PAR_FX3_SAT || p > PAR_FX3_BIA)
@@ -2334,7 +2345,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr == PAR_T7_WAVE || parNr == PAR_T7_COARSE)
+			else if(parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN)
 			{
 				//MOD: track 7, right aligned
 				char t[17];
@@ -3977,7 +3988,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 		const int16_t v = (int16_t)*s + inc;
 		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_BIA) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT))
 				: paramNr == PAR_T7_WAVE ? getMaxEntriesForMenu(MENU_WAVEFORM)
-				: paramNr == PAR_T7_COARSE ? 2 * KIT_T7_COARSE_ZERO : 127;	//MOD
+				: paramNr == PAR_T7_COARSE ? 2 * KIT_T7_COARSE_ZERO
+				: (paramNr >= PAR_T7_SENDA && paramNr <= PAR_T7_PAN) ? 128 : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;
