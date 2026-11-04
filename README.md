@@ -30,6 +30,7 @@ OpenElixir-02 v1.2, everything else from this fork.
 Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.de.md](docs/OVERVIEW.de.md).
 As a supplement to the LXR owners manual (PDF, its layout and parameter tables):
 [docs/OE02-Samples_Manual_Supplement.pdf](docs/OE02-Samples_Manual_Supplement.pdf).
+All modulation and step automation targets with their display names: [docs/MOD_TARGETS.md](docs/MOD_TARGETS.md).
 
 ### Voices
 
