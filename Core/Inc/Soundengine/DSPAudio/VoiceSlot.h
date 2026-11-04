@@ -79,6 +79,9 @@ void slot_setEngine(const uint8_t slot, const uint8_t engine);
 //them silent until they are triggered again.
 extern uint8_t slot_chokeGroup;
 void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size);
+//MOD: fade out (~2 ms) every slot that plays a loop sample, until its next trigger;
+//on sequencer stop (with the amp decay at 127 a loop never ends by itself)
+void slot_stopLoops(void);
 
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);

@@ -12,6 +12,7 @@
 
 #include "Soundengine/DSPAudio/VoiceSlot.h"
 #include <string.h>
+#include "SampleRom/sampleFlash.h"	//MOD: loop flag (slot_stopLoops)
 
 INDTCMZ VoiceSlot voiceSlots[NUM_VOICE_SLOTS];
 
@@ -123,6 +124,20 @@ static void slot_chokeOthers(const uint8_t track, const uint8_t slot)
 			continue;		//tracks 6/7 share a slot: they cut each other anyway
 		if(slot_choke[other] == SLOT_CHOKE_OFF)
 			slot_choke[other] = SLOT_CHOKE_FADE;
+	}
+}
+void slot_stopLoops(void)
+{
+	for(uint8_t s=0;s<NUM_VOICE_SLOTS;s++)
+	{
+		const OscInfo* o = &voiceSlots[s].u.c.osc;
+		const uint8_t w = o->smpWave;	//the sample latched at the trigger
+		if(o->waveform < NUM_OSC_WAVEFORMS || o->waveform >= OSC_WAVE_USER
+				|| w < NUM_OSC_WAVEFORMS || w >= OSC_WAVE_USER)
+			continue;		//no sample playing
+		const SampleFlashEntry* e = sampleFlash_entry((uint8_t)(w - NUM_OSC_WAVEFORMS));
+		if(e != NULL && (e->flags & SF_FLAG_LOOP) && slot_choke[s] == SLOT_CHOKE_OFF)
+			slot_choke[s] = SLOT_CHOKE_FADE;
 	}
 }
 //---------------------------------------------------

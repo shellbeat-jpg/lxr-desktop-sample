@@ -89,6 +89,8 @@ Files from `/SAMPLES/LOOPS` are loop samples: they play from the start (Sta) to 
 = end of the file) and then jump back to the start, until the amp envelope (AEG decay) ends the
 sound. Drum voices have no gate, so a long decay keeps the loop going.
 
+- With the amp decay at 127 a loop plays on without end (the envelope holds). Stopping the
+  sequencer fades out every playing loop (1.2.11); the next trigger starts it again.
 - Sta and Len set the loop points, shown in ms.
 - The loop point is crossfaded with the audio just before the start (up to 256 frames, at most a
   quarter of the loop). With start 0 there is no audio before it: then a short fade out/in (32

@@ -38,6 +38,7 @@
 #include "buttonHandler.h"
 #include "Preset/PresetManager.h"
 #include "Soundengine/CpuMeter.h"
+#include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: slot_stopLoops
 
 void seq_setPendingPatternActive();
 
@@ -2488,6 +2489,7 @@ void seq_setRunning(uint8_t isRunning)
 	//jump to 1st step if sequencer is stopped
 	if(!seq_running)
 	{
+		slot_stopLoops();	//MOD: loops (amp decay 127) don't play on after stop
 		preset_touchTimer(PRESET_PAT_TIMER);
 		//moved to seq_resetPosition()
 	} else {

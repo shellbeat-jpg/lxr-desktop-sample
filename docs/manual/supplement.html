@@ -275,7 +275,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>3.4. Samples and loops</h2>
       <p>A sample from <code>SAMPLES</code> plays once per trigger; the amp envelope (AEG decay) can end it earlier. A retrigger fades the sound that still plays (about 1 ms) instead of clicking.</p>
-      <p>A sample from <code>SAMPLES/LOOPS</code> plays from <b>sta</b> to the end set by <b>len</b> and jumps back to <b>sta</b>, until the amp envelope ends the sound. Drum voices have no gate, so a long decay keeps the loop going. The loop point is crossfaded (up to 256 frames, at most a quarter of the loop).</p>
+      <p>A sample from <code>SAMPLES/LOOPS</code> plays from <b>sta</b> to the end set by <b>len</b> and jumps back to <b>sta</b>, until the amp envelope ends the sound. Drum voices have no gate, so a long decay keeps the loop going; with decay 127 it never ends by itself. Stopping the sequencer fades out every playing loop. The loop point is crossfaded (up to 256 frames, at most a quarter of the loop).</p>
       <h2 data-toc>3.5. Waves</h2>
       <p>Up to 8 WAV files in <code>SAMPLES/WAVES</code>, each one cycle of a waveform. At the import every file is resampled to 1024 points; the end leads back to the start. Stereo files use the left channel only.</p>
       <ul>
