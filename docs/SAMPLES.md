@@ -487,11 +487,13 @@ mix page still acts on both. Voices with `OUT` = `FX`/`FXB` keep their fader in 
 ## Track 7: own waveform, pitch, sends and pan (1.2.11)
 
 Tracks 6 and 7 play one voice (slot 6, the hi-hats by default). Besides its own amp decay,
-track 7 can now have its own waveform, pitch, sends and pan. On the pages of track 7
+track 7 can now have its own waveform, pitch, sends and pan. The pages of track 7 show them in
+place of the shared `WAV`, `SND`, `SNB` and `PAN` (with every engine on slot 6); set those on the
+pages of track 6
 
 | Displayed name | Name | Description |
 |---|---|---|
-| `WV7` | Track 7 wave | `=T6` = the waveform of track 6 (default), else any waveform, sample or wave for the triggers of track 7 |
+| `WV7` | Track 7 wave | OSC page, in place of `WAV`: `=T6` = the waveform of track 6 (default), else any waveform, sample or wave for the triggers of track 7 |
 | `CO7` | Track 7 coarse | OSC page: −24 … +24 semitones on top of the voice's pitch for the triggers of track 7 (0 = as track 6) |
 | `SA7`, `SB7` | Track 7 send A/B | AEG page, in place of `SND`/`SNB`: `=T6` = the sends of track 6 (default), else 0 … 127 into FX slot A/B for the triggers of track 7 |
 | `PN7` | Track 7 pan | MIX page, in place of `PAN`: `=T6` = the pan of track 6 (default), else −63 … +64 for the triggers of track 7 |
