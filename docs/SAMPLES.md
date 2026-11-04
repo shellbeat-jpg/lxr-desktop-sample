@@ -452,7 +452,7 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
   `F2` `G2` `Q2` `HI` | `ORD` `AMU` `GAI` `D/W` `BIA`.
 - With band split, `AMU`/`GAI` and `D/W` act on the compressed band only.
 - PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
-  `VMO`, `VSW` (FX3 values: the same kit values as on the FX3 page).
+  `VMO`, `VSW`, `OSX` (FX3 values: the same kit values as on the FX3 page).
 - With `SAT`, `RAT` and `GAI` at 0 and all EQ gains at 0 dB the bus is off and the sum stays
   unchanged.
 - CPU: the CPU meter build (`cmake -DLXR_CPU_METER=ON`) shows FX3 as `M` on its second page
@@ -505,6 +505,13 @@ sends ramp over one audio block (about 1 ms) when they change, the tails already
 out. Everything else is shared: fine tune, filter, LFO, start and length, volume (fader) and
 outputs. With the FM hi-hat engine track 7's `COA` shifts the
 carrier only, which changes the timbre more than the pitch. Stored in the kit (part `TR7`).
+
+## OSX: voices without the global sample rate (1.2.11)
+
+`OSX` on the PERF page (after `VSW`): `on` = the active voice doesn't follow the global sample
+rate (`SR` on the PERF page, target `0sr` of the step automation and the LFOs) and keeps only
+its own `SRT` (MIX page). Edit view: the excluded voices on the left, e.g. `1--4--`. Track 7
+belongs to voice 6. Default: off for all voices. Stored in the kit (part `OSX`).
 
 ## LFO 2 and the LFO of track 7 (1.2.11, test)
 

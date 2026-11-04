@@ -322,6 +322,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_OFFSET,CAT_T7LFO,LONG_OFFSET},/*TEXT_T7LFO_OFS*/
 		{SHORT_VOICE,CAT_T7LFO,LONG_DEST_VOICE},/*TEXT_T7LFO_VOI*/
 		{SHORT_DEST,CAT_T7LFO,LONG_DEST_PARAM},/*TEXT_T7LFO_DST*/
+		{SHORT_OSX, CAT_VOICE, LONG_OSX},/*TEXT_OSX*/
 
 
 };
@@ -617,6 +618,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_T7_SENDA..PAN*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
 		/*PAR_LFOX_FRQ..DST*/	DTYPE_0B127, DTYPE_MENU | (MENU_SYNC_RATES<<8), DTYPE_0B127, DTYPE_MENU | (MENU_LFO_WAVES<<8),
 								DTYPE_MENU | (MENU_RETRIGGER<<8), DTYPE_0B127, DTYPE_VOICE_LFO, DTYPE_TARGET_SELECTION_LFO,
+		/*PAR_OSX*/				DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -2468,6 +2470,14 @@ void menu_repaintGeneric()
 				editDisplayBuffer[1][7] = ' ';
 				numtostrpu(&editDisplayBuffer[1][13], voiceMorph_switchPoint(s), ' ');
 			}
+			else if(parNr == PAR_OSX)
+			{
+				//MOD: the voices without the global sample rate on the left, on/off for the active voice
+				const uint8_t m = kitEngines[KIT_OSX_OFFSET];
+				for(uint8_t s=0;s<6;s++)
+					editDisplayBuffer[1][s] = (m & (1u << s)) ? (char)('1' + s) : '-';
+				memcpy(&editDisplayBuffer[1][13], (m & menu_activeSlotBit()) ? menuText_on : menuText_off, 3);
+			}
 			else if(parNr == PAR_MORPH_VOICES)
 			{
 				//MOD: the morphed voices on the left, on/off for the active voice
@@ -2657,6 +2667,9 @@ void menu_repaintGeneric()
 			} else if(parNr == PAR_VMORPH_SWITCH) {
 				//MOD: switch point of the source voice (morph off: of the active voice)
 				numtostrpu(valueAsText, voiceMorph_switchPoint(menu_vswSlot()), ' ');
+			} else if(parNr == PAR_OSX) {
+				//MOD: is the active voice excluded from the global sample rate
+				memcpy(valueAsText, (kitEngines[KIT_OSX_OFFSET] & menu_activeSlotBit()) ? menuText_on : menuText_off, 3);
 			} else if(parNr == PAR_MORPH_VOICES) {
 				//MOD: is the active voice morphed
 				memcpy(valueAsText, (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
@@ -4022,7 +4035,7 @@ static void menu_skipHiddenTargets(uint8_t* value, int8_t inc, const uint8_t sta
 static uint8_t menu_isSpecialEncoderParam(const uint16_t p)
 {
 	return p == PAR_VMORPH_PAIR || p == PAR_VMORPH_SWITCH || p == PAR_MORPH_VOICES
-		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p) || (p >= PAR_LFOX_FRQ && p <= PAR_LFOX_DST)
+		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p) || (p >= PAR_LFOX_FRQ && p <= PAR_LFOX_DST) || p == PAR_OSX
 		|| menu_fxChoiceCount(p);
 }
 static void menu_encoderChangeParameter(int8_t inc)
@@ -4129,6 +4142,14 @@ static void menu_encoderChangeParameter(int8_t inc)
 		else if(inc < 0)	activeParameters[paramNr] |= menu_activeSlotBit();
 		activeParameters[paramNr] &= 0x3F;
 		preset_morph(activeParameters[PAR_MORPH]);
+		return;
+	}
+	//MOD: OSX: the bit of the active voice (on = without the global sample rate)
+	if(paramNr == PAR_OSX)
+	{
+		if(inc > 0)			kitEngines[KIT_OSX_OFFSET] |= menu_activeSlotBit();
+		else if(inc < 0)	kitEngines[KIT_OSX_OFFSET] &= (uint8_t)~menu_activeSlotBit();
+		activeParameters[paramNr] = kitEngines[KIT_OSX_OFFSET];
 		return;
 	}
 	//MOD: the choke group shows/sets the bit of the active voice (on/off)

@@ -330,6 +330,7 @@ enum NamesEnum
 	TEXT_T7LFO_OFS,
 	TEXT_T7LFO_VOI,
 	TEXT_T7LFO_DST,
+	TEXT_OSX,		//MOD: voice without the global sample rate
 
 
 	NUM_NAMES
@@ -477,7 +478,8 @@ enum shortNamesEnum
 	SHORT_T7_COARSE,
 	SHORT_T7_SENDA,
 	SHORT_T7_SENDB,
-	SHORT_T7_PAN
+	SHORT_T7_PAN,
+	SHORT_OSX
 
 	
 };
@@ -647,7 +649,8 @@ enum longNamesEnum
 	LONG_T7_COARSE,
 	LONG_T7_SENDA,
 	LONG_T7_SENDB,
-	LONG_T7_PAN
+	LONG_T7_PAN,
+	LONG_OSX
 	
 };
 

@@ -57,10 +57,12 @@
 #define KIT_LFOX_NUM			7
 #define KIT_LFOX_SIZE			(KIT_LFOX_STRIDE * KIT_LFOX_NUM)
 enum { LFOX_FRQ, LFOX_SYN, LFOX_AMT, LFOX_WAV, LFOX_RTG, LFOX_OFS, LFOX_VOI, LFOX_DST };
-#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE + KIT_LFOX_SIZE)
+//MOD: the slots that don't follow the global sample rate (PAR_VOICE_DECIMATION_ALL), bit = slot, part "OSX"
+#define KIT_OSX_OFFSET			(KIT_LFOX_OFFSET + KIT_LFOX_SIZE)
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE + KIT_LFOX_SIZE + 1)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE + 4 + KIT_LFOX_SIZE)
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE + 4 + KIT_LFOX_SIZE + 5)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

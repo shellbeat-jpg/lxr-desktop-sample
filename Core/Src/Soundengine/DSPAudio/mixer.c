@@ -73,7 +73,8 @@ void mixer_init()
 IN_ITCM_RAM void mixer_decimateBlock(const uint8_t voiceNr, int16_t* buffer)
 {
 	uint8_t i;
-	float phaseInc = mixer_decimation_rate[voiceNr]*mixer_decimation_rate[6];
+	//MOD: voices excluded from the global rate (OSX) only take their own
+	float phaseInc = mixer_decimation_rate[voiceNr]*(((kitEngines[KIT_OSX_OFFSET] >> voiceNr) & 1u) ? 1.f : mixer_decimation_rate[6]);
 	for(i=0;i<OUTPUT_DMA_SIZE;i++)
 	{
 		mixer_decimation_cnt[voiceNr] += phaseInc;

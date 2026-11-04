@@ -57,6 +57,7 @@ void kitEngines_setStock(uint8_t* engines)
 	engines[KIT_T7_OFFSET + KIT_T7_PAN] = 0;
 	for(uint8_t x=0;x<KIT_LFOX_NUM;x++)	//MOD: extra LFOs off
 		kitEngines_lfoXStock(&engines[KIT_LFOX_OFFSET + x*KIT_LFOX_STRIDE], x);
+	engines[KIT_OSX_OFFSET] = 0;	//MOD: all voices follow the global sample rate
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -91,6 +92,8 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 4 + KIT_T7_SIZE;
 	o[0] = 'L'; o[1] = 'F'; o[2] = 'X'; o[3] = KIT_LFOX_SIZE;	//MOD: extra LFOs
 	memcpy(&o[4], &engines[KIT_LFOX_OFFSET], KIT_LFOX_SIZE);
+	o += 4 + KIT_LFOX_SIZE;
+	o[0] = 'O'; o[1] = 'S'; o[2] = 'X'; o[3] = 1; o[4] = engines[KIT_OSX_OFFSET];	//MOD: global sample rate exclusions
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -133,6 +136,8 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 				else if(v <= 127)	*s = v;
 			}
 		}
+		else if(t[0] == 'O' && t[1] == 'S' && t[2] == 'X' && n >= 1)	//MOD
+			engines[KIT_OSX_OFFSET] = t[4] & ((1u << NUM_VOICE_SLOTS) - 1u);
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;
 		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= 9)
@@ -380,6 +385,7 @@ void kitEngines_initVoice(const uint8_t slot)
 	kitEngines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD: FX sends
 	kitEngines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
 	kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], slot);	//MOD: 2nd LFO
+	kitEngines[KIT_OSX_OFFSET] &= (uint8_t)~(1u << slot);	//MOD: follows the global sample rate
 	if(slot == NUM_VOICE_SLOTS-1)	//MOD: track 7
 	{
 		kitEngines[KIT_T7_OFFSET] = 0;
@@ -397,6 +403,7 @@ void kitEngines_copySlotData(const uint8_t slot, uint8_t* dst, const uint8_t* sr
 	dst[KIT_SEND_OFFSET + slot] = src[KIT_SEND_OFFSET + slot];
 	dst[KIT_SENDB_OFFSET + slot] = src[KIT_SENDB_OFFSET + slot];
 	memcpy(&dst[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], &src[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], KIT_LFOX_STRIDE);
+	dst[KIT_OSX_OFFSET] = (uint8_t)((dst[KIT_OSX_OFFSET] & ~(1u << slot)) | (src[KIT_OSX_OFFSET] & (1u << slot)));
 	if(slot == NUM_VOICE_SLOTS-1)
 	{
 		memcpy(&dst[KIT_T7_OFFSET], &src[KIT_T7_OFFSET], KIT_T7_SIZE);

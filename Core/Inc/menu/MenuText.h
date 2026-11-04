@@ -542,6 +542,7 @@ const char shortNames[][4]  =
 	{"sna"},	//MOD: track 7 send A
 	{"snb"},	//MOD: track 7 send B
 	{"pan"},	//MOD: track 7 pan
+	{"osx"},	//MOD: OSR exclude
 
 };
 //-----------------------------------------------------------------
@@ -713,6 +714,7 @@ const char longNames[][16] =
 	{"Trk7 send A"},	//MOD
 	{"Trk7 send B"},	//MOD
 	{"Trk7 pan"},	//MOD
+	{"OSR excl."},	//MOD
 };
 
 
