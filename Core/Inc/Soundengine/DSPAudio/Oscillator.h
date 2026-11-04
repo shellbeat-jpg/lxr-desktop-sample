@@ -75,8 +75,6 @@ typedef struct OscStruct
 	uint8_t  smpTailPos;
 	uint8_t  smpBeats;		// MOD: loop sync: a loop sample spans this many beats (0 = off)
 	int32_t  smpTick;		// MOD: sequencer tick of the trigger (-1 = stopped)
-	int32_t  smpPeriod;		// MOD: loop sync: the loop period (song position / length) playing
-	uint8_t  smpVar;		// MOD: loop sync with a transposition (COA/FIN not neutral)
 } OscInfo;
 //-----------------------------------------------------------
 

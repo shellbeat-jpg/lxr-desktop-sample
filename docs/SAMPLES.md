@@ -94,16 +94,11 @@ sound. Drum voices have no gate, so a long decay keeps the loop going.
 - **Loop sync** (`LSY`, AEG page, 1.2.11, stored in the kit): `OFF`, 1 or 2 beats, 1, 2, 4, 8 or
   16 bars. The loop (`STA` to the end set by `LEN`) then lasts that long at the current tempo:
   the playback speed follows the tempo, the pitch changes with it (like a turntable; 104 → 120
-  BPM = +2.5 semitones). A loop triggered while the sequencer runs
+  BPM = +2.5 semitones), `COA`/`FIN` are ignored. A loop triggered while the sequencer runs
   starts at the position of the song within its length, so it stays in time when it is
   triggered late or again before its end. Example: a loop of 8 bars at 104 BPM, `LSY` = 8 and a
   trigger on step 1. Memory: 8 bars at 104 BPM are 18.5 s; only `BIGFLASH` with 22.05 kHz
   (about 35 s) or 32 kHz (about 24 s) holds that.
-- With loop sync, `COA`/`FIN` transpose on top: at `COA` 60 and `FIN` in the middle (original
-  pitch) the loop fits its length exactly. Other settings change its speed with the pitch: it
-  stays in time at octaves (`COA` ±12, ±24: it plays 2× or ½× per length); otherwise it jumps
-  back to the song position at the start of each length (cut short or repeating its beginning),
-  declicked.
 - Sta and Len set the loop points, shown in ms.
 - The loop point is crossfaded with the audio just before the start (up to 256 frames, at most a
   quarter of the loop). With start 0 there is no audio before it: then a short fade out/in (32
