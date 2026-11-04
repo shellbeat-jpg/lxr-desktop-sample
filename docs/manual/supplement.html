@@ -53,6 +53,11 @@ table.p3 td:first-child, table.p3 th:first-child { width: 17%; }
 table.p3 td:nth-child(2), table.p3 th:nth-child(2) { width: 27%; }
 table.p2 td:first-child, table.p2 th:first-child { width: 22%; }
 table.wide td:first-child { white-space: normal; }
+table.mt { font-size: 6.2pt; line-height: 1.12; margin: 0 0 1.4mm; }
+table.mt td, table.mt th { padding: .3mm 1mm .3mm 0; white-space: nowrap; }
+table.mt td:first-child, table.mt th:first-child { width: 19%; }
+table.mt td:nth-child(2), table.mt th:nth-child(2) { width: 12%; }
+table.mt td:nth-child(4), table.mt th:nth-child(4) { width: 22%; }
 
 /* block diagrams in the manual's style */
 svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
@@ -684,12 +689,87 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li><b>docs/SAMPLES.md</b>: user guide of all additions.</li>
         <li><b>docs/OVERVIEW.md</b> / <b>OVERVIEW.de.md</b>: one-page overview in English and German.</li>
         <li><b>docs/ENGINES.md</b>: the voice engines <span class="oe">OE</span>.</li>
+        <li><b>docs/MOD_TARGETS.md</b>: the modulation targets of every voice.</li>
       </ul>
       <p>github.com/shellbeat-jpg/lxr-desktop-sample</p>
       <p class="note">OE02-Samples+ is free software under the GNU General Public License 3.0. It is a fork of OpenElixir-02 1.2 by Moritz Waser, based on the LXR firmware by Julian Schmidt (Sonic Potions) and Erica Synths. Fonts: Barlow, SIL Open Font License.</p>
     </div>
   </div>
 </section>
+
+
+
+
+
+
+
+
+<!-- MODTARGETS -->
+<section class="page">
+  <div class="cols">
+    <div class="col">
+      <h1 data-toc><b>B</b> &gt; Modulation targets</h1>
+      <p>Targets of the LFOs, velocity and the step automation (parameter lock 1, 2). LFO and velocity <b>dst</b> show the name, the step page the voice and two letters (<b>1wa</b> = <b>wav</b> of voice 1, <b>0sr</b>: all voices). Targets the slot's engine lacks: <b>off</b>.</p>
+      <table class="mt">
+        <tr><th>Page</th><th>Name</th><th>Edit view</th><th>Voices</th></tr>
+        <tr><td>Oscillator</td><td><b>coa</b></td><td>Oscilltr Coarse</td><td>1–6</td></tr>
+        <tr><td></td><td><b>fin</b></td><td>Oscilltr Fine</td><td>1–6</td></tr>
+        <tr><td></td><td><b>wav</b></td><td>Oscilltr Waveform</td><td>1–6</td></tr>
+        <tr><td></td><td><b>pwm</b></td><td>Oscilltr PulsWdth</td><td>1–6</td></tr>
+        <tr><td></td><td><b>noi</b></td><td>Noise Frequncy</td><td>4</td></tr>
+        <tr><td></td><td><b>mix</b></td><td>Nois/Osc Mix</td><td>4</td></tr>
+        <tr><td>Amp EG</td><td><b>atk</b></td><td>Veloc EG Attack</td><td>1–6</td></tr>
+        <tr><td></td><td><b>dec</b></td><td>Veloc EG Decay</td><td>1–5</td></tr>
+        <tr><td></td><td><b>slp</b></td><td>Veloc EG Slope</td><td>1–6</td></tr>
+        <tr><td></td><td><b>rpt</b></td><td>Veloc EG RepeatCt</td><td>4, 5</td></tr>
+        <tr><td></td><td><b>d1</b></td><td>Veloc EG Dcy Clsd</td><td>6</td></tr>
+        <tr><td></td><td><b>d2</b></td><td>Veloc EG Dcy Open</td><td>6</td></tr>
+        <tr><td>Modulation</td><td><b>dec</b></td><td>Mod EG Decay</td><td>1–4</td></tr>
+        <tr><td></td><td><b>slp</b></td><td>Veloc EG Slope</td><td>1–4</td></tr>
+        <tr><td></td><td><b>mod</b></td><td>PitchMod Amount</td><td>1–4</td></tr>
+        <tr><td></td><td><b>dst</b></td><td>Velocity DstParam</td><td>1–6</td></tr>
+        <tr><td></td><td><b>amt</b></td><td>Velocity Amount</td><td>1–6</td></tr>
+        <tr><td></td><td><b>vol</b></td><td>Velocity Vol mod</td><td>1–6</td></tr>
+        <tr><td>FM</td><td><b>amt</b></td><td>FM Amount</td><td>1–3</td></tr>
+        <tr><td></td><td><b>frq</b></td><td>FM Frequncy</td><td>1–3</td></tr>
+        <tr><td></td><td><b>fwv</b></td><td>Oscilltr Waveform</td><td>1–3, 5, 6</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <table class="mt">
+        <tr><th>Page</th><th>Name</th><th>Edit view</th><th>Voices</th></tr>
+        <tr><td>FM</td><td><b>mod</b></td><td>Oscilltr Mode</td><td>1–3</td></tr>
+        <tr><td></td><td><b>f1</b></td><td>Mod Osc Freqcy 1</td><td>5, 6</td></tr>
+        <tr><td></td><td><b>f2</b></td><td>Mod Osc Freqcy 2</td><td>5, 6</td></tr>
+        <tr><td></td><td><b>g1</b></td><td>Mod Osc Gain 1</td><td>5, 6</td></tr>
+        <tr><td></td><td><b>g2</b></td><td>Mod Osc Gain 2</td><td>5, 6</td></tr>
+        <tr><td>Transient</td><td><b>cwv</b></td><td>Transnt Waveform</td><td>1–6</td></tr>
+        <tr><td></td><td><b>vol</b></td><td>Transnt Volume</td><td>1–6</td></tr>
+        <tr><td></td><td><b>frq</b></td><td>Transnt Frequncy</td><td>1–6</td></tr>
+        <tr><td>Filter</td><td><b>frq</b></td><td>Filter Frequncy</td><td>1–6</td></tr>
+        <tr><td></td><td><b>res</b></td><td>Filter Resnance</td><td>1–6</td></tr>
+        <tr><td></td><td><b>typ</b></td><td>Filter Type</td><td>1–6</td></tr>
+        <tr><td></td><td><b>drv</b></td><td>Filter Overdriv</td><td>1–6</td></tr>
+        <tr><td>LFO</td><td><b>frq</b></td><td>LFO Frequncy</td><td>1–6</td></tr>
+        <tr><td></td><td><b>snc</b></td><td>LFO ClockSnc</td><td>1–6</td></tr>
+        <tr><td></td><td><b>mod</b></td><td>LFO Amount</td><td>1–6</td></tr>
+        <tr><td></td><td><b>wav</b></td><td>LFO Waveform</td><td>1–6</td></tr>
+        <tr><td></td><td><b>rtg</b></td><td>LFO Retriggr</td><td>1–6</td></tr>
+        <tr><td></td><td><b>ofs</b></td><td>LFO Offset</td><td>1–6</td></tr>
+        <tr><td>Mix</td><td><b>srt</b></td><td>Voice SampleRt</td><td>0 (all), 1–6</td></tr>
+        <tr><td></td><td><b>vol</b></td><td>Voice Volume</td><td>1–6</td></tr>
+        <tr><td></td><td><b>pan</b></td><td>Voice Panning</td><td>1–6</td></tr>
+        <tr><td></td><td><b>drv</b></td><td>Voice Overdriv</td><td>1–6</td></tr>
+        <tr><td>FX</td><td><b>p1</b></td><td>Fx Param 1</td><td>1–6</td></tr>
+        <tr><td></td><td><b>p2</b></td><td>Fx Param 2</td><td>1–6</td></tr>
+        <tr><td></td><td><b>p3</b></td><td>Fx Param 3</td><td>1–6</td></tr>
+        <tr><td></td><td><b>p4</b></td><td>Fx Param 4</td><td>1–6</td></tr>
+      </table>
+      <p class="note"><b>fwv</b> = FM / mod oscillator, <b>cwv</b> = transient. A <b>wav</b> lock: 0–5 waveforms, 6–36 samples S1–S31, 37–44 waves W1–W8. All voices: docs/MOD_TARGETS.md.</p>
+    </div>
+  </div>
+</section>
+<!-- /MODTARGETS -->
 
 <script>
 // page numbers and footers (the cover has none), then the table of contents
