@@ -263,6 +263,9 @@ void seq_triggerNextMasterStep(uint8_t stepSize);
 void seq_setBpm(uint16_t bpm);
 //------------------------------------------------------------------------------
 uint16_t seq_getBpm();
+//MOD: ticks (96 per beat) since the sequencer started, -1 while stopped or before
+//the first step (loop sync)
+int32_t seq_getAbsTick(void);
 //------------------------------------------------------------------------------
 void seq_sync();
 //------------------------------------------------------------------------------

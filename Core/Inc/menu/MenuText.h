@@ -537,6 +537,7 @@ const char shortNames[][4]  =
 	{"q2"},
 	{"hi"},
 	{"bia"},	//MOD: FX3 saturation bias
+	{"lsy"},	//MOD: loop sync
 
 };
 //-----------------------------------------------------------------
@@ -701,6 +702,7 @@ const char longNames[][16] =
 	{"Mid 2 Q"},
 	{"High shelf"},
 	{"Sat bias"},	//MOD
+	{"Loop sync"},	//MOD
 };
 
 

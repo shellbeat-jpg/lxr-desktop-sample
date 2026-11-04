@@ -73,6 +73,8 @@ typedef struct OscStruct
 	uint8_t  smpWave;		// MOD: the sample (waveform) latched at the trigger
 	int16_t  smpTail;		// MOD: output when retriggered, faded out over SMP_DECLICK frames
 	uint8_t  smpTailPos;
+	uint8_t  smpBeats;		// MOD: loop sync: a loop sample spans this many beats (0 = off)
+	int32_t  smpTick;		// MOD: sequencer tick of the trigger (-1 = stopped)
 } OscInfo;
 //-----------------------------------------------------------
 

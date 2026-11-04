@@ -644,6 +644,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	//--- Calc async -----
 	for(v=0;v<6;v++)
 	{
+		//MOD: loop sync of the slot (kit data) for the sample rate of its oscillator
+		static const uint8_t beats[KIT_LSYNC_NUM] = { 0, 1, 2, 4, 8, 16, 32, 64 };
+		const uint8_t ls = kitEngines[KIT_LSYNC_OFFSET + v];
+		voiceSlots[v].u.c.osc.smpBeats = ls < KIT_LSYNC_NUM ? beats[ls] : 0;
 		mixer_calcVoiceAsync(&voiceSlots[v]);
 	}
 

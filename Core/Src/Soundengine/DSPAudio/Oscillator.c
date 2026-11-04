@@ -596,6 +596,21 @@ static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
 	osc->phase    = start;
 	osc->smpFrac  = 0;
 	osc->smpWrapped = 0;
+	/* MOD: loop sync: a loop triggered while the sequencer runs starts where the
+	 * song position is within its length (beats), so it stays in time when it is
+	 * triggered later than on its first beat or again before its end */
+	if(osc->smpBeats && (e->flags & SF_FLAG_LOOP) && end > start)
+	{
+		const int32_t tick = osc->smpTick;
+		if(tick >= 0)
+		{
+			const uint32_t loopTicks = (uint32_t)osc->smpBeats * 96u;
+			const float pos = (float)((uint32_t)tick % loopTicks) / (float)loopTicks;
+			uint32_t p = start + (uint32_t)(pos * (float)(end - start));
+			if(p >= end) p = start;
+			osc->phase = p;
+		}
+	}
 	/* a retrigger cuts the sound that still plays: fade its last value out
 	 * instead of jumping (choke without click) */
 	osc->smpTail    = osc->output;
@@ -875,6 +890,23 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	const float rate = (e != NULL && e->rate > 0u) ? (float)e->rate : REAL_FS;
 	const float currentFreq = osc->freq*osc->pitchMod*osc->modNodeValue;
 	float inc = (currentFreq / MidiNoteFrequencies[SMP_ROOT_NOTE]) * (rate / REAL_FS) * (float)(1u << SMP_FRAC_BITS);
+	/* MOD: loop sync: the loop (start..end of the sample playing) lasts smpBeats
+	 * beats of the tempo; the speed follows the tempo, the pitch with it */
+	if(osc->smpBeats)
+	{
+		const uint8_t wave = (osc->phase != SMP_PENDING && osc->smpWave >= NUM_OSC_WAVEFORMS && osc->smpWave < OSC_WAVE_USER)
+				? osc->smpWave : osc->waveform;
+		const SampleFlashEntry* le = sampleFlash_entry((uint8_t)(wave - NUM_OSC_WAVEFORMS));
+		if(le != NULL && (le->flags & SF_FLAG_LOOP) && le->frames)
+		{
+			uint32_t frames = le->frames;
+			if(osc->phase != SMP_PENDING && osc->smpEnd > osc->smpStart && osc->smpEnd <= le->frames)
+				frames = osc->smpEnd - osc->smpStart;
+			const uint16_t bpm = seq_getBpm();
+			const float seconds = (float)osc->smpBeats * 60.f / (float)(bpm ? bpm : 120);
+			inc = (float)frames / (seconds * REAL_FS) * (float)(1u << SMP_FRAC_BITS);
+		}
+	}
 	if(!(inc > 0.f)) inc = 0.f;                                      /* also catches NaN */
 	if(inc > 64.f * (float)(1u << SMP_FRAC_BITS)) inc = 64.f * (float)(1u << SMP_FRAC_BITS);
 	osc->phaseInc = (uint32_t)inc;
@@ -938,6 +970,7 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	 if(osc->waveform >= NUM_OSC_WAVEFORMS && !osc_isUserWave(osc->waveform))
 	 {
 		 osc->phase = SMP_PENDING;
+		 osc->smpTick = seq_getAbsTick();	/* MOD: song position of the trigger (loop sync) */
 		 osc->smpFrac = 0;
 	 }
  };
