@@ -77,6 +77,8 @@ static FRESULT vi_load(void)
 		kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
 		kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
 			kitEngines[KIT_SENDB_OFFSET + voiceLoad_slot()] = engines[KIT_SENDB_OFFSET + voiceLoad_slot()];
+			if(voiceLoad_slot() == NUM_VOICE_SLOTS-1)	//MOD: track 7 settings belong to slot 6
+				memcpy(&kitEngines[KIT_T7_OFFSET], &engines[KIT_T7_OFFSET], KIT_T7_SIZE);
 	}
 	return res;
 }
@@ -97,6 +99,8 @@ static FRESULT vi_save(const uint8_t project)
 	engines[slot] = kitEngines[slot];
 	engines[KIT_SEND_OFFSET + slot] = kitEngines[KIT_SEND_OFFSET + slot];	//MOD: FX sends
 	engines[KIT_SENDB_OFFSET + slot] = kitEngines[KIT_SENDB_OFFSET + slot];
+	if(slot == NUM_VOICE_SLOTS-1)	//MOD: track 7 settings
+		memcpy(&engines[KIT_T7_OFFSET], &kitEngines[KIT_T7_OFFSET], KIT_T7_SIZE);
 	const FRESULT res = preset_writeInitTemplate(project, params, engines, (uint8_t)(mask | (1u << slot)));
 	soundengine_backgroundAudioEnd(bg);
 	return res;
@@ -266,6 +270,8 @@ void voiceLoad_click(void)
 			kitEngines_loadVoice(voiceLoad_slot(), engines[voiceLoad_slot()], params);
 			kitEngines[KIT_SEND_OFFSET + voiceLoad_slot()] = engines[KIT_SEND_OFFSET + voiceLoad_slot()];	//MOD: FX send
 			kitEngines[KIT_SENDB_OFFSET + voiceLoad_slot()] = engines[KIT_SENDB_OFFSET + voiceLoad_slot()];
+			if(voiceLoad_slot() == NUM_VOICE_SLOTS-1)	//MOD: track 7 settings belong to slot 6
+				memcpy(&kitEngines[KIT_T7_OFFSET], &engines[KIT_T7_OFFSET], KIT_T7_SIZE);
 		}
 		else
 			menu_showSdError(res);

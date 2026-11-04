@@ -309,6 +309,8 @@ enum NamesEnum
 	TEXT_FX3_E2Q,
 	TEXT_FX3_EQH,
 	TEXT_FX3_BIA,
+	TEXT_T7_WAVE,		//MOD: track 7 waveform
+	TEXT_T7_COARSE,		//MOD: track 7 pitch
 
 
 	NUM_NAMES
@@ -451,7 +453,9 @@ enum shortNamesEnum
 	SHORT_FX3_E2G,
 	SHORT_FX3_E2Q,
 	SHORT_FX3_EQH,
-	SHORT_FX3_BIA
+	SHORT_FX3_BIA,
+	SHORT_T7_WAVE,
+	SHORT_T7_COARSE
 
 	
 };
@@ -614,7 +618,9 @@ enum longNamesEnum
 	LONG_FX3_E2G,
 	LONG_FX3_E2Q,
 	LONG_FX3_EQH,
-	LONG_FX3_BIA
+	LONG_FX3_BIA,
+	LONG_T7_WAVE,
+	LONG_T7_COARSE
 	
 };
 

@@ -73,6 +73,8 @@ typedef struct OscStruct
 	uint8_t  smpWave;		// MOD: the sample (waveform) latched at the trigger
 	int16_t  smpTail;		// MOD: output when retriggered, faded out over SMP_DECLICK frames
 	uint8_t  smpTailPos;
+	uint8_t  altWave;		// MOD: track 7: waveform + 1 for this trigger (0 = the voice's own)
+	float    altPitch;		// MOD: track 7: pitch factor for this trigger (0 = none)
 } OscInfo;
 //-----------------------------------------------------------
 

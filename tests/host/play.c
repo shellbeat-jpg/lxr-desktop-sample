@@ -148,4 +148,13 @@ int main(){
     CHECK(ok,"W1: 256 Ausgabesamples pro Zyklus lesen jeden 4. Punkt");
     ok=1; for(int i=0;i<256;i++) if(o2[i]!=o2[i+256]) ok=0; CHECK(ok,"W1: Zyklus wiederholt sich (Wrap am Ende)");
     w.waveform=OSC_WAVE_USER+1; render(&w,o2,64,0,0); ok=1; for(int i=0;i<64;i++) if(o2[i]) ok=0; CHECK(ok,"W2 nicht vorhanden -> Stille"); }
+  /* 14: MOD Track 7: eigene Wellenform und Tonhoehe auf derselben Voice */
+  { OscInfo t=mk(0); t.freq=MidiNoteFrequencies[60]; t.altWave=(uint8_t)(NUM_OSC_WAVEFORMS+1+1); t.altPitch=2.f;
+    osc_setBaseNote(&t,60); t.freq=MidiNoteFrequencies[60]; osc_setFreq(&t);
+    CHECK(fabs(t.phaseInc/(double)(1u<<17)-2*48000.0/REAL_FS)<0.001,"Track 7: Sample 2 mit +12 (Rate und Tonhoehe)");
+    int16_t buf[32]; calcNextOscSampleBlock(&t,buf,32,1.f,0.f);
+    CHECK(t.waveform==NUM_OSC_WAVEFORMS && t.smpWave==NUM_OSC_WAVEFORMS+1,"Track 7: spielt Sample 2, Wellenform der Voice bleibt Sample 1");
+    CHECK(t.freq==MidiNoteFrequencies[60],"Track 7: Frequenz der Voice unveraendert");
+    t.altWave=0; t.altPitch=0.f; osc_setBaseNote(&t,60); t.freq=MidiNoteFrequencies[60]; osc_setFreq(&t); calcNextOscSampleBlock(&t,buf,32,1.f,0.f);
+CHECK(t.smpWave==NUM_OSC_WAVEFORMS && t.phaseInc==(1u<<17),"Track 6 danach: wieder Sample 1 in Originalhoehe"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

@@ -13,6 +13,8 @@
 #include "Soundengine/DSPAudio/VoiceSlot.h"
 #include <string.h>
 #include "SampleRom/sampleFlash.h"	//MOD: loop flag (slot_stopLoops)
+#include "Preset/KitEngines.h"			//MOD: track 7 settings
+#include <math.h>
 
 INDTCMZ VoiceSlot voiceSlots[NUM_VOICE_SLOTS];
 
@@ -148,6 +150,19 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	VoiceSlot* s = &voiceSlots[slot];
 
 	slot_chokeOthers(track, slot);	//MOD
+
+	//MOD: track 7 can play its own waveform and pitch on the shared voice of slot 6
+	{
+		OscInfo* o = &s->u.c.osc;
+		o->altWave = 0;
+		o->altPitch = 0.f;
+		if(second)
+		{
+			o->altWave = kitEngines[KIT_T7_OFFSET];
+			const int8_t semi = (int8_t)kitEngines[KIT_T7_OFFSET + 1] - KIT_T7_COARSE_ZERO;
+			if(semi) o->altPitch = powf(2.f, semi / 12.f);
+		}
+	}
 
 	switch(s->engine)
 	{

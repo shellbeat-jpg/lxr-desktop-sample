@@ -537,6 +537,8 @@ const char shortNames[][4]  =
 	{"q2"},
 	{"hi"},
 	{"bia"},	//MOD: FX3 saturation bias
+	{"wv7"},	//MOD: track 7 waveform
+	{"co7"},	//MOD: track 7 coarse
 
 };
 //-----------------------------------------------------------------
@@ -701,6 +703,8 @@ const char longNames[][16] =
 	{"Mid 2 Q"},
 	{"High shelf"},
 	{"Sat bias"},	//MOD
+	{"Trk7 wave"},	//MOD
+	{"Trk7 coarse"},	//MOD
 };
 
 

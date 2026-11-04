@@ -24,7 +24,8 @@
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, 0,
 		KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT, KIT_SEND_DEFAULT,
-		0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0 };	//MOD: FX3 off (kitEngines_fx3Defaults)
+		0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0,	//MOD: FX3 off (kitEngines_fx3Defaults)
+		0, KIT_T7_COARSE_ZERO };	//MOD: track 7 as track 6
 //MOD: FX3 defaults: no saturation, full band, threshold 0 dB, ratio 1:1 (off), no gain, 100 % wet
 static const uint8_t kitEngines_fx3Defaults[KIT_FX3_SIZE] = { 0, 0, 127, 0, 20, 40, 0, 127, 0, 0, 0, 0, 64, 51, 64, 47, 95, 64, 47, 64, 0 };	//EQ flat: mids 300 Hz / 3 kHz, Q 1
 uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
@@ -41,6 +42,8 @@ void kitEngines_setStock(uint8_t* engines)
 	}
 	memcpy(&engines[KIT_FX3_OFFSET], kitEngines_fx3Defaults, KIT_FX3_SIZE);	//MOD
 	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
+	engines[KIT_T7_OFFSET] = 0;		//MOD: track 7 as track 6
+	engines[KIT_T7_OFFSET + 1] = KIT_T7_COARSE_ZERO;
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -69,6 +72,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 4 + NUM_VOICE_SLOTS;
 	o[0] = 'F'; o[1] = 'X'; o[2] = '3'; o[3] = KIT_FX3_SIZE;	//MOD: FX3 settings
 	memcpy(&o[4], &engines[KIT_FX3_OFFSET], KIT_FX3_SIZE);
+	o += 4 + KIT_FX3_SIZE;
+	o[0] = 'T'; o[1] = 'R'; o[2] = '7'; o[3] = KIT_T7_SIZE;	//MOD: track 7 waveform and pitch
+	memcpy(&o[4], &engines[KIT_T7_OFFSET], KIT_T7_SIZE);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -93,6 +99,11 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 			const uint8_t offset = t[2] == 'A' ? KIT_SEND_OFFSET : KIT_SENDB_OFFSET;
 			for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
 				engines[offset + slot] = t[4+slot] > 127 ? KIT_SEND_DEFAULT : t[4+slot];
+		}
+		else if(t[0] == 'T' && t[1] == 'R' && t[2] == '7' && n >= KIT_T7_SIZE)	//MOD: track 7
+		{
+			engines[KIT_T7_OFFSET] = t[4] <= 127 ? t[4] : 0;
+			engines[KIT_T7_OFFSET + 1] = t[5] <= 2 * KIT_T7_COARSE_ZERO ? t[5] : KIT_T7_COARSE_ZERO;
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;

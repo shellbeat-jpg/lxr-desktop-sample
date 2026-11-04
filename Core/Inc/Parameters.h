@@ -411,6 +411,8 @@ enum ParamEnums
 	PAR_FX3_E2Q,
 	PAR_FX3_EQH,
 	PAR_FX3_BIA,	//saturation bias (even harmonics)
+	PAR_T7_WAVE,	//MOD: track 7: own waveform (0 = as track 6) and coarse offset (kit data)
+	PAR_T7_COARSE,
 
 	
 	//#########################################

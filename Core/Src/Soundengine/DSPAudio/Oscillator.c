@@ -263,7 +263,7 @@ int16_t calcFm(OscInfo* osc, OscInfo* modOsc, const int16_t table[][1024])
 	return oscOut;
 }
 //-----------------------------------------------------------
-IN_ITCM_RAM void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
+IN_ITCM_RAM __attribute__((noinline)) static void calcNextOscSampleFmBlock_osc(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
 {
 	switch(osc->waveform)
 		{
@@ -391,7 +391,7 @@ int16_t calcNoise(OscInfo* osc)
 	return osc->output;
 }
 //-----------------------------------------------------------
-IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm)
+IN_ITCM_RAM __attribute__((noinline)) static void calcNextOscSampleBlock_osc(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm)
 {
 	switch(osc->waveform)
 		{
@@ -880,7 +880,7 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	osc->phaseInc = (uint32_t)inc;
 }
 //-----------------------------------------------------------
- void osc_setFreq(OscInfo* osc)
+ __attribute__((noinline)) static void osc_setFreq_osc(OscInfo* osc)
  {
 		switch(osc->waveform)
 		{
@@ -935,7 +935,8 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 
 	 /* MOD: called on every voice trigger - start position and length are
 	  * applied on the next block (smp_begin), with the current PWM/start value */
-	 if(osc->waveform >= NUM_OSC_WAVEFORMS && !osc_isUserWave(osc->waveform))
+	 const uint8_t wave = osc->altWave ? osc->altWave - 1u : osc->waveform;	/* MOD: track 7 */
+	 if(wave >= NUM_OSC_WAVEFORMS && !osc_isUserWave(wave))
 	 {
 		 osc->phase = SMP_PENDING;
 		 osc->smpFrac = 0;
@@ -956,3 +957,33 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	 osc->freq = MidiNoteFrequencies[note]*cent;
  }
  //-----------------------------------------------------------
+
+//-----------------------------------------------------------
+/* MOD: track 7 (the second track of slot 6) can play its own waveform and pitch
+ * on the shared voice: for the time of the call the oscillator uses them. */
+IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm)
+{
+	if(!osc->altWave) { calcNextOscSampleBlock_osc(osc, buf, size, gain, pwm); return; }
+	const uint8_t w = osc->waveform;
+	osc->waveform = osc->altWave - 1u;
+	calcNextOscSampleBlock_osc(osc, buf, size, gain, pwm);
+	osc->waveform = w;
+}
+IN_ITCM_RAM void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
+{
+	if(!osc->altWave) { calcNextOscSampleFmBlock_osc(osc, modBuffer, buf, size, gain, pwm); return; }
+	const uint8_t w = osc->waveform;
+	osc->waveform = osc->altWave - 1u;
+	calcNextOscSampleFmBlock_osc(osc, modBuffer, buf, size, gain, pwm);
+	osc->waveform = w;
+}
+void osc_setFreq(OscInfo* osc)
+{
+	const uint8_t w = osc->waveform;
+	const float f = osc->freq;
+	if(osc->altWave) osc->waveform = osc->altWave - 1u;
+	if(osc->altPitch > 0.f) osc->freq *= osc->altPitch;
+	osc_setFreq_osc(osc);
+	osc->waveform = w;
+	osc->freq = f;
+}
