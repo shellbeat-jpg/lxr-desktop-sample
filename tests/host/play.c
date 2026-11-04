@@ -161,5 +161,16 @@ int main(){
     host_bpm=60; osc_setFreq(&l); CHECK(fabs(l.phaseInc/(double)(1u<<17)-want/2)<0.001,"Sync: halbes Tempo -> halbe Geschwindigkeit");
     host_bpm=120; host_tick=96*3+48; osc_setBaseNote(&l,60); osc_setFreq(&l); { int16_t buf[32]; calcNextOscSampleBlock(&l,buf,32,1.f,0.f); }
     CHECK(abs((int)l.phase-(22050+32*2))<4,"Sync: Trigger mitten im Beat startet bei der Song-Position (Haelfte)");
+    /* VAR: COA +12 -> doppelt so schnell (bleibt synchron), Quinte -> Ruecksprung am Periodenanfang */
+    l.midiFreq=(72<<8)|64; host_tick=0; osc_setBaseNote(&l,60); osc_setFreq(&l);
+    CHECK(fabs(l.phaseInc/(double)(1u<<17)-2*want)<0.002 && l.smpVar,"VAR: Coarse +12 -> doppelte Sync-Geschwindigkeit");
+    l.midiFreq=(67<<8)|64; host_tick=0; osc_setBaseNote(&l,60); osc_setFreq(&l);
+    { int16_t buf[32]; for(int b=0;b<300;b++){ osc_setFreq(&l); calcNextOscSampleBlock(&l,buf,32,1.f,0.f);} }  /* ~ 9600 Ausgabesamples */
+    uint32_t before=l.phase; host_tick=96+12; /* naechste Periode, 1/8 Beat hinein */
+    { int16_t buf[32]; osc_setFreq(&l); calcNextOscSampleBlock(&l,buf,32,1.f,0.f); }
+    uint32_t tgt=(uint32_t)(44100*12/96.0);
+    CHECK(l.smpPeriod==1 && abs((int)l.phase-(int)tgt)<200,"VAR: neue Periode -> Sprung zur Song-Position");
+    printf("      vorher %u, nachher %u (Ziel ~%u)\n",before,l.phase,tgt);
+    l.midiFreq=(60<<8)|64; osc_setBaseNote(&l,60); osc_setFreq(&l); CHECK(!l.smpVar,"COA 60 / FIN Mitte: exakter Sync (FIX)");
     l.smpBeats=0; osc_setFreq(&l); CHECK(fabs(l.phaseInc/(double)(1u<<17)-44100.0/REAL_FS)<0.001,"Sync aus: Originalgeschwindigkeit"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

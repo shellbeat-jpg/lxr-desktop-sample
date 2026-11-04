@@ -274,16 +274,15 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>3.4. Samples and loops</h2>
-      <p>A sample from <code>SAMPLES</code> plays once per trigger; the amp envelope (AEG decay) can end it earlier. A retrigger fades the sound that still plays (about 1 ms) instead of clicking.</p>
+      <p>A sample from <code>SAMPLES</code> plays once per trigger; the amp envelope (AEG decay) can end it earlier. A retrigger fades the old sound (about 1 ms).</p>
       <p>A sample from <code>SAMPLES/LOOPS</code> plays from <b>sta</b> to the end set by <b>len</b> and jumps back to <b>sta</b>, until the amp envelope ends the sound. Drum voices have no gate, so a long decay keeps the loop going; with decay 127 it never ends by itself. Stopping the sequencer fades out every playing loop. The loop point is crossfaded (up to 256 frames, at most a quarter of the loop).</p>
-      <p><b>Loop sync</b> (<b>lsy</b>, AEG page): the loop lasts 1 or 2 beats or 1 … 16 bars at the current tempo. The speed follows the tempo and the pitch with it (<b>coa</b>/<b>fin</b> are ignored). A loop triggered while the sequencer runs starts at the song position within its length and stays in time.</p>
+      <p><b>Loop sync</b> (<b>lsy</b>, AEG page): the loop lasts 1 or 2 beats or 1 … 16 bars at the tempo; speed and pitch follow it. Triggered while the sequencer runs, it starts at the song position. <b>coa</b>/<b>fin</b> transpose on top: neutral = exact, octaves stay in time, other intervals jump back at the start of each length.</p>
       <h2 data-toc>3.5. Waves</h2>
       <p>Up to 8 WAV files in <code>SAMPLES/WAVES</code>, each one cycle of a waveform. At the import every file is resampled to 1024 points; the end leads back to the start. Stereo files use the left channel only.</p>
       <ul>
         <li>Waves are numbered on their own: <b>W1</b> = the first name. Adding or removing samples doesn't move them.</li>
         <li>Best results: one cycle that starts and ends at a zero crossing, rising in the same direction, without DC offset.</li>
-        <li>2 KB per wave in the sample memory.</li>
-      </ul>
+              </ul>
     </div>
     <div class="col">
       <h2 data-toc>3.6. Modulated sample selection</h2>

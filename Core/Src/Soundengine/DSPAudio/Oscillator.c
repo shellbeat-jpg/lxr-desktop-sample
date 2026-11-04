@@ -20,6 +20,7 @@
 #include "Soundengine/Sequencer/sequencer.h"
 #include "SampleRom/sampleFlash.h"
 #include <string.h>
+#include <math.h>
 
 /* MOD: user samples from flash. A sample plays at its original pitch when the
  * oscillator is tuned to MIDI note SMP_ROOT_NOTE (coarse 60, fine centre). */
@@ -606,6 +607,7 @@ static void smp_begin(OscInfo* osc, const SampleFlashEntry* e, float pwm)
 		{
 			const uint32_t loopTicks = (uint32_t)osc->smpBeats * 96u;
 			const float pos = (float)((uint32_t)tick % loopTicks) / (float)loopTicks;
+			osc->smpPeriod = (int32_t)((uint32_t)tick / loopTicks);
 			uint32_t p = start + (uint32_t)(pos * (float)(end - start));
 			if(p >= end) p = start;
 			osc->phase = p;
@@ -664,6 +666,29 @@ static void smp_render(OscInfo* osc, const int16_t* modBuffer, int16_t* buf, con
 		xf = len / 4u;
 		if(xf > SMP_LOOP_XF) xf = SMP_LOOP_XF;
 		if(xf > start) xf = start;
+	}
+	/* MOD: loop sync with a transposition: the loop no longer fits its length;
+	 * at the start of each period it jumps back to the song position (declicked) */
+	if(loop && osc->smpBeats && osc->smpVar)
+	{
+		const int32_t tick = seq_getAbsTick();
+		const uint32_t loopTicks = (uint32_t)osc->smpBeats * 96u;
+		const int32_t period = tick >= 0 ? (int32_t)((uint32_t)tick / loopTicks) : osc->smpPeriod;
+		if(period != osc->smpPeriod)
+		{
+			osc->smpPeriod = period;
+			const uint32_t target = start + (uint32_t)((float)((uint32_t)tick % loopTicks) / (float)loopTicks * (float)len);
+			const uint32_t p = osc->phase;
+			uint32_t d = p > target ? p - target : target - p;
+			if(d > len / 2u) d = len - d;		/* distance around the loop */
+			if(d > 32u && target < end)
+			{
+				osc->smpTail    = osc->output;
+				osc->smpTailPos = osc->output ? SMP_DECLICK : 0u;
+				osc->phase      = target;
+				osc->smpFrac    = 0;
+			}
+		}
 	}
 	const uint8_t fadeOut = !loop && end < n;
 	uint8_t wrapped = osc->smpWrapped;
@@ -891,7 +916,9 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 	const float currentFreq = osc->freq*osc->pitchMod*osc->modNodeValue;
 	float inc = (currentFreq / MidiNoteFrequencies[SMP_ROOT_NOTE]) * (rate / REAL_FS) * (float)(1u << SMP_FRAC_BITS);
 	/* MOD: loop sync: the loop (start..end of the sample playing) lasts smpBeats
-	 * beats of the tempo; the speed follows the tempo, the pitch with it */
+	 * beats of the tempo; the speed follows the tempo, the pitch with it. A
+	 * transposition (COA/FIN, pitch modulation) comes on top (smpVar). */
+	osc->smpVar = 0;
 	if(osc->smpBeats)
 	{
 		const uint8_t wave = (osc->phase != SMP_PENDING && osc->smpWave >= NUM_OSC_WAVEFORMS && osc->smpWave < OSC_WAVE_USER)
@@ -904,7 +931,9 @@ void osc_calcUserSampleFreq(OscInfo* osc)
 				frames = osc->smpEnd - osc->smpStart;
 			const uint16_t bpm = seq_getBpm();
 			const float seconds = (float)osc->smpBeats * 60.f / (float)(bpm ? bpm : 120);
-			inc = (float)frames / (seconds * REAL_FS) * (float)(1u << SMP_FRAC_BITS);
+			const float transpose = currentFreq / MidiNoteFrequencies[SMP_ROOT_NOTE];
+			osc->smpVar = fabsf(transpose - 1.f) > 0.0005f;
+			inc = (float)frames / (seconds * REAL_FS) * transpose * (float)(1u << SMP_FRAC_BITS);
 		}
 	}
 	if(!(inc > 0.f)) inc = 0.f;                                      /* also catches NaN */
