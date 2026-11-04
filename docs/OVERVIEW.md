@@ -15,7 +15,7 @@ Waser), everything else from OE02-Samples+.
 | Samples | Up to 31 WAVs, 5.9 s in total (with `BIGFLASH` ≈ 17.8 s). Start and length parameters in ms with fades, loops with crossfade, declick on retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, samples in flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 100–105 (`STA` / Voice 1–6), NRPN 93, 94, 97 (`LEN` / Voice 1–3) |
 | User waves | Up to 8 WAVs from `SAMPLES/WAVES` as single cycles (1024 points): oscillator waveforms `W1`…`W8` (fixed values after `S1`…`S31`) and LFO shapes `W1`…`W8` (running) / `W1.`…`W8.` (one-shot); numbered on their own. | VOICE (OSC `WAV`, LFO `WAV`) | Kit (number), waves in flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 27–32 (LFO `WAV` / Voice 1–6) |
 | Choke | Voices of the choke group cut each other (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
-| Track 7 | Own waveform/sample (`WV7`), pitch (`CO7`), sends (`SA7`, `SB7`) and pan (`PN7`) for track 7 on the shared voice of slot 6, e.g. closed/open hi-hat samples, only one of them into the reverb. | VOICE 7 (OSC `WV7`, `CO7`; AEG `SA7`, `SB7`; MIX `PN7`) | Kit | – |
+| Track 7 | Own waveform/sample, pitch, sends and pan for track 7 on the shared voice of slot 6, e.g. closed/open hi-hat samples, only one of them into the reverb. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
 
 ## Sequencer / tracks
 

@@ -537,11 +537,11 @@ const char shortNames[][4]  =
 	{"q2"},
 	{"hi"},
 	{"bia"},	//MOD: FX3 saturation bias
-	{"wv7"},	//MOD: track 7 waveform
-	{"co7"},	//MOD: track 7 coarse
-	{"sa7"},	//MOD: track 7 send A
-	{"sb7"},	//MOD: track 7 send B
-	{"pn7"},	//MOD: track 7 pan
+	{"wav"},	//MOD: track 7 waveform (named like the shared parameter it replaces)
+	{"coa"},	//MOD: track 7 coarse
+	{"sna"},	//MOD: track 7 send A
+	{"snb"},	//MOD: track 7 send B
+	{"pan"},	//MOD: track 7 pan
 
 };
 //-----------------------------------------------------------------

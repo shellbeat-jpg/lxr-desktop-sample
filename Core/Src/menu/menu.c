@@ -822,19 +822,10 @@ void menu_updateVoicePages()
 				if(page == VOICE7_PAGE)
 				{
 					if(par[i] == PAR_WAVE1_HH)			{ par[i] = PAR_T7_WAVE;		text[i] = TEXT_T7_WAVE; }
+					else if(par[i] == PAR_COARSE6)		{ par[i] = PAR_T7_COARSE;	text[i] = TEXT_T7_COARSE; }
 					else if(par[i] == PAR_FX_SEND6)		{ par[i] = PAR_T7_SENDA;	text[i] = TEXT_T7_SENDA; }
 					else if(par[i] == PAR_FX_SENDB6)	{ par[i] = PAR_T7_SENDB;	text[i] = TEXT_T7_SENDB; }
 					else if(par[i] == PAR_PAN6)			{ par[i] = PAR_T7_PAN;		text[i] = TEXT_T7_PAN; }
-				}
-			}
-			//MOD: track 7's pitch offset on the page of its waveform, on the first free place
-			if(page == VOICE7_PAGE)
-			{
-				uint8_t hasWave = 0;
-				for(uint8_t i=0;i<8;i++) hasWave |= par[i] == PAR_T7_WAVE;
-				for(uint8_t i=0;hasWave && i<8;i++)
-				{
-					if(par[i] == PAR_NONE) { par[i] = PAR_T7_COARSE; text[i] = TEXT_T7_COARSE; break; }
 				}
 			}
 		}
