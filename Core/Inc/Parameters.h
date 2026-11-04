@@ -411,13 +411,6 @@ enum ParamEnums
 	PAR_FX3_E2Q,
 	PAR_FX3_EQH,
 	PAR_FX3_BIA,	//saturation bias (even harmonics)
-	//MOD: loop sync per voice (kit data): a loop sample spans 1 beat .. 16 bars
-	PAR_LOOP_SYNC1,
-	PAR_LOOP_SYNC2,
-	PAR_LOOP_SYNC3,
-	PAR_LOOP_SYNC4,
-	PAR_LOOP_SYNC5,
-	PAR_LOOP_SYNC6,
 
 	
 	//#########################################

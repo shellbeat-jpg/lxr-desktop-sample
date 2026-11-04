@@ -38,7 +38,6 @@ void kitEngines_setStock(uint8_t* engines)
 		engines[slot] = slot_stockEngine(slot);
 		engines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD
 		engines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
-		engines[KIT_LSYNC_OFFSET + slot] = 0;	//MOD: loop sync off
 	}
 	memcpy(&engines[KIT_FX3_OFFSET], kitEngines_fx3Defaults, KIT_FX3_SIZE);	//MOD
 	engines[KIT_FXMODE_OFFSET] = 0;	//MOD: FX order A>B
@@ -70,9 +69,6 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 4 + NUM_VOICE_SLOTS;
 	o[0] = 'F'; o[1] = 'X'; o[2] = '3'; o[3] = KIT_FX3_SIZE;	//MOD: FX3 settings
 	memcpy(&o[4], &engines[KIT_FX3_OFFSET], KIT_FX3_SIZE);
-	o += 4 + KIT_FX3_SIZE;
-	o[0] = 'L'; o[1] = 'S'; o[2] = 'Y'; o[3] = NUM_VOICE_SLOTS;	//MOD: loop sync
-	memcpy(&o[4], &engines[KIT_LSYNC_OFFSET], NUM_VOICE_SLOTS);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -97,11 +93,6 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 			const uint8_t offset = t[2] == 'A' ? KIT_SEND_OFFSET : KIT_SENDB_OFFSET;
 			for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
 				engines[offset + slot] = t[4+slot] > 127 ? KIT_SEND_DEFAULT : t[4+slot];
-		}
-		else if(t[0] == 'L' && t[1] == 'S' && t[2] == 'Y' && n >= NUM_VOICE_SLOTS)	//MOD: loop sync
-		{
-			for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
-				engines[KIT_LSYNC_OFFSET + slot] = t[4+slot] < KIT_LSYNC_NUM ? t[4+slot] : 0;
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;

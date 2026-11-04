@@ -455,14 +455,6 @@ uint16_t seq_getBpm()
 	return seq_tempo;
 }
 //------------------------------------------------------------------------------
-static int32_t seq_gridSteps;	//MOD: defined with the step grid below
-int32_t seq_getAbsTick(void)	//MOD
-{
-	if(!seq_running || seq_gridSteps < 0)
-		return -1;
-	return seq_gridSteps * 24 + seq_prescaleCounter;
-}
-//------------------------------------------------------------------------------
 void seq_sync()
 {
   if (seq_getExtSync() == 2)

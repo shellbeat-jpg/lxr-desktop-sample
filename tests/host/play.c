@@ -13,8 +13,6 @@ const int16_t sine_table[TABLESIZE+1]; const int16_t sawTable[11][1024]; const i
 uint32_t GetRngValue(void){return 0;}
 #define SEMITONE_UP 1.059463094f
 float midiParser_calcDetune(uint8_t value){return 1+(value/127.f-0.5f)*(SEMITONE_UP-1);}
-static int32_t host_tick=-1; static uint16_t host_bpm=120;
-int32_t seq_getAbsTick(void){return host_tick;} uint16_t seq_getBpm(void){return host_bpm;}
 void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm);
 void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm);
 void osc_setFreq(OscInfo* osc); void osc_setBaseNote(OscInfo* osc, uint8_t baseNote);
@@ -150,16 +148,4 @@ int main(){
     CHECK(ok,"W1: 256 Ausgabesamples pro Zyklus lesen jeden 4. Punkt");
     ok=1; for(int i=0;i<256;i++) if(o2[i]!=o2[i+256]) ok=0; CHECK(ok,"W1: Zyklus wiederholt sich (Wrap am Ende)");
     w.waveform=OSC_WAVE_USER+1; render(&w,o2,64,0,0); ok=1; for(int i=0;i<64;i++) if(o2[i]) ok=0; CHECK(ok,"W2 nicht vorhanden -> Stille"); }
-  /* 14: MOD loop sync: a loop of 1 s at 44.1 kHz as 1 beat at 120 BPM = 0.5 s */
-  system("mkdir -p sd/SAMPLES/LOOPS"); wav16("LOOPS/1LOOP.WAV",44100,44100,ramp);
-  r=sampleFlash_importAtBoot(); CHECK(r==SF_OK_IMPORTED && sampleFlash_getCount()==3,"Import: 3 Samples (1 Loop)");
-  { int L=-1; for(int s=0;s<3;s++){ const SampleFlashEntry* e=sampleFlash_entry(s); if(e && (e->flags&SF_FLAG_LOOP)) L=s; }
-    CHECK(L>=0,"Loop-Sample gefunden");
-    OscInfo l=mk(L); l.freq=MidiNoteFrequencies[60]; l.smpBeats=1; host_bpm=120; host_tick=-1;
-    osc_setBaseNote(&l,60); l.freq=MidiNoteFrequencies[60]; osc_setFreq(&l);
-    double want=44100.0/(0.5*REAL_FS); CHECK(fabs(l.phaseInc/(double)(1u<<17)-want)<0.001,"Sync: 1 Beat bei 120 BPM -> Tempo passt");
-    host_bpm=60; osc_setFreq(&l); CHECK(fabs(l.phaseInc/(double)(1u<<17)-want/2)<0.001,"Sync: halbes Tempo -> halbe Geschwindigkeit");
-    host_bpm=120; host_tick=96*3+48; osc_setBaseNote(&l,60); osc_setFreq(&l); { int16_t buf[32]; calcNextOscSampleBlock(&l,buf,32,1.f,0.f); }
-    CHECK(abs((int)l.phase-(22050+32*2))<4,"Sync: Trigger mitten im Beat startet bei der Song-Position (Haelfte)");
-    l.smpBeats=0; osc_setFreq(&l); CHECK(fabs(l.phaseInc/(double)(1u<<17)-44100.0/REAL_FS)<0.001,"Sync aus: Originalgeschwindigkeit"); }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }

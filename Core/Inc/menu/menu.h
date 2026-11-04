@@ -309,7 +309,6 @@ enum NamesEnum
 	TEXT_FX3_E2Q,
 	TEXT_FX3_EQH,
 	TEXT_FX3_BIA,
-	TEXT_LOOP_SYNC,		//MOD: loop sync per voice
 
 
 	NUM_NAMES
@@ -452,8 +451,7 @@ enum shortNamesEnum
 	SHORT_FX3_E2G,
 	SHORT_FX3_E2Q,
 	SHORT_FX3_EQH,
-	SHORT_FX3_BIA,
-	SHORT_LOOP_SYNC
+	SHORT_FX3_BIA
 
 	
 };
@@ -616,8 +614,7 @@ enum longNamesEnum
 	LONG_FX3_E2G,
 	LONG_FX3_E2Q,
 	LONG_FX3_EQH,
-	LONG_FX3_BIA,
-	LONG_LOOP_SYNC
+	LONG_FX3_BIA
 	
 };
 

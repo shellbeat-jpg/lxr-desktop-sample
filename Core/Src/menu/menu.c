@@ -300,7 +300,6 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX3_E2Q, CAT_FX, LONG_FX3_E2Q},/*TEXT_FX3_E2Q*/
 		{SHORT_FX3_EQH, CAT_FX, LONG_FX3_EQH},/*TEXT_FX3_EQH*/
 		{SHORT_FX3_BIA, CAT_FX, LONG_FX3_BIA},/*TEXT_FX3_BIA*/
-		{SHORT_LOOP_SYNC, CAT_VELO_EG, LONG_LOOP_SYNC},/*TEXT_LOOP_SYNC*/
 
 
 };
@@ -591,7 +590,6 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FX3_SAT..ORD*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,	//MOD (+AMU, CFQ, CSM)
 		/*PAR_FX3_EQL..EQH*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
 		/*PAR_FX3_BIA*/			DTYPE_0B127,
-		/*PAR_LOOP_SYNC1-6*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -769,8 +767,6 @@ static uint16_t menu_trackPar(const uint16_t par, const uint8_t fromTrack, const
 		return PAR_FX_SEND1 + (toTrack < NUM_VOICE_SLOTS ? toTrack : NUM_VOICE_SLOTS-1);
 	if(par >= PAR_FX_SENDB1 && par <= PAR_FX_SENDB6)
 		return PAR_FX_SENDB1 + (toTrack < NUM_VOICE_SLOTS ? toTrack : NUM_VOICE_SLOTS-1);
-	if(par >= PAR_LOOP_SYNC1 && par <= PAR_LOOP_SYNC6)	//MOD: loop sync
-		return PAR_LOOP_SYNC1 + (toTrack < NUM_VOICE_SLOTS ? toTrack : NUM_VOICE_SLOTS-1);
 	return par;
 }
 
@@ -1057,22 +1053,12 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 		return &kitEngines[KIT_SENDB_OFFSET + (p - PAR_FX_SENDB1)];
 	if(p >= PAR_FX3_SAT && p <= PAR_FX3_BIA)	//MOD: FX3 settings (MasterBus.h order)
 		return &kitEngines[KIT_FX3_OFFSET + (p - PAR_FX3_SAT)];
-	if(p >= PAR_LOOP_SYNC1 && p <= PAR_LOOP_SYNC6)	//MOD: loop sync
-		return &kitEngines[KIT_LSYNC_OFFSET + (p - PAR_LOOP_SYNC1)];
 	return 0;
 }
 //MOD: FX3 values as text: 3 characters (four-parameter view) or the edit view's
 //value with its unit; returns 0 for other parameters
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
-	if(p >= PAR_LOOP_SYNC1 && p <= PAR_LOOP_SYNC6)	//MOD: loop sync, beats / bars
-	{
-		static const char* const s[KIT_LSYNC_NUM] = { "off", "1bt", "2bt", "  1", "  2", "  4", "  8", " 16" };
-		static const char* const l[KIT_LSYNC_NUM] = { "off", "1 beat", "2 beats", "1 bar", "2 bars", "4 bars", "8 bars", "16 bars" };
-		const uint8_t k = v < KIT_LSYNC_NUM ? v : 0;
-		if(isLong) strcpy(out, l[k]); else memcpy(out, s[k], 3);
-		return 1;
-	}
 	if(p < PAR_FX3_SAT || p > PAR_FX3_BIA)
 		return 0;
 	char t[12];
@@ -2326,14 +2312,6 @@ void menu_repaintGeneric()
 					snprintf(&editDisplayBuffer[1][5], 12, "Voice %u > %u", (unsigned)(s+1u), (unsigned)(d+1u));
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
-			}
-			else if(parNr >= PAR_LOOP_SYNC1 && parNr <= PAR_LOOP_SYNC6)
-			{
-				//MOD: loop sync, right aligned
-				char t[17];
-				menu_fx3Text(parNr, *menu_sendLevel(parNr), t, 1);
-				const size_t n = strlen(t);
-				memcpy(&editDisplayBuffer[1][16 - n], t, n);
 			}
 			else if(parNr >= PAR_FX3_SAT && parNr <= PAR_FX3_BIA)
 			{
@@ -3968,8 +3946,7 @@ static void menu_encoderChangeParameter(int8_t inc)
 	{
 		uint8_t* s = menu_sendLevel(paramNr);
 		const int16_t v = (int16_t)*s + inc;
-		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_BIA) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT))
-				: (paramNr >= PAR_LOOP_SYNC1 && paramNr <= PAR_LOOP_SYNC6) ? KIT_LSYNC_NUM - 1 : 127;	//MOD
+		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_BIA) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT)) : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;

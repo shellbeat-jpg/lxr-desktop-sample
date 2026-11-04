@@ -43,12 +43,10 @@
 //MOD: FX3 (master bus of St1, MasterBus.h): 9 settings, part "FX3"
 #define KIT_FX3_OFFSET			(3*NUM_VOICE_SLOTS + 1)
 #define KIT_FX3_SIZE			21
-#define KIT_LSYNC_OFFSET		(KIT_FX3_OFFSET + KIT_FX3_SIZE)	//loop sync per slot (KIT_LSYNC_x)
-#define KIT_DATA_SIZE			(4*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE)
-#define KIT_LSYNC_NUM			8	//off, 1 and 2 beats, 1, 2, 4, 8, 16 bars
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + NUM_VOICE_SLOTS)
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

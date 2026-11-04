@@ -276,7 +276,6 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h2 data-toc>3.4. Samples and loops</h2>
       <p>A sample from <code>SAMPLES</code> plays once per trigger; the amp envelope (AEG decay) can end it earlier. A retrigger fades the sound that still plays (about 1 ms) instead of clicking.</p>
       <p>A sample from <code>SAMPLES/LOOPS</code> plays from <b>sta</b> to the end set by <b>len</b> and jumps back to <b>sta</b>, until the amp envelope ends the sound. Drum voices have no gate, so a long decay keeps the loop going; with decay 127 it never ends by itself. Stopping the sequencer fades out every playing loop. The loop point is crossfaded (up to 256 frames, at most a quarter of the loop).</p>
-      <p><b>Loop sync</b> (<b>lsy</b>, AEG page): the loop lasts 1 or 2 beats or 1 … 16 bars at the current tempo. The speed follows the tempo and the pitch with it (<b>coa</b>/<b>fin</b> are ignored). A loop triggered while the sequencer runs starts at the song position within its length and stays in time.</p>
       <h2 data-toc>3.5. Waves</h2>
       <p>Up to 8 WAV files in <code>SAMPLES/WAVES</code>, each one cycle of a waveform. At the import every file is resampled to 1024 points; the end leads back to the start. Stereo files use the left channel only.</p>
       <ul>
@@ -310,7 +309,6 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>chk</td><td>Choke</td><td>on/off: puts this track into the choke group of the kit. The edit view shows all tracks of the group, e.g. <b>1--4-6-</b>.</td></tr>
         <tr><td>sna</td><td>FX1 send</td><td>send into FX slot A (FX1), 0 … 127, besides the voice's output.</td></tr>
         <tr><td>snb</td><td>FX2 send</td><td>send into FX slot B (FX2), 0 … 127.</td></tr>
-        <tr><td>lsy</td><td>Loop sync</td><td>off, 1 or 2 beats, 1 … 16 bars: a loop sample lasts that long at the tempo (chapter 3.4).</td></tr>
       </table>
       <h4>Choke group</h4>
       <p>A track of the group cuts the other tracks of the group when it is triggered, with a fade of about 2 ms; a choked track stays silent until its next trigger. Use it for hi-hat samples on several voices, or an open hat cut by a closed one. Tracks 6 and 7 share one voice and cut each other anyway.</p>
