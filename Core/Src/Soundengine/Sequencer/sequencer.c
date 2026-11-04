@@ -39,6 +39,7 @@
 #include "Preset/PresetManager.h"
 #include "Soundengine/CpuMeter.h"
 #include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: slot_stopLoops
+#include "Soundengine/DSPAudio/mixer.h"		//MOD: cue
 
 void seq_setPendingPatternActive();
 
@@ -82,6 +83,8 @@ static int8_t seq_armedArmedAutomationStep = -1;
 static int8_t seq_armedArmedAutomationTrack = -1;
 
 static uint8_t seq_mutedTracks=0;			/**< indicate which tracks are muted */
+//MOD: cue: a muted track that is cued is still triggered (heard on the cue only)
+#define SEQ_SILENT(t)	((seq_mutedTracks & (uint8_t)~mixer_cueTracks) & (1u << (t)))
 uint8_t seq_songModeEnabled=0;
 uint8_t seq_running = 0;					/**<  1 running, 0 if stopped*/
 
@@ -536,8 +539,14 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 	// if a note is on for that channel send note-off first
 	voiceControl_noteOff(voiceNr);
 
+	//MOD: a muted track gets here only when it is cued: heard on the cue only, no MIDI note
+	const uint8_t cueOnly = (seq_mutedTracks >> voiceNr) & 1u;
+	slot_triggerCueOnly = cueOnly;
 	//Trigger internal synth voice
 	voiceControl_noteOn(voiceNr, note, vol);
+	slot_triggerCueOnly = 0;
+	if(cueOnly)
+		return;
 
 	midiChan = midi_MidiChannels[voiceNr];
 
@@ -1165,7 +1174,7 @@ __attribute__((noinline)) void seq_slowRoll(const uint8_t track)
 	if(++seq_slowRollCnt[track] < seq_slowRollInt[track])
 		return;
 	seq_slowRollCnt[track] = 0;
-	if(seq_mutedTracks & (1<<track))
+	if(SEQ_SILENT(track))
 		return;
 	const Step* st = &seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_slowRollFrom[track]];
 	seq_triggerVoice(track, st->volume&STEP_VOLUME_MASK, st->note);
@@ -1275,14 +1284,14 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t T)
 			seq_triggerVoice(track, ROLL_VOLUME, note);
 			seq_addNote(track, ROLL_VOLUME, note);
 		}
-		if(!(seq_mutedTracks & (1<<track)) && seq_intIsMainStepActive(track,seq_stepIndex[track],seq_activePattern))
+		if(!SEQ_SILENT(track) && seq_intIsMainStepActive(track,seq_stepIndex[track],seq_activePattern))
 		{
 			seq_rndValue[track].prev = seq_rndValue[track].current;
 			seq_rndValue[track].current = seq_rndValue[track].next;
 			seq_rndValue[track].next = GetRngValue()% 100 + 1;
 		}
 	}
-	if(seq_stepIndex[track] < 0 || (seq_mutedTracks & (1<<track)))
+	if(seq_stepIndex[track] < 0 || SEQ_SILENT(track))
 		return;
 	//the 24 flam/shift positions of a step, scaled onto this track's step
 	//(rounded up: position 0 = the step's own hit falls on its first tick)
@@ -1589,7 +1598,7 @@ void seq_processFlam(uint8_t idx)
 		if(seq_ownClock(track))	//MOD: handled by seq_gridTick
 			continue;
 		//if track is not muted
-		if(!(seq_mutedTracks & (1<<track) ) )
+		if(!SEQ_SILENT(track))
 		{
 			//pattern takes main step active and probability into account
 #if 1
@@ -1893,7 +1902,7 @@ IN_ITCM_RAM void seq_nextStep()
 
 
 		//if track is not muted
-		if(!(seq_mutedTracks & (1<<i) ) )
+		if(!SEQ_SILENT(i))
 		{
 /*
 			//if main step (associated with current substep) is active
@@ -2581,6 +2590,7 @@ IN_ITCM_RAM void seq_setMute(uint8_t trackNr, uint8_t isMuted)
 	{
 		//unmute all
 		seq_mutedTracks = 0;
+		slot_clearCueOnly(7);	//MOD: a sound heard on the cue only plays on St1 again
 	} else {
 		//mute/unmute tracks
 		if(isMuted) {
@@ -2591,6 +2601,7 @@ IN_ITCM_RAM void seq_setMute(uint8_t trackNr, uint8_t isMuted)
 		} else {
 			//unmute track
 			seq_mutedTracks &= ~(1<<trackNr);
+			slot_clearCueOnly(trackNr);	//MOD
 		}
 	}
 };

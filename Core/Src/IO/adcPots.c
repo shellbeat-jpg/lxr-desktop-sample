@@ -291,7 +291,8 @@ float adc_getFaderVolumeRaw(uint8_t idx)
 //MOD: with pre-fader sends the mixer applies the fader after the sends
 float adc_getFaderVolume(uint8_t idx)
 {
-	return mixer_preFader ? 1.f : adc_getFaderVolumeRaw(idx);
+	//MOD: also for a cued slot (the cue is taken before the fader)
+	return (mixer_preFader || ((mixer_cueSlotMask >> idx) & 1u)) ? 1.f : adc_getFaderVolumeRaw(idx);
 }
 //------------------------------------------------------------------------
 

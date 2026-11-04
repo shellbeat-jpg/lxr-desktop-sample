@@ -514,6 +514,51 @@ INDTCM float mixer_limiterGain[2] = {1.f, 1.f};
 INDTCM uint8_t mixer_limiterOn = 1;
 INDTCM uint8_t mixer_preFader = 0;		//MOD: global PAR_FX_PREFADER
 static float mixer_faderGain[6] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };	//MOD: pre-fader: the fader, smoothed per block
+//MOD: cue on St2 (mixer.h)
+uint8_t mixer_cueTracks = 0;
+uint8_t mixer_cueSlotMask = 0;
+float mixer_cueMix = 0.f;
+float mixer_cueVol = 1.f;
+static int32_t mixer_cueBus[OUTPUT_DMA_SIZE*2];
+//start of a block: is the cue on (a track cued, St1 has its own cable), its bus cleared
+__attribute__((noinline)) static uint8_t mixer_cueBegin(void)
+{
+	uint8_t m = (uint8_t)(mixer_cueTracks & 0x3Fu);
+	if(mixer_cueTracks & 0x40u) m |= 0x20u;		//track 7: slot 6
+	if(!(l1_Available && r1_Available)) m = 0;	//St1 is on the jacks of St2: no cue
+	mixer_cueSlotMask = m;
+	if(m) memset(mixer_cueBus, 0, sizeof(mixer_cueBus));
+	return m;
+}
+//a cued voice before its fader, with its pan
+__attribute__((noinline)) static void mixer_cueVoice(const int16_t* data, const float panL, const float panR)
+{
+	for(uint32_t i = 0; i < OUTPUT_DMA_SIZE; i++)
+	{
+		mixer_cueBus[2*i]   += (int32_t)(data[i] * panL);
+		mixer_cueBus[2*i+1] += (int32_t)(data[i] * panR);
+	}
+}
+//what went to St2 (voices, FX returns) plays on St1 meanwhile
+__attribute__((noinline)) static void mixer_cueFold(int32_t* st2, int32_t* st1)
+{
+	for(uint32_t i = 0; i < OUTPUT_DMA_SIZE*2; i++)
+	{
+		st1[i] += st2[i];
+		st2[i] = 0;
+	}
+}
+//St2 = level * (cue .. main)
+__attribute__((noinline)) static void mixer_cueOut(int32_t* st2, const int32_t* st1)
+{
+	const float m = mixer_cueMix, g = mixer_cueVol;
+	const float gc = g * (1.f - m), gm = g * m;
+	for(uint32_t i = 0; i < OUTPUT_DMA_SIZE*2; i++)
+	{
+		const int32_t s = (int32_t)(gc * (float)mixer_cueBus[i] + gm * (float)st1[i]);
+		st2[i] = mixer_limiterOn ? s : __SSAT(s, 16);
+	}
+}
 //MOD: the send levels of the last block, per FX slot and voice (ramps)
 static float mixer_sendGain[2][NUM_VOICE_SLOTS];
 //MOD: a send whose level changed (knob, track 6/7 switch): a linear ramp over the
@@ -711,6 +756,8 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	bufferTool_clearBuffer(fxBusData,OUTPUT_DMA_SIZE*2);
 	bufferTool_clearBuffer(fxBusDataB,OUTPUT_DMA_SIZE*2);
 
+	const uint8_t cueOn = mixer_cueTracks ? mixer_cueBegin() : (mixer_cueSlotMask = 0);	//MOD: cue
+
 	//calc the voices, decimate them and add them to the selected outputs
 	for(v=0;v<6;v++)
 	{
@@ -743,13 +790,21 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		//(also OUT = FX / FXB: the fader keeps working there). Post-fader (default):
 		//the engines applied the fader already.
 		const uint8_t fadeSlot = voiceSlots[v].u.c.slot;
-		if(mixer_preFader)
+		//MOD: cue: a cued voice before its fader; a muted, cued track only there
+		const uint8_t cued = (mixer_cueSlotMask >> v) & 1u;
+		const uint8_t cueOnly = slot_cueOnly[v];
+		if(mixer_preFader || cued)
 		{
-			mixer_addSends(v, panL, panR, sampleData, &mix[pos], &mix2[pos], fxBusData, fxBusDataB);
+			if(mixer_preFader && !cueOnly)
+				mixer_addSends(v, panL, panR, sampleData, &mix[pos], &mix2[pos], fxBusData, fxBusDataB);
+			if(cued)
+				mixer_cueVoice(sampleData, panL, panR);
 			mixer_applyFader(fadeSlot, sampleData);
 		}
 		else
 			mixer_faderGain[fadeSlot] = adc_getFaderVolumeRaw(fadeSlot);
+		if(cueOnly)
+			continue;
 		{
 			const uint8_t isFxB = route == MIXER_ROUTING_FX_BUS_B;	//MOD
 			mixer_addDataToOutput(isFxB ? MIXER_ROUTING_FX_BUS : route, panL, panR, sampleData,&mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], isFxB ? fxBusDataB : fxBusData);
@@ -775,6 +830,8 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	meterStart = DWT->CYCCNT;
 #endif
 	FxBus_process(fxBusData, fxBusDataB, &mix[pos],&mix[pos+1],&mix2[pos],&mix2[pos+1], OUTPUT_DMA_SIZE);
+	if(cueOn)
+		mixer_cueFold(mix, mix2);	//MOD: cue: St2 (mix) onto St1 (mix2)
 	if(!mixer_limiterOn)
 	{
 		mixer_saturateMix(mix);
@@ -823,6 +880,9 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 		mixer_saturateMix(mix);
 		mixer_saturateMix(mix2);
 	}
+
+	if(cueOn)
+		mixer_cueOut(mix, mix2);	//MOD: St2 = the cue
 
 	//bring the sums back into the 16-bit range of the DACs
 	mixer_limitBlock(&mixer_limiterGain[0], mix, output);

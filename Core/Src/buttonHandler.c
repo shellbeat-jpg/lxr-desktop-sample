@@ -15,6 +15,7 @@
 #include "buttonHandler.h"
 #include "menu/menu.h"
 #include "ledHandler.h"
+#include "Soundengine/DSPAudio/mixer.h"	//MOD: cue
 #include "lcd.h"
 #include <stdio.h>
 #include "IO/DIO.h"
@@ -851,7 +852,11 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 		case SEQ_CLP:
 		case SEQ_CL_HH:
 		case SEQ_OP_HH:
-			//single instrument buttons
+			//MOD: SHIFT + step button 1-7: cue the track on St2 (on every page)
+			mixer_cueTracks ^= (uint8_t)(1u << seqButtonPressed);
+			if(!(mixer_cueTracks & (1u << seqButtonPressed)))
+				led_reset((uint8_t)(LED_VOICE1 + seqButtonPressed));
+			menu_showCue();
 			break;
 
 		case SEQ_KIT: //kit: engine menu of the active voice

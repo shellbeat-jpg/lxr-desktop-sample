@@ -19,6 +19,7 @@ Waser), everything else from OE02-Samples+.
 | LFO 2 | A second LFO per voice and an own LFO for track 7 (acts while track 7 plays, instead of the LFO of voice 6). Test. | VOICE 1-7, LFO button pressed again on its 2nd screen | Kit | – |
 | OSX | Exclude single voices from the global sample rate (`SR` / `0sr`). | PERF (`OSX`, on/off for the active voice) | Kit | – |
 | FX presets | List for FX1/FX2: 17 factory presets (delay, distortion, compressor, ring mod) and 8 user presets per project; load/save with an encoder click. | FX setup page (`PRS`) | user: project (`FXPRESET.BIN`) | – |
+| Cue | Pre-listening on St2 (pre-fader, also muted tracks); `CMX` cue/main mix, `CVL` level. | SHIFT + step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
 
 ## Sequencer / tracks
 

@@ -84,6 +84,11 @@ void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size);
 void slot_stopLoops(void);
 //MOD: 1 while slot 6 plays a trigger of track 7 (the mixer takes its sends then)
 extern uint8_t slot_t7Playing;
+//MOD: cue: slot_cueOnly[slot] = 1 while the slot plays a trigger of a muted, cued track
+//(heard on the cue only); the sequencer sets slot_triggerCueOnly around such a trigger
+extern uint8_t slot_cueOnly[NUM_VOICE_SLOTS];
+extern uint8_t slot_triggerCueOnly;
+void slot_clearCueOnly(const uint8_t track);	//the track was unmuted (7: all)
 
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);

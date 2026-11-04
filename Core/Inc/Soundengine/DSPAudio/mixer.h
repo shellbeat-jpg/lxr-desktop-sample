@@ -54,6 +54,15 @@ void  mixer_calcNextSampleBlock(int16_t* output,int16_t* output2);
 /** 1 = 32-bit mix with an output limiter per DAC, 0 = the stock 16-bit saturating mix */
 extern uint8_t mixer_limiterOn;
 extern uint8_t mixer_preFader;	//MOD: FX sends before the volume faders (global PAR_FX_PREFADER)
+//MOD: cue (pre-fader listening) on St2: bit n = track n+1 is cued. While a track is
+//cued (and St1 has its cable), St2 carries the cue mix and what is routed to St2
+//plays on St1. mixer_cueSlotMask: the slots cued in this block (their fader is
+//applied by the mixer, after the cue).
+extern uint8_t mixer_cueTracks;
+extern uint8_t mixer_cueSlotMask;
+extern float mixer_cueMix;		//0 = cue only .. 1 = main only
+extern float mixer_cueVol;
+extern uint8_t l1_Available, r1_Available;	//cables in St1 (read each block)
 
 /** Adds a packed stereo sample (as built with __PKHBT(left, right, 16)) to a 32-bit mix buffer. */
 static inline void mixer_addStereo(int32_t* out, int32_t x)

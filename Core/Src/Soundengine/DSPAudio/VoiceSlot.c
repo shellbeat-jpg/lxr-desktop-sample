@@ -101,6 +101,13 @@ void slot_setEngine(const uint8_t slot, const uint8_t engine)
 #define SLOT_CHOKE_OFF		(-1)	//not choked
 uint8_t slot_chokeGroup = 0;
 uint8_t slot_t7Playing = 0;	//MOD: track 7 sends
+uint8_t slot_cueOnly[NUM_VOICE_SLOTS];	//MOD: cue
+uint8_t slot_triggerCueOnly = 0;
+void slot_clearCueOnly(const uint8_t track)
+{
+	if(track >= 7)	memset(slot_cueOnly, 0, sizeof(slot_cueOnly));
+	else			slot_cueOnly[track < NUM_VOICE_SLOTS ? track : NUM_VOICE_SLOTS-1] = 0;
+}
 static int16_t slot_choke[NUM_VOICE_SLOTS] = { SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF, SLOT_CHOKE_OFF };
 
 void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size)
@@ -151,6 +158,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	VoiceSlot* s = &voiceSlots[slot];
 
 	slot_chokeOthers(track, slot);	//MOD
+	slot_cueOnly[slot] = slot_triggerCueOnly;	//MOD: cue
 
 	//MOD: track 7 can play its own waveform and pitch on the shared voice of slot 6
 	{

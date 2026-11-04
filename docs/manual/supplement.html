@@ -453,13 +453,14 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <p>Turn the encoder on to reach the second page.</p>
       <table class="p3">
         <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>bpm rol mrp srt</td><td>Tempo, roll, morph, sample rate</td><td>as before; <b>rol</b> counts in the track's own steps</td></tr>
+        <tr><td>bpm rol mrp srt</td><td>Tempo, roll, morph, sample rate</td><td>as before; <b>rol</b> in the track's own steps</td></tr>
         <tr><td>dj</td><td>DJ filter cutoff <span class="oe">OE</span></td><td>LP/HP filter on the final mix of all outputs</td></tr>
         <tr><td>res</td><td>DJ filter resonance <span class="oe">OE</span></td><td></td></tr>
         <tr><td>sat</td><td>Saturation</td><td>of the master bus FX3 (chapter 6.5)</td></tr>
         <tr><td>frq</td><td>Saturation split</td><td>of FX3</td></tr>
         <tr><td>shu</td><td>Shuffle</td><td>as before (second page)</td></tr>
         <tr><td>vmv vmo vsw</td><td>Voice morph</td><td>chapter 5.3</td></tr>
+        <tr><td>cmx cvl</td><td>Cue mix, level</td><td>cue on St2: SHIFT + step 1–7 (pre-fader, muted too)</td></tr>
         <tr><td>osx</td><td>OSR exclude</td><td><b>on</b>: the active voice ignores the global <b>srt</b> (and <b>0sr</b>), keeps its own</td></tr>
       </table>
     </div>
@@ -677,7 +678,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><th>Stored in</th><th>Settings</th></tr>
         <tr><td>Kit</td><td>engine <span class="oe">OE</span>, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b></td></tr>
         <tr><td>Pattern</td><td>step grid, flam values, trigger tracks, LFO start, velocity 0 steps</td></tr>
-        <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input gains (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
+        <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input gains (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
         <tr><td>Project</td><td>the voice INIT template, the morph kit's values</td></tr>
         <tr><td>Flash</td><td>samples and waves (imported from the card)</td></tr>
         <tr><td>Not saved</td><td><b>vmv</b>, <b>vmo</b>, <b>dj</b>, <b>res</b> <span class="oe">OE</span></td></tr>

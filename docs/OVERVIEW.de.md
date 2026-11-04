@@ -19,6 +19,7 @@ Waser), alles andere aus OE02-Samples+.
 | LFO 2 | Ein zweiter LFO pro Voice und ein eigener LFO für Track 7 (wirkt, solange Track 7 klingt, statt des LFO von Voice 6). Test. | VOICE 1-7, LFO-Taste auf dem 2. Bildschirm erneut drücken | Kit | – |
 | OSX | Einzelne Voices von der globalen Samplerate (`SR` / `0sr`) ausnehmen. | PERF (`OSX`, an/aus für die aktive Voice) | Kit | – |
 | FX presets | Liste für FX1/FX2: 17 Werks-Presets (Delay, Distortion, Kompressor, Ring-Mod) und 8 eigene pro Projekt; Laden/Speichern per Encoder-Klick. | FX-Setup-Seite (`PRS`) | eigene: Projekt (`FXPRESET.BIN`) | – |
+| Cue | Vorhören auf St2 (vor dem Fader, auch gemutete Tracks); `CMX` Cue/Main-Mix, `CVL` Pegel. | SHIFT + Step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
 
 ## Sequencer / Tracks
 

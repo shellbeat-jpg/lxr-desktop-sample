@@ -464,7 +464,7 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
   `F2` `G2` `Q2` `HI` | `ORD` `AMU` `GAI` `D/W` `BIA`.
 - With band split, `AMU`/`GAI` and `D/W` act on the compressed band only.
 - PERF page: `DJ`, `RES`, `SAT`, `FRQ` on the second half of the first page, then `SHU`, `VMV`,
-  `VMO`, `VSW`, `OSX` (FX3 values: the same kit values as on the FX3 page).
+  `VMO`, `VSW`, `OSX`, `CMX`, `CVL` (FX3 values: the same kit values as on the FX3 page).
 - With `SAT`, `RAT` and `GAI` at 0 and all EQ gains at 0 dB the bus is off and the sum stays
   unchanged.
 - CPU: the CPU meter build (`cmake -DLXR_CPU_METER=ON`) shows FX3 as `M` on its second page
@@ -517,6 +517,23 @@ sends ramp over one audio block (about 1 ms) when they change, the tails already
 out. Everything else is shared: fine tune, filter, LFO, start and length, volume (fader) and
 outputs. With the FM hi-hat engine track 7's `COA` shifts the
 carrier only, which changes the timbre more than the pitch. Stored in the kit (part `TR7`).
+
+## Cue on St2 (1.2.11)
+
+Pre-listening of tracks on the St2 output, like the cue of a DJ mixer.
+
+- **SHIFT + step button 1-7** (DRUM1 … OP HH) cues the track or takes it out, on every page.
+  Cued tracks blink at their voice button; the display shows the cued tracks for a moment.
+- As long as a track is cued, **St2 carries the cue**: the cued tracks before their fader
+  (pre-fader listening), with their pan, without FX. St1 stays as it is; what is routed to St2
+  (voice outputs, FX returns) plays on St1 meanwhile. Nothing cued: St2 is a normal output again.
+- **Muted tracks** that are cued are still triggered, but heard on the cue only (no MIDI note,
+  no FX sends). Unmuting them brings them to St1 (also a sound that is still playing). With the
+  fader down a cued track is heard on the cue only as well.
+- PERF page, after `OSX`: **`CMX`** = cue mix: 0 = cue only … 127 = main (St1 with FX3 and DJ
+  filter) only; **`CVL`** = cue level (100 = unity). Both are global settings.
+- The cue needs a cable in St1 (otherwise St1 plays on the jacks of St2: no cue, the display
+  shows `no St1!`).
 
 ## OSX: voices without the global sample rate (1.2.11)
 

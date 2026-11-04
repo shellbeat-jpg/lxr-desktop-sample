@@ -514,6 +514,9 @@ enum ParamEnums
 	PAR_FXB_GAIN,
 	//MOD: FX sends SNA / SNB before the volume fader (1) or after it (0, default)
 	PAR_FX_PREFADER,
+	//MOD: cue on St2: mix cue (0) .. main (127), cue level (100 = unity, 0 = older settings: 100)
+	PAR_CUE_MIX,
+	PAR_CUE_VOL,
 
 	NUM_PARAMS	
 };

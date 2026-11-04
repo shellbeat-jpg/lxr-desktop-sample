@@ -18,6 +18,7 @@
 #include "menu/menu.h"
 #include "Soundengine/globals.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Soundengine/DSPAudio/mixer.h"	//MOD: cue
 
 //since we need an array to store the start time we have to limit the number of simultanousely pulsable LEDs
 #define NUM_OF_PULSABLE_LEDS 8	//MAX 8 at the moment (because of led_pulsingLeds)
@@ -638,6 +639,16 @@ void led_blinkHandler()
 			}
 		}
 
+	}
+	//MOD: cued tracks blink at their voice button
+	if(led_blinkPrescaler==0 && mixer_cueTracks)
+	{
+		for(uint8_t t=0;t<7;t++)
+		{
+			if(!(mixer_cueTracks & (1u << t))) continue;
+			if(led_blinkToggleState)	led_setValueTemp(1, (uint8_t)(LED_VOICE1 + t));
+			else						led_reset((uint8_t)(LED_VOICE1 + t));
+		}
 	}
 	led_blinkPrescaler++;
 	if(led_blinkPrescaler>=2)led_blinkPrescaler=0;

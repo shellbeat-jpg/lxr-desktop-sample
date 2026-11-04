@@ -324,6 +324,8 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_DEST,CAT_T7LFO,LONG_DEST_PARAM},/*TEXT_T7LFO_DST*/
 		{SHORT_OSX, CAT_VOICE, LONG_OSX},/*TEXT_OSX*/
 		{SHORT_FX_PRESET, CAT_FX, LONG_FX_PRESET},/*TEXT_FX_PRESET*/
+		{SHORT_CUE_MIX, CAT_GLOBAL, LONG_CUE_MIX},/*TEXT_CUE_MIX*/
+		{SHORT_CUE_VOL, CAT_GLOBAL, LONG_CUE_VOL},/*TEXT_CUE_VOL*/
 
 
 };
@@ -671,6 +673,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FXA_GAIN*/		DTYPE_0B127,	//MOD
 		/*PAR_FXB_GAIN*/		DTYPE_0B127,
 		/*PAR_FX_PREFADER*/		DTYPE_ON_OFF,
+		/*PAR_CUE_MIX*/			DTYPE_0B127,	//MOD
+		/*PAR_CUE_VOL*/			DTYPE_0B127,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -1066,6 +1070,25 @@ static uint8_t menu_morphEditHeld = 0;
 //MOD: SHIFT + knob overlay (FX input gain and mix), shown for 1.5 s
 static uint8_t menu_fxKnobShown = 0;
 static uint32_t menu_fxKnobTimer = 0;
+//MOD: cue overlay (SHIFT + step button 1-7), shown for 1.5 s like the knob overlay
+static uint8_t menu_cueShown = 0;
+void menu_showCue(void)
+{
+	menu_cueShown = 1;
+	menu_fxKnobShown = 0;
+	menu_fxKnobTimer = systick_ticks;
+	menu_repaintAll();
+}
+static void menu_repaintCue(void)
+{
+	memset(&editDisplayBuffer[0][0], ' ', 16);
+	memset(&editDisplayBuffer[1][0], ' ', 16);
+	memcpy(&editDisplayBuffer[0][0], mixer_cueTracks ? "Cue on St2" : "Cue off", mixer_cueTracks ? 10 : 7);
+	for(uint8_t t=0;t<7;t++)
+		editDisplayBuffer[1][t] = (mixer_cueTracks & (1u << t)) ? (char)('1' + t) : '-';
+	if(mixer_cueTracks && !(l1_Available && r1_Available))
+		memcpy(&editDisplayBuffer[1][8], "no St1!", 7);
+}
 static uint8_t menu_morphEditBusy = 0;
 static uint8_t menu_morphEditFor(const uint16_t p)
 {
@@ -1841,9 +1864,10 @@ void menu_uiTick()
 			menu_repaint();
 		}
 	}
-	if(menu_fxKnobShown && (systick_ticks - menu_fxKnobTimer > 1500))	//MOD
+	if((menu_fxKnobShown || menu_cueShown) && (systick_ticks - menu_fxKnobTimer > 1500))	//MOD
 	{
 		menu_fxKnobShown = 0;
+		menu_cueShown = 0;
 		menu_repaintAll();
 	}
 
@@ -2974,6 +2998,12 @@ static void menu_repaintFxKnobs()
 void menu_repaint()
 {
 	if(screensaver_Active) return;
+	if(menu_cueShown)	//MOD
+	{
+		menu_repaintCue();
+		display_needs_refresh = 1;
+		return;
+	}
 	if(menu_fxKnobShown)
 	{
 		menu_repaintFxKnobs();
@@ -5164,6 +5194,14 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 	case PAR_FX_PREFADER:	//MOD
 		if(value > 1) value = activeParameters[paramNr] = 0;
 		mixer_preFader = value;
+		break;
+	case PAR_CUE_MIX:	//MOD: cue (0) .. main (127) on St2
+		if(value > 127) value = activeParameters[paramNr] = 0;
+		mixer_cueMix = value / 127.f;
+		break;
+	case PAR_CUE_VOL:	//MOD: 100 = unity (0: older settings)
+		if(value == 0 || value > 127) value = activeParameters[paramNr] = 100;
+		mixer_cueVol = value / 100.f;
 		break;
 
 	case PAR_BPM:

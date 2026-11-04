@@ -544,6 +544,8 @@ const char shortNames[][4]  =
 	{"pan"},	//MOD: track 7 pan
 	{"osx"},	//MOD: OSR exclude
 	{"prs"},	//MOD: FX preset
+	{"cmx"},	//MOD: cue mix
+	{"cvl"},	//MOD: cue level
 
 };
 //-----------------------------------------------------------------
@@ -717,6 +719,8 @@ const char longNames[][16] =
 	{"Trk7 pan"},	//MOD
 	{"OSR excl."},	//MOD
 	{"Preset"},		//MOD
+	{"Cue mix"},	//MOD
+	{"Cue level"},	//MOD
 };
 
 

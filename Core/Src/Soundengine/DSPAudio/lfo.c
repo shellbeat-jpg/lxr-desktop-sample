@@ -204,7 +204,8 @@ void lfo_dispatchNextValue(Lfo* lfo)
 	modNode_updateValue(&lfo->modTarget,val);
 }
 //-------------------------------------------------------------
-IN_ITCM_RAM uint32_t lfo_calcPhaseInc(float freq, uint8_t sync)
+//MOD: in flash (only on parameter and tempo changes; the ITCM is full)
+uint32_t lfo_calcPhaseInc(float freq, uint8_t sync)
 {
 	if(sync==0)//no sync
 	{
@@ -275,7 +276,7 @@ IN_ITCM_RAM uint32_t lfo_calcPhaseInc(float freq, uint8_t sync)
 	return (lfoSyncfreq / (LFO_SR)) * 0xffffffff;
 }
 //-------------------------------------------------------------
-IN_ITCM_RAM void lfo_setFreq(Lfo *lfo, float f)
+void lfo_setFreq(Lfo *lfo, float f)	//MOD: in flash
 {
 	//f += 1;
 	//f = f/128.f;
@@ -285,7 +286,7 @@ IN_ITCM_RAM void lfo_setFreq(Lfo *lfo, float f)
 	lfo->phaseInc = lfo_calcPhaseInc(lfo->freq,lfo->sync);
 }
 //-------------------------------------------------------------
-IN_ITCM_RAM void lfo_setSync(Lfo* lfo, uint8_t sync)
+void lfo_setSync(Lfo* lfo, uint8_t sync)	//MOD: in flash
 {
 	lfo->sync = sync;
 	lfo->phaseInc = lfo_calcPhaseInc(lfo->freq,lfo->sync);
