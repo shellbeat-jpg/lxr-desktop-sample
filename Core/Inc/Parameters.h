@@ -425,6 +425,8 @@ enum ParamEnums
 	PAR_LFOX_VOI,
 	PAR_LFOX_DST,
 	PAR_OSX,		//MOD: voices without the global sample rate (bit = slot), kit data
+	PAR_FXA_PRS,	//MOD: FX preset list of slot A / B (menu only)
+	PAR_FXB_PRS,
 
 	
 	//#########################################

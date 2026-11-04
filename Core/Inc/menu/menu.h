@@ -331,6 +331,7 @@ enum NamesEnum
 	TEXT_T7LFO_VOI,
 	TEXT_T7LFO_DST,
 	TEXT_OSX,		//MOD: voice without the global sample rate
+	TEXT_FX_PRESET,	//MOD: FX preset list
 
 
 	NUM_NAMES
@@ -479,7 +480,8 @@ enum shortNamesEnum
 	SHORT_T7_SENDA,
 	SHORT_T7_SENDB,
 	SHORT_T7_PAN,
-	SHORT_OSX
+	SHORT_OSX,
+	SHORT_FX_PRESET
 
 	
 };
@@ -650,7 +652,8 @@ enum longNamesEnum
 	LONG_T7_SENDA,
 	LONG_T7_SENDB,
 	LONG_T7_PAN,
-	LONG_OSX
+	LONG_OSX,
+	LONG_FX_PRESET
 	
 };
 
@@ -843,6 +846,10 @@ uint8_t menu_getDisplayParameterType(uint8_t pos);
 uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff);
 //-----------------------------------------------------------------
 void menu_parseGlobalParam(uint16_t paramNr, uint8_t value);
+//MOD: in the edit view of a parameter with one bit per voice (OSX, CHK, MRV) a voice
+//button sets/clears that voice; returns 1 if it did
+uint8_t menu_voiceButtonEdit(const uint8_t voiceNr);
+extern uint8_t menu_fxPresetLoading;	//MOD: an FX preset is loaded (no page change)
 //-----------------------------------------------------------------
 /** all parameters are send to the cortex soundchip. called after loading a preset into the avr ram*/
 void menu_sendAllParameters();

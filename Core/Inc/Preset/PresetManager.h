@@ -114,6 +114,14 @@ uint8_t preset_initTemplateMask(uint8_t projectNr);
 FRESULT preset_readInitTemplate(uint8_t projectNr, uint8_t* params, uint8_t* engines);
 FRESULT preset_writeInitTemplate(uint8_t projectNr, const uint8_t* params, const uint8_t* engines, uint8_t mask);
 FRESULT preset_deleteInitTemplate(uint8_t projectNr);
+//MOD: user FX presets of a project (FXPRESET.BIN in its folder): PRESET_FX_SLOTS
+//places of PRESET_FX_SIZE values (menu.c: type, mix, dist type, P1-P4, ratio,
+//wave, delay type, sync); used[i] = 0 for an empty place. A project save keeps them.
+#define PRESET_FX_FILE		"FXPRESET.BIN"
+#define PRESET_FX_SLOTS		8
+#define PRESET_FX_SIZE		11
+FRESULT preset_readFxPresets(uint8_t projectNr, uint8_t* used, uint8_t data[][PRESET_FX_SIZE]);
+FRESULT preset_writeFxPresets(uint8_t projectNr, const uint8_t* used, const uint8_t data[][PRESET_FX_SIZE]);
 //the active kit becomes these parameters and engines (a kit from another
 //project); nothing is written (no RAM kit, no autosave) until the user saves it
 void preset_loadKitData(const uint8_t* params, const uint8_t* engines, const char* name);

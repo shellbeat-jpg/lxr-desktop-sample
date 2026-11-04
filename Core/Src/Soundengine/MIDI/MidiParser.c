@@ -1160,7 +1160,7 @@ void midiParser_ccHandler(MidiMsg msg, uint8_t updateOriginalValue, uint8_t isFl
 				fxBus.fxType = value.itg;
 				FxBus_updateParameter();
 				//change visible parameters to selected FX type
-				if(menu_activePage == FX_MODE_PAGE)
+				if(menu_activePage == FX_MODE_PAGE && !menu_fxPresetLoading)	//MOD: not while an FX preset loads
 				{
 					if(menu_getSubPage() != fxBus.fxType)
 						menu_switchSubPage(fxBus.fxType, 1 );

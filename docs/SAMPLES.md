@@ -158,7 +158,8 @@ One choke group per kit: a track in the group cuts the other tracks of the group
 triggered (e.g. several hi-hat samples on different voices, an open hat cut by a closed one).
 
 - AEG page of each voice: **`CHK` on/off** puts this track into the group or takes it out. The edit
-  view shows all tracks of the group on the left (e.g. `1--4-6-`).
+  view shows all tracks of the group on the left (e.g. `1--4-6-`); in the edit view the voice
+  buttons switch their track in or out (1.2.11).
 - The cut is a fade of about 2 ms; a choked track stays silent until it is triggered again.
 - Tracks 6 and 7 (CL HH / OP HH) share one voice and cut each other anyway.
 - Stored in the kit (parameter slot of the former 7th MIDI note setting). Kits without it: no
@@ -214,7 +215,8 @@ changes it there. Release SHIFT to see and edit the active kit's value again.
 Global settings (SHIFT + step button 12, CONFIG), second page: **`MRV`** = kit morph on/off for the
 active voice; select the voice with its voice button while the page is shown. The edit view shows
 the morphed voices on the left (e.g. `----56`: only snare/cymbal and hi-hats morph). Voices that
-are off keep their own sound at every `MRP` value (also with the mod wheel). Kept after a restart
+are off keep their own sound at every `MRP` value (also with the mod wheel). In the edit view the
+voice buttons switch their voice on or off (1.2.11). Kept after a restart
 when the global settings are saved (SAVE → Global); default: all voices morph.
 
 ### Lock trigger: velocity 0
@@ -396,8 +398,18 @@ Next to the kit's FX (`FX1`, slot A) there is a project FX (`FX2`, slot B) with 
 - **Kit format:** the send levels are a small block after the engine block of the kit file.
   Older kits load with 0; OpenElixir-02 ignores the block. The outputs `1+A` … `R2B` of the
   first 1.2.8 test versions play as the output only (set the send again).
-- **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`
-  and `ORD` on slot A's page, `SYB` on slot B's page.
+- **Setup page:** on both FX pages, turn the encoder past the last parameter of the effect: `SYA`,
+  `ORD` and `PRS` on slot A's page, `SYB` and `PRS` on slot B's page.
+- **FX presets (1.2.11):** `PRS` on the setup page. Click (edit view), turn to choose, click again:
+  the preset is loaded into the slot (type, mix and all values of the effect, delay sync; not the
+  output, sends or `ORD`). The list:
+  - factory presets (same for all projects): delay `Slap`, `Dub 3/16`, `Dotted 1/8`, `Ping 1/8`,
+    `Tape 1/4`, `Trip 1/16T`; distortion `Warm Tube`, `Hot Tube`, `Fold`, `Clip Fuzz`; compressor
+    `Glue 2:1`, `Punch 4:1`, `Squash 8:1`, `Parallel`; ring modulator `Metal`, `Bell`, `Robot`;
+  - the user presets `U1` … `U8` of the project;
+  - `Save to U1` … `U8`: a click saves the slot's settings there (`(rpl)`: replaces one). They are
+    in `FXPRESET.BIN` in the project folder (the project must have been saved once) and go along
+    with a project save. Both slots share the list.
 - **FX routing** (`ORD`):
   - `A>B` (default): slot A, then slot B; voices on `FXB` only go through B. The chain goes to the
     `OUT` of slot A. With slot B `OFF` everything sounds as before.
@@ -510,7 +522,8 @@ carrier only, which changes the timbre more than the pitch. Stored in the kit (p
 
 `OSX` on the PERF page (after `VSW`): `on` = the active voice doesn't follow the global sample
 rate (`SR` on the PERF page, target `0sr` of the step automation and the LFOs) and keeps only
-its own `SRT` (MIX page). Edit view: the excluded voices on the left, e.g. `1--4--`. Track 7
+its own `SRT` (MIX page). Edit view: the excluded voices on the left, e.g. `1--4--`; there the
+voice buttons switch their voice (the encoder switches the active one). Track 7
 belongs to voice 6. Default: off for all voices. Stored in the kit (part `OSX`).
 
 ## LFO 2 and the LFO of track 7 (1.2.11, test)

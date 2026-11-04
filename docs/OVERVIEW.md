@@ -18,6 +18,7 @@ Waser), everything else from OE02-Samples+.
 | Track 7 | Own waveform/sample, pitch, sends and pan for track 7 on the shared voice of slot 6, e.g. closed/open hi-hat samples, only one of them into the reverb. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
 | LFO 2 | A second LFO per voice and an own LFO for track 7 (acts while track 7 plays, instead of the LFO of voice 6). Test. | VOICE 1-7, LFO button pressed again on its 2nd screen | Kit | – |
 | OSX | Exclude single voices from the global sample rate (`SR` / `0sr`). | PERF (`OSX`, on/off for the active voice) | Kit | – |
+| FX presets | List for FX1/FX2: 17 factory presets (delay, distortion, compressor, ring mod) and 8 user presets per project; load/save with an encoder click. | FX setup page (`PRS`) | user: project (`FXPRESET.BIN`) | – |
 
 ## Sequencer / tracks
 

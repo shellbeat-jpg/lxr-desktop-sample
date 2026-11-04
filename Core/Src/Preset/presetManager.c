@@ -79,7 +79,7 @@ static void preset_makeFileNameOld(char *buf, uint8_t num, uint8_t type);
 //load uses wildcard to find a name of the pattern 00-*.ext
 static FRESULT preset_makeFileNameLoad(char *buf, uint8_t num, uint8_t type);
 static FRESULT preset_removeOtherFiles(uint8_t num, uint8_t type, const char *keep);
-static FRESULT preset_copyInitTemplate(const uint8_t fromProject, const char* toFolder);	//MOD
+static FRESULT preset_copyProjectFile(const uint8_t fromProject, const char* toFolder, const char* file);	//MOD
 static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion);
 //save uses the kit name to create a filename eg 00-NAME.ext
 static void preset_makeFileNameSave(char *buf, uint8_t num, uint8_t type, char *name);
@@ -2550,7 +2550,11 @@ FRESULT preset_saveProject(uint8_t presetNr)
 	}
 
 	//MOD: the voice INIT template of the project being saved
-	res = preset_copyInitTemplate(menu_loadedPresetNr[CURRENT_PROJECT], newFolder);
+	res = preset_copyProjectFile(menu_loadedPresetNr[CURRENT_PROJECT], newFolder, PRESET_INIT_FILE);
+	if(res != FR_OK)
+		goto saveFailed;
+	//MOD: and its user FX presets
+	res = preset_copyProjectFile(menu_loadedPresetNr[CURRENT_PROJECT], newFolder, PRESET_FX_FILE);
 	if(res != FR_OK)
 		goto saveFailed;
 
@@ -2943,6 +2947,60 @@ FRESULT preset_writeInitTemplate(uint8_t projectNr, const uint8_t* params, const
 		res = preset_writeEngines(engines);
 	return preset_fcloseWrite();
 }
+//MOD: user FX presets: "FXP1", then per place: used, PRESET_FX_SIZE values
+FRESULT preset_readFxPresets(uint8_t projectNr, uint8_t* used, uint8_t data[][PRESET_FX_SIZE])
+{
+	char path[32];
+	uint8_t buf[4 + PRESET_FX_SLOTS * (1 + PRESET_FX_SIZE)];
+	UINT n = 0;
+	memset(used, 0, PRESET_FX_SLOTS);
+	sprintf(path, "/proj%02d/" PRESET_FX_FILE, projectNr);
+	FRESULT res = f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ);
+	if(res == FR_NO_FILE || res == FR_NO_PATH)
+		return FR_OK;		//none yet
+	if(res != FR_OK)
+		return res;
+	res = f_read((FIL*)&SDFile, buf, sizeof(buf), &n);
+	f_close((FIL*)&SDFile);
+	if(res != FR_OK)
+		return res;
+	if(n < 4 || memcmp(buf, "FXP1", 4) != 0)
+		return FR_OK;
+	for(uint8_t i=0;i<PRESET_FX_SLOTS;i++)
+	{
+		const uint8_t* e = &buf[4 + i * (1 + PRESET_FX_SIZE)];
+		if(4u + (i + 1u) * (1u + PRESET_FX_SIZE) > n)
+			break;
+		used[i] = e[0] ? 1 : 0;
+		memcpy(data[i], &e[1], PRESET_FX_SIZE);
+	}
+	return FR_OK;
+}
+FRESULT preset_writeFxPresets(uint8_t projectNr, const uint8_t* used, const uint8_t data[][PRESET_FX_SIZE])
+{
+	char path[32];
+	FILINFO fno;
+	UINT bw;
+	uint8_t buf[4 + PRESET_FX_SLOTS * (1 + PRESET_FX_SIZE)];
+	sprintf(path, "/proj%02d", projectNr);
+	FRESULT res = f_stat(path, &fno);
+	if(res != FR_OK)
+		return res;		//the project was never saved
+	memcpy(buf, "FXP1", 4);
+	for(uint8_t i=0;i<PRESET_FX_SLOTS;i++)
+	{
+		uint8_t* e = &buf[4 + i * (1 + PRESET_FX_SIZE)];
+		e[0] = used[i] ? 1 : 0;
+		memcpy(&e[1], data[i], PRESET_FX_SIZE);
+	}
+	sprintf(path, "/proj%02d/" PRESET_FX_FILE, projectNr);
+	res = preset_fopenWrite(path);
+	if(res != FR_OK)
+		return res;
+	res = preset_fwrite((FIL*)&SDFile, buf, sizeof(buf), &bw);
+	const FRESULT c = preset_fcloseWrite();
+	return res != FR_OK ? res : c;
+}
 FRESULT preset_deleteInitTemplate(uint8_t projectNr)
 {
 	char path[24];
@@ -2950,24 +3008,24 @@ FRESULT preset_deleteInitTemplate(uint8_t projectNr)
 	const FRESULT res = f_unlink(path);
 	return res == FR_NO_FILE ? FR_OK : res;
 }
-//a project save writes a new folder: take the project's template along. FatFs
-//has one open file at a time, so the file goes through RAM (it is ~270 bytes).
-static FRESULT preset_copyInitTemplate(const uint8_t fromProject, const char* toFolder)
+//a project save writes a new folder: take the project's template (and FX presets)
+//along. FatFs has one open file at a time, so the file goes through RAM (~270 bytes).
+static FRESULT preset_copyProjectFile(const uint8_t fromProject, const char* toFolder, const char* file)
 {
 	static uint8_t buf[8 + END_OF_SOUND_PARAMETERS + 64];
 	char path[32];
 	UINT n = 0, bw;
-	sprintf(path, "/proj%02d/" PRESET_INIT_FILE, fromProject);
+	snprintf(path, sizeof(path), "/proj%02d/%s", fromProject, file);
 	FRESULT res = f_open((FIL*)&SDFile, path, FA_OPEN_EXISTING | FA_READ);
 	if(res == FR_NO_FILE || res == FR_NO_PATH)
-		return FR_OK;		//no template
+		return FR_OK;		//no such file
 	if(res != FR_OK)
 		return res;
 	res = f_read((FIL*)&SDFile, buf, sizeof(buf), &n);
 	f_close((FIL*)&SDFile);
 	if(res != FR_OK)
 		return res;
-	snprintf(path, sizeof(path), "%s/" PRESET_INIT_FILE, toFolder);
+	snprintf(path, sizeof(path), "%s/%s", toFolder, file);
 	res = preset_fopenWrite(path);
 	if(res != FR_OK)
 		return res;

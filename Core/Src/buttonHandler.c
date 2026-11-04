@@ -1485,6 +1485,9 @@ static void buttonHandler_partButtonReleased(uint8_t partNr)
 // one of the 7 voice buttons pressed
 static void buttonHandler_voiceButtonPressed(uint8_t voiceNr)
 {
+	//MOD: edit view of OSX, CHK or MRV: the voice buttons switch the voices
+	if(menu_voiceButtonEdit(voiceNr))
+		return;
 
 	//if in step mode, return to voice/edit mode
 	if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_STEP)

@@ -323,6 +323,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_VOICE,CAT_T7LFO,LONG_DEST_VOICE},/*TEXT_T7LFO_VOI*/
 		{SHORT_DEST,CAT_T7LFO,LONG_DEST_PARAM},/*TEXT_T7LFO_DST*/
 		{SHORT_OSX, CAT_VOICE, LONG_OSX},/*TEXT_OSX*/
+		{SHORT_FX_PRESET, CAT_FX, LONG_FX_PRESET},/*TEXT_FX_PRESET*/
 
 
 };
@@ -619,6 +620,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_LFOX_FRQ..DST*/	DTYPE_0B127, DTYPE_MENU | (MENU_SYNC_RATES<<8), DTYPE_0B127, DTYPE_MENU | (MENU_LFO_WAVES<<8),
 								DTYPE_MENU | (MENU_RETRIGGER<<8), DTYPE_0B127, DTYPE_VOICE_LFO, DTYPE_TARGET_SELECTION_LFO,
 		/*PAR_OSX*/				DTYPE_0B127,
+		/*PAR_FXA_PRS, PAR_FXB_PRS*/	DTYPE_0B127, DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -1118,9 +1120,173 @@ static uint8_t menu_fxChoiceCount(const uint16_t p)
 	if(p == PAR_FXA_SYNC || p == PAR_FXB_SYNC) return FXBUS_NUM_SYNC;
 	return 0;
 }
+//MOD: FX presets (setup page of FX1 / FX2, "prs"): the factory presets, the user
+//presets of the project (U1..U8, PresetManager.h) and "save to U1..U8". A click in
+//the edit view loads (or saves) the selected entry. Sends, outputs and ORD stay.
+enum { FXP_TYPE, FXP_MIX, FXP_DIST, FXP_P1, FXP_P2, FXP_P3, FXP_P4, FXP_RATIO, FXP_WAVE, FXP_DLY, FXP_SYNC };
+typedef struct { char name[13]; char code[4]; uint8_t v[PRESET_FX_SIZE]; } MenuFxPreset;
+static const MenuFxPreset menu_fxFactory[] =
+{
+	//                         type mix dist  p1   p2   p3   p4 ratio wave dly sync
+	{ "Slap",        "slp", { FX_DELAY,      30, 0,  10,  40, 100,  15, 0, 0, 0,  0 } },
+	{ "Dub 3/16",    "dub", { FX_DELAY,      40, 0,  64,  64,  50,  95, 0, 0, 0,  5 } },
+	{ "Dotted 1/8",  "8. ", { FX_DELAY,      35, 0,  64,  64,  80,  60, 0, 0, 0,  2 } },
+	{ "Ping 1/8",    "pp8", { FX_DELAY,      35, 0,  64,  64,  90,  70, 0, 0, 1,  4 } },
+	{ "Tape 1/4",    "tap", { FX_DELAY,      35, 0,  64,  64,  30,  80, 0, 0, 0,  1 } },
+	{ "Trip 1/16T",  "16T", { FX_DELAY,      30, 0,  64,  64,  90,  50, 0, 0, 1, 10 } },
+	{ "Warm Tube",   "wrm", { FX_DISTORTION,100, 0,  30,  64,  90,  80, 0, 0, 0,  0 } },
+	{ "Hot Tube",    "hot", { FX_DISTORTION,100, 0,  90,  64,  70,  60, 0, 0, 0,  0 } },
+	{ "Fold",        "fld", { FX_DISTORTION,100, 1,  70,  64,  90,  70, 0, 0, 0,  0 } },
+	{ "Clip Fuzz",   "fuz", { FX_DISTORTION,100, 2, 110,  40,  60,  55, 0, 0, 0,  0 } },
+	{ "Glue 2:1",    "glu", { FX_COMPRESSOR,100, 0,  20,  50, 105,  25, 1, 0, 0,  0 } },
+	{ "Punch 4:1",   "pun", { FX_COMPRESSOR,100, 0,  40,  30,  95,  40, 3, 0, 0,  0 } },
+	{ "Squash 8:1",  "sqs", { FX_COMPRESSOR,100, 0,   2,  60,  80,  70, 5, 0, 0,  0 } },
+	{ "Parallel",    "par", { FX_COMPRESSOR, 50, 0,   5,  40,  80,  60, 4, 0, 0,  0 } },
+	{ "Metal",       "mtl", { FX_RING,       60, 0,  70,  64,  64,  64, 0, 0, 0,  0 } },
+	{ "Bell",        "bel", { FX_RING,       45, 0,  40,  64,  64,  64, 0, 1, 0,  0 } },
+	{ "Robot",       "rob", { FX_RING,       70, 0,  15,  64,  64,  64, 0, 2, 0,  0 } },
+};
+#define MENU_FX_FACTORY	((uint8_t)(sizeof(menu_fxFactory) / sizeof(menu_fxFactory[0])))
+static const uint16_t menu_fxParA[PRESET_FX_SIZE] = { PAR_FX_TYPE, PAR_FX_DRY_WET, PAR_FX_DIST_TYPE, PAR_FX_P1, PAR_FX_P2,
+		PAR_FX_P3, PAR_FX_P4, PAR_FX_RATIO, PAR_FX_WAVE, PAR_FX_DELAY_TYPE, PAR_FXA_SYNC };
+static const uint16_t menu_fxParB[PRESET_FX_SIZE] = { PAR_FXB_TYPE, PAR_FXB_DRY_WET, PAR_FXB_DIST_TYPE, PAR_FXB_P1, PAR_FXB_P2,
+		PAR_FXB_P3, PAR_FXB_P4, PAR_FXB_RATIO, PAR_FXB_WAVE, PAR_FXB_DELAY_TYPE, PAR_FXB_SYNC };
+static uint8_t menu_fxUserUsed[PRESET_FX_SLOTS];
+static uint8_t menu_fxUser[PRESET_FX_SLOTS][PRESET_FX_SIZE];
+static uint8_t menu_fxUserProject = 0xFF;	//the project the user presets were read from
+uint8_t menu_fxPresetLoading = 0;
+
+static uint8_t menu_isFxPreset(const uint16_t p)
+{
+	return p == PAR_FXA_PRS || p == PAR_FXB_PRS;
+}
+//the user presets of the loaded project (read again after a project change)
+static void menu_fxUserRead(void)
+{
+	const uint8_t project = menu_loadedPresetNr[CURRENT_PROJECT];
+	if(menu_fxUserProject == project)
+		return;
+	const uint8_t bg = soundengine_backgroundAudioBegin();
+	if(preset_readFxPresets(project, menu_fxUserUsed, menu_fxUser) != FR_OK)
+		memset(menu_fxUserUsed, 0, sizeof(menu_fxUserUsed));
+	soundengine_backgroundAudioEnd(bg);
+	menu_fxUserProject = project;
+}
+static uint8_t menu_fxUserCount(void)
+{
+	uint8_t n = 0;
+	for(uint8_t s=0;s<PRESET_FX_SLOTS;s++) n = (uint8_t)(n + menu_fxUserUsed[s]);
+	return n;
+}
+static uint8_t menu_fxPresetCount(void)
+{
+	return (uint8_t)(MENU_FX_FACTORY + menu_fxUserCount() + PRESET_FX_SLOTS);
+}
+//an entry of the list: 0 = factory preset n, 1 = user preset n, 2 = save to user place n
+static uint8_t menu_fxPresetEntry(uint8_t idx, uint8_t* n)
+{
+	if(idx < MENU_FX_FACTORY) { *n = idx; return 0; }
+	idx = (uint8_t)(idx - MENU_FX_FACTORY);
+	for(uint8_t s=0;s<PRESET_FX_SLOTS;s++)
+	{
+		if(!menu_fxUserUsed[s]) continue;
+		if(!idx) { *n = s; return 1; }
+		idx--;
+	}
+	*n = idx < PRESET_FX_SLOTS ? idx : PRESET_FX_SLOTS - 1;
+	return 2;
+}
+static const char* menu_fxTypeName(const uint8_t t)
+{
+	return t < fxNames[0][0] ? fxNames[t + 1] : "---";
+}
+static void menu_fxPresetText(const uint8_t v, char* out, const uint8_t isLong)
+{
+	uint8_t n;
+	switch(menu_fxPresetEntry(v, &n))
+	{
+	case 0:
+		if(isLong)	snprintf(out, 17, "%-12s %s", menu_fxFactory[n].name, menu_fxTypeName(menu_fxFactory[n].v[FXP_TYPE]));
+		else		{ memcpy(out, menu_fxFactory[n].code, 3); out[3] = 0; }
+		break;
+	case 1:
+		if(isLong)	snprintf(out, 17, "User %u       %s", (unsigned)(n + 1u), menu_fxTypeName(menu_fxUser[n][FXP_TYPE]));
+		else		snprintf(out, 4, "U%u ", (unsigned)(n + 1u));
+		break;
+	default:
+		if(isLong)	snprintf(out, 17, "Save to U%u%s", (unsigned)(n + 1u), menu_fxUserUsed[n] ? " (rpl)" : "");
+		else		snprintf(out, 4, ">U%u", (unsigned)(n + 1u));
+		break;
+	}
+}
+//set a parameter and pass it on like an edit
+static void menu_fxPresetSet(const uint16_t p, const uint8_t v)
+{
+	activeParameters[p] = v;
+	if(p < 128)							frontPanel_sendData(MIDI_CC, (uint8_t)p, v);
+	else if(p < END_OF_SOUND_PARAMETERS)	frontPanel_sendData(CC_2, (uint8_t)(p - 128), v);
+	else								menu_parseGlobalParam(p, v);
+}
+static void menu_fxPresetClick(const uint16_t p)
+{
+	const uint16_t* par = p == PAR_FXA_PRS ? menu_fxParA : menu_fxParB;
+	uint8_t n;
+	const uint8_t kind = menu_fxPresetEntry(activeParameters[p], &n);
+	if(kind == 2)
+	{
+		//save the slot's settings into user place n
+		for(uint8_t i=0;i<PRESET_FX_SIZE;i++)
+			menu_fxUser[n][i] = activeParameters[par[i]];
+		const uint8_t wasUsed = menu_fxUserUsed[n];
+		menu_fxUserUsed[n] = 1;
+		const uint8_t bg = soundengine_backgroundAudioBegin();
+		const FRESULT res = preset_writeFxPresets(menu_loadedPresetNr[CURRENT_PROJECT], menu_fxUserUsed, menu_fxUser);
+		soundengine_backgroundAudioEnd(bg);
+		if(res != FR_OK)
+		{
+			menu_fxUserUsed[n] = wasUsed;
+			menu_showSdError(res);
+			return;
+		}
+		//select the saved preset
+		uint8_t idx = MENU_FX_FACTORY;
+		for(uint8_t s=0;s<n;s++) idx = (uint8_t)(idx + menu_fxUserUsed[s]);
+		activeParameters[p] = idx;
+		return;
+	}
+	const uint8_t* v = kind == 0 ? menu_fxFactory[n].v : menu_fxUser[n];
+	menu_fxPresetLoading = 1;	//stay on the setup page
+	for(uint8_t i=0;i<PRESET_FX_SIZE;i++)
+		menu_fxPresetSet(par[i], v[i]);
+	menu_fxPresetLoading = 0;
+}
+static void menu_encoderChangeParameter(int8_t inc);
+static uint16_t menu_currentParamNr(void);
+//MOD: edit view of OSX, CHK or MRV: a voice button switches that voice (as the
+//encoder does for the active voice)
+uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
+{
+	if(!editModeActive || voiceNr > 6)
+		return 0;
+	const uint16_t p = menu_currentParamNr();
+	const uint8_t slotBit = (uint8_t)(1u << (voiceNr < 6 ? voiceNr : 5u));
+	uint8_t on;
+	if(p == PAR_OSX)					on = (kitEngines[KIT_OSX_OFFSET] & slotBit) != 0;
+	else if(p == PAR_CHOKE_GROUP)		on = (activeParameters[p] >> voiceNr) & 1u;
+	else if(p == PAR_MORPH_VOICES)		on = !(activeParameters[p] & slotBit);	//bit set = not morphed
+	else								return 0;
+	const uint8_t keep = menu_activeVoice;
+	menu_activeVoice = voiceNr;
+	menu_encoderChangeParameter(on ? -1 : 1);
+	menu_activeVoice = keep;
+	menu_repaintAll();
+	return 1;
+}
 //MOD: the FX send level a menu entry shows (kit data), NULL for other parameters
 static uint8_t* menu_sendLevel(const uint16_t p)
 {
+	if(menu_isFxPreset(p))	//MOD: FX preset list (index)
+		return &activeParameters[p];
 	if(p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
 	if(p >= PAR_FX_SENDB1 && p <= PAR_FX_SENDB6)
@@ -1135,6 +1301,11 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 //value with its unit; returns 0 for other parameters
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
+	if(menu_isFxPreset(p))	//MOD: FX preset
+	{
+		menu_fxPresetText(v, out, isLong);
+		return 1;
+	}
 	if(p == PAR_T7_WAVE)	//MOD: track 7 waveform
 	{
 		if(!v) { strcpy(out, isLong ? "as track 6" : "=t6"); return 1; }
@@ -2411,7 +2582,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if(parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN)
+			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr))
 			{
 				//MOD: track 7, right aligned
 				char t[17];
@@ -2639,7 +2810,7 @@ void menu_repaintGeneric()
 		// bottom values
 
 		// some place to store the parameter value as text
-		char valueAsText[3];
+		char valueAsText[16];	//MOD: 3 shown; room for the terminator of the texts written into it
 
 		for(uint8_t i=0;i<4;i++) { // for each of the four columns of values
 			const uint16_t parNr = pgm_read_word(&ap->bot1 + i +is2ndPage);
@@ -3839,6 +4010,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				if(s > 5)			s = 0;
 				menu_lastStepGrid = s;
 			}
+			else if(editModeActive && menu_isFxPreset(menu_currentParamNr()))
+			{
+				//MOD: load (or save) the selected FX preset, back to the parameters
+				menu_fxPresetClick(menu_currentParamNr());
+				editModeActive = 0;
+			}
 			else if(menu_morphEditHeld && editModeActive && menu_morphEditFor(menu_currentParamNr()))
 			{
 				//MOD: SHIFT + click: the morph kit gets the active value, the
@@ -3852,6 +4029,14 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 			// toggle edit mode
 				if(!screensaver_Active)
 					editModeActive = (uint8_t)(1-editModeActive);
+				//MOD: FX preset list: the user presets of the project, a valid entry
+				if(editModeActive && menu_isFxPreset(menu_currentParamNr()))
+				{
+					menu_fxUserRead();
+					const uint16_t p = menu_currentParamNr();
+					if(activeParameters[p] >= menu_fxPresetCount())
+						activeParameters[p] = 0;
+				}
 			}
 		}
 		lastEncoderButton = button;
@@ -4109,7 +4294,8 @@ static void menu_encoderChangeParameter(int8_t inc)
 		const int16_t max = (paramNr >= PAR_FX3_SAT && paramNr <= PAR_FX3_BIA) ? masterBus_maxValue((uint8_t)(paramNr - PAR_FX3_SAT))
 				: paramNr == PAR_T7_WAVE ? getMaxEntriesForMenu(MENU_WAVEFORM)
 				: paramNr == PAR_T7_COARSE ? 2 * KIT_T7_COARSE_ZERO
-				: (paramNr >= PAR_T7_SENDA && paramNr <= PAR_T7_PAN) ? 128 : 127;	//MOD
+				: (paramNr >= PAR_T7_SENDA && paramNr <= PAR_T7_PAN) ? 128
+				: menu_isFxPreset(paramNr) ? (menu_fxUserRead(), menu_fxPresetCount() - 1) : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
 		return;
@@ -4886,7 +5072,7 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 		if(value > FX_DELAY) value = activeParameters[paramNr] = FX_OFF;
 		fxBusB.fxType = value;
 		FxBus_updateSlot(&fxBusB);
-		if(menu_activePage == FXB_PAGE && menu_getSubPage() != value)
+		if(menu_activePage == FXB_PAGE && menu_getSubPage() != value && !menu_fxPresetLoading)
 			menu_switchSubPage(value, 1);
 		break;
 	case PAR_FXB_ROUTING:

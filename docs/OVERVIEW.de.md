@@ -18,6 +18,7 @@ Waser), alles andere aus OE02-Samples+.
 | Track 7 | Eigene Wellenform bzw. eigenes Sample, Tonhöhe, Sends und Panorama für Track 7 auf der gemeinsamen Voice von Slot 6, z. B. Closed-/Open-Hat-Samples, nur eines davon in den Hall. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
 | LFO 2 | Ein zweiter LFO pro Voice und ein eigener LFO für Track 7 (wirkt, solange Track 7 klingt, statt des LFO von Voice 6). Test. | VOICE 1-7, LFO-Taste auf dem 2. Bildschirm erneut drücken | Kit | – |
 | OSX | Einzelne Voices von der globalen Samplerate (`SR` / `0sr`) ausnehmen. | PERF (`OSX`, an/aus für die aktive Voice) | Kit | – |
+| FX presets | Liste für FX1/FX2: 17 Werks-Presets (Delay, Distortion, Kompressor, Ring-Mod) und 8 eigene pro Projekt; Laden/Speichern per Encoder-Klick. | FX-Setup-Seite (`PRS`) | eigene: Projekt (`FXPRESET.BIN`) | – |
 
 ## Sequencer / Tracks
 
