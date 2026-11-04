@@ -581,6 +581,8 @@ const char catNames[][16] =
 	{"DJ Filt."},
 	{"V.Morph"},
 	{"K.Morph"},
+	{"LFO 2"},		//MOD
+	{"Trk7 LFO"},	//MOD
 };
 //-----------------------------------------------------------------
 // these must correspond to longNamesEnum

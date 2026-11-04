@@ -49,10 +49,18 @@
 #define KIT_T7_SENDB			3
 #define KIT_T7_PAN				4
 #define KIT_T7_COARSE_ZERO		24
-#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE)
+//MOD: extra LFOs (lfo.h): 0..5 = the 2nd LFO of voice 1..6, 6 = the LFO of track 7;
+//8 settings each in the order of the LFO page (the values of the stock LFO
+//parameters), part "LFX"
+#define KIT_LFOX_OFFSET			(KIT_T7_OFFSET + KIT_T7_SIZE)
+#define KIT_LFOX_STRIDE			8
+#define KIT_LFOX_NUM			7
+#define KIT_LFOX_SIZE			(KIT_LFOX_STRIDE * KIT_LFOX_NUM)
+enum { LFOX_FRQ, LFOX_SYN, LFOX_AMT, LFOX_WAV, LFOX_RTG, LFOX_OFS, LFOX_VOI, LFOX_DST };
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE + KIT_LFOX_SIZE)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE)
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE + 4 + KIT_LFOX_SIZE)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3
@@ -78,6 +86,8 @@ void kitEngines_loadVoice(const uint8_t slot, const uint8_t engine, const uint8_
 void kitEngines_initVoice(const uint8_t slot);
 void kitEngines_factoryKit(uint8_t* params, uint8_t* engines);
 void kitEngines_copyVoice(const uint8_t slot, uint8_t* dst, const uint8_t* src);
+//MOD: the kit data of a slot besides its engine (sends, 2nd LFO; slot 6: track 7's settings and LFO)
+void kitEngines_copySlotData(const uint8_t slot, uint8_t* dst, const uint8_t* src);
 
 //MOD: the sound parameters of a slot, entry i has the same function in every
 //slot (list must hold KITENGINES_MAX_SLOT_PARAMS); returns their number

@@ -506,6 +506,23 @@ out. Everything else is shared: fine tune, filter, LFO, start and length, volume
 outputs. With the FM hi-hat engine track 7's `COA` shifts the
 carrier only, which changes the timbre more than the pitch. Stored in the kit (part `TR7`).
 
+## LFO 2 and the LFO of track 7 (1.2.11, test)
+
+Each voice has a second LFO, and track 7 its own LFO. Press the LFO button of a voice again on
+the second LFO screen: the display shows "LFO 2" in the edit view and the same parameters
+(`FRQ`, `SYN`, `MOD`, `WAV`, `RTG`, `OFS`, `VOI`, `DST`) as the LFO; one more press goes back to
+the LFO. Selecting another page or voice starts with the LFO again.
+
+- **LFO 2** works like the LFO of the voice, with its own target (also another voice's).
+  Without a target (`DST` off, the default) it is off and costs no time.
+- **Track 7:** its LFO page is the LFO of track 7 ("Trk7 LFO"). With a target it acts while slot 6
+  plays a trigger of track 7, instead of the LFO of voice 6; the next trigger of track 6 brings
+  back the LFO of voice 6. Without a target, track 7 keeps the LFO of voice 6 (as before). Its
+  `RTG` `v6` and its own one-shot start are the triggers of track 7. LFO 2 on the pages of track 7
+  is the LFO 2 of voice 6, for both tracks.
+- The settings are kit data (part `LFX`, also in voice load and INIT templates): not morphed,
+  not recorded as step automation, no MIDI CC.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:

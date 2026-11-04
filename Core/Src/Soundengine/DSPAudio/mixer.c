@@ -657,16 +657,21 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	{
 		lfoVal[v] = lfo_calc(&voiceSlots[v].u.c.lfo);
 	}
+	lfo_extraCalc();	//MOD: 2nd LFOs, track 7 LFO
 
 	modNode_resetTargets();
 	//re assign velocity modulation
 	modNode_reassignVeloMod();
 
 	//dispatch LFO
+	const uint8_t t7Lfo = lfo_t7Active();	//MOD: instead of the LFO of voice 6
 	for(v=0;v<6;v++)
 	{
+		if(v == 5 && t7Lfo)
+			continue;
 		modNode_updateValue(&voiceSlots[v].u.c.lfo.modTarget, lfoVal[v]);
 	}
+	lfo_extraDispatch();	//MOD
 
 	//update filter frequencies
 	for(v=0;v<6;v++)

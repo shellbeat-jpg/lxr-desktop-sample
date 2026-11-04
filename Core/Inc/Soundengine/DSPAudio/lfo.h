@@ -89,4 +89,17 @@ void lfo_retrigger(uint8_t voiceNr);
 //slot whose trigger caused the last one (0xff: the LFO's own cycle)
 uint8_t lfo_getStarts(uint8_t slot, uint8_t* cause);
 
+//MOD: extra LFOs: 0..5 = the 2nd LFO of voice 1..6, LFO_T7 = the LFO of track 7. Their
+//settings are kit data (KitEngines.h, KIT_LFOX_OFFSET), taken over when they change.
+//An LFO without a target is off. The track 7 LFO acts while slot 6 plays a trigger of
+//track 7, instead of the LFO of voice 6 (which acts again with the next trigger of track 6).
+#define LFO_NUM_EXTRA	7
+#define LFO_T7			6
+extern Lfo lfo_extra[LFO_NUM_EXTRA];
+void lfo_extraCalc(void);			//before modNode_resetTargets: settings, next values
+void lfo_extraDispatch(void);		//after it: the values to their targets
+void lfo_extraResetTargets(void);	//the targets back to their own values
+uint8_t lfo_t7Active(void);			//the track 7 LFO acts now (instead of the LFO of voice 6)
+void lfo_extraRetrigger(const uint8_t slot, const uint8_t second);	//slot_trigger (second = track 7)
+
 #endif /* LFO_H_ */

@@ -56,6 +56,7 @@ uint8_t saveScreenPots[4]; //hold absolute pot position for save page name editi
 
 
 #include "Soundengine/DSPAudio/modulationNode.h"
+#include "Soundengine/DSPAudio/lfo.h"	//MOD: extra LFOs
 #include "Soundengine/CpuMeter.h"
 #include <stdio.h>
 
@@ -305,6 +306,22 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_T7_SENDA, CAT_FX, LONG_T7_SENDA},/*TEXT_T7_SENDA*/
 		{SHORT_T7_SENDB, CAT_FX, LONG_T7_SENDB},/*TEXT_T7_SENDB*/
 		{SHORT_T7_PAN, CAT_VOICE, LONG_T7_PAN},/*TEXT_T7_PAN*/
+		{SHORT_FREQ,CAT_LFO2,LONG_FREQ},/*TEXT_LFO2_FRQ*/
+		{SHORT_SYNC,CAT_LFO2,LONG_CLOCKSYNC},/*TEXT_LFO2_SYN*/
+		{SHORT_MOD,CAT_LFO2,LONG_AMOUNT},/*TEXT_LFO2_AMT*/
+		{SHORT_WAVE,CAT_LFO2,LONG_WAVE},/*TEXT_LFO2_WAV*/
+		{SHORT_RETRIGGER,CAT_LFO2,LONG_RETRIGGER},/*TEXT_LFO2_RTG*/
+		{SHORT_OFFSET,CAT_LFO2,LONG_OFFSET},/*TEXT_LFO2_OFS*/
+		{SHORT_VOICE,CAT_LFO2,LONG_DEST_VOICE},/*TEXT_LFO2_VOI*/
+		{SHORT_DEST,CAT_LFO2,LONG_DEST_PARAM},/*TEXT_LFO2_DST*/
+		{SHORT_FREQ,CAT_T7LFO,LONG_FREQ},/*TEXT_T7LFO_FRQ*/
+		{SHORT_SYNC,CAT_T7LFO,LONG_CLOCKSYNC},/*TEXT_T7LFO_SYN*/
+		{SHORT_MOD,CAT_T7LFO,LONG_AMOUNT},/*TEXT_T7LFO_AMT*/
+		{SHORT_WAVE,CAT_T7LFO,LONG_WAVE},/*TEXT_T7LFO_WAV*/
+		{SHORT_RETRIGGER,CAT_T7LFO,LONG_RETRIGGER},/*TEXT_T7LFO_RTG*/
+		{SHORT_OFFSET,CAT_T7LFO,LONG_OFFSET},/*TEXT_T7LFO_OFS*/
+		{SHORT_VOICE,CAT_T7LFO,LONG_DEST_VOICE},/*TEXT_T7LFO_VOI*/
+		{SHORT_DEST,CAT_T7LFO,LONG_DEST_PARAM},/*TEXT_T7LFO_DST*/
 
 
 };
@@ -598,6 +615,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_T7_WAVE*/			DTYPE_0B127,
 		/*PAR_T7_COARSE*/		DTYPE_0B127,
 		/*PAR_T7_SENDA..PAN*/	DTYPE_0B127, DTYPE_0B127, DTYPE_0B127,
+		/*PAR_LFOX_FRQ..DST*/	DTYPE_0B127, DTYPE_MENU | (MENU_SYNC_RATES<<8), DTYPE_0B127, DTYPE_MENU | (MENU_LFO_WAVES<<8),
+								DTYPE_MENU | (MENU_RETRIGGER<<8), DTYPE_0B127, DTYPE_VOICE_LFO, DTYPE_TARGET_SELECTION_LFO,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -832,8 +851,43 @@ void menu_updateVoicePages()
 	}
 }
 
+//MOD: extra LFOs (lfo.h). The LFO button toggles LFO (2 screens) > LFO 2 (2 screens) > LFO.
+//On track 7 the LFO page is the LFO of track 7, LFO 2 the one of voice 6.
+#define MENU_LFO_SUB	6
+static uint8_t menu_lfoB = 0;		//LFO 2 shown
+static Page menu_lfoXPage;
+static uint8_t menu_lfoXShown = 0;	//the extra LFO of the page last built
+//the extra LFO a voice page shows on its LFO sub page, -1: the voice's own LFO
+static int8_t menu_lfoXOf(const uint8_t page)
+{
+	if(page == VOICE7_PAGE)
+		return menu_lfoB ? NUM_VOICE_SLOTS-1 : LFO_T7;
+	return (page < VOICE7_PAGE && menu_lfoB) ? (int8_t)page : -1;
+}
+static uint8_t* menu_lfoXData(void)
+{
+	return &kitEngines[KIT_LFOX_OFFSET + menu_lfoXShown * KIT_LFOX_STRIDE];
+}
+static const Page* menu_lfoXPageFor(const uint8_t x)
+{
+	uint8_t* text = &menu_lfoXPage.top1;
+	uint16_t* par = &menu_lfoXPage.bot1;
+	const uint8_t base = x == LFO_T7 ? TEXT_T7LFO_FRQ : TEXT_LFO2_FRQ;
+	menu_lfoXShown = x;
+	const uint8_t* s = menu_lfoXData();
+	for(uint8_t k=0;k<KIT_LFOX_STRIDE;k++)
+	{
+		text[k] = (uint8_t)(base + k);
+		par[k] = (uint16_t)(PAR_LFOX_FRQ + k);
+		activeParameters[PAR_LFOX_FRQ + k] = s[k];	//shown like the stock LFO parameters
+	}
+	return &menu_lfoXPage;
+}
+
 const Page* menu_getPage(const uint8_t page, const uint8_t sub)
 {
+	if(sub == MENU_LFO_SUB && page <= VOICE7_PAGE && menu_lfoXOf(page) >= 0)	//MOD
+		return menu_lfoXPageFor((uint8_t)menu_lfoXOf(page));
 	if(page <= VOICE7_PAGE && menu_voicePageBuilt[page])
 		return &menu_voicePages[page][sub];
 	return &menuPages[page][sub];
@@ -3968,7 +4022,7 @@ static void menu_skipHiddenTargets(uint8_t* value, int8_t inc, const uint8_t sta
 static uint8_t menu_isSpecialEncoderParam(const uint16_t p)
 {
 	return p == PAR_VMORPH_PAIR || p == PAR_VMORPH_SWITCH || p == PAR_MORPH_VOICES
-		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p)
+		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p) || (p >= PAR_LFOX_FRQ && p <= PAR_LFOX_DST)
 		|| menu_fxChoiceCount(p);
 }
 static void menu_encoderChangeParameter(int8_t inc)
@@ -3989,6 +4043,49 @@ static void menu_encoderChangeParameter(int8_t inc)
 		int16_t v = (int16_t)activeParameters[paramNr] + inc;
 		activeParameters[paramNr] = (uint8_t)(v < 0 ? 0 : v > VMORPH_NUM_PAIRS ? VMORPH_NUM_PAIRS : v);
 		menu_parseGlobalParam(paramNr, activeParameters[paramNr]);
+		return;
+	}
+	//MOD: extra LFO (kit data): the ranges of the stock LFO parameters
+	if(paramNr >= PAR_LFOX_FRQ && paramNr <= PAR_LFOX_DST)
+	{
+		uint8_t* s = menu_lfoXData();
+		const uint8_t k = (uint8_t)(paramNr - PAR_LFOX_FRQ);
+		int16_t v = (int16_t)s[k] + inc;
+		int16_t lo = 0, hi = 127;
+		switch(k)
+		{
+		case LFOX_SYN:	hi = (int16_t)getMaxEntriesForMenu(MENU_SYNC_RATES) - 1;	break;
+		case LFOX_WAV:	hi = (int16_t)getMaxEntriesForMenu(MENU_LFO_WAVES) - 1;	break;
+		case LFOX_RTG:	hi = (int16_t)getMaxEntriesForMenu(MENU_RETRIGGER) - 1;	break;
+		case LFOX_VOI:	lo = 1; hi = NUM_VOICE_SLOTS;							break;
+		default:																break;
+		}
+		if(k == LFOX_DST)
+		{
+			//the targets of the target voice, 0 = off (as the stock LFO)
+			const uint8_t voiceNr = (uint8_t)(s[LFOX_VOI] - 1u);
+			const uint8_t start = pgm_read_byte(&modTargetVoiceOffsets[voiceNr].start);
+			const uint8_t end = pgm_read_byte(&modTargetVoiceOffsets[voiceNr].end);
+			uint8_t t = (uint8_t)(v < 0 ? 0 : v > 255 ? 255 : v);
+			if(t < start)		t = inc < 0 ? 0 : start;
+			else if(t > end)	t = end;
+			menu_skipHiddenTargets(&t, inc, start, end);
+			s[k] = t;
+		}
+		else
+		{
+			s[k] = (uint8_t)(v < lo ? lo : v > hi ? hi : v);
+			if(k == LFOX_VOI && s[LFOX_DST])
+			{
+				//the same kind of target on the new voice (stock: **LFOTARGFIX)
+				uint8_t t = getModTargetIdxFromGapIdx((uint8_t)(s[k] - 1u), getModTargetGapIndex(s[LFOX_DST]));
+				if(modTargetNameIdx(t) == MOD_TARGET_HIDDEN)
+					t = 0;
+				s[LFOX_DST] = t;
+			}
+		}
+		for(uint8_t i=0;i<KIT_LFOX_STRIDE;i++)
+			activeParameters[PAR_LFOX_FRQ + i] = s[i];
 		return;
 	}
 	//MOD: FX send level of the voice (kit data)
@@ -4451,11 +4548,15 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 					activePage=0;
 				}
 			}
+			//MOD: voice LFO page: on to LFO 2, from there back to the LFO
+			if(menu_activePage <= VOICE7_PAGE && activePage == MENU_LFO_SUB)
+				menu_lfoB ^= 1;
 			activeParameter=0;
 		}
 	} else { // move to different sub page
 		// we are moving to a different (specific) subpage
 		activePage=subPageNr;
+		menu_lfoB = 0;	//MOD: the voice's own LFO first
 		if(activeParameter > 3 && has2ndPage(activePage))
 			activeParameter = 4;
 		else
@@ -4491,6 +4592,8 @@ uint8_t menu_getSubPage()
 //-----------------------------------------------------------------
 void menu_switchPage(uint8_t pageNr)
 {
+	if(pageNr != menu_activePage)
+		menu_lfoB = 0;	//MOD: the voice's own LFO first
 	//leaving the engine menu: stop the KIT button blinking
 	if(menu_activePage == ENGINE_PAGE && pageNr != ENGINE_PAGE)
 		led_setBlinkLed(LED_STEP8, 0);

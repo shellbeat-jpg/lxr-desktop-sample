@@ -16,6 +16,7 @@ Waser), alles andere aus OE02-Samples+.
 | User-Waves | Bis zu 8 WAVs aus `SAMPLES/WAVES` als Single-Cycle (1024 Punkte): Oszillator-Wellenformen `W1`…`W8` (feste Werte nach `S1`…`S31`) und LFO-Formen `W1`…`W8` (durchlaufend) / `W1.`…`W8.` (One-Shot); eigene Nummerierung. | VOICE (OSC `WAV`, LFO `WAV`) | Kit (Nummer), Waves im Flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 27–32 (LFO `WAV` / Voice 1–6) |
 | Choke | Voices der Choke-Gruppe blenden sich gegenseitig aus (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
 | Track 7 | Eigene Wellenform bzw. eigenes Sample, Tonhöhe, Sends und Panorama für Track 7 auf der gemeinsamen Voice von Slot 6, z. B. Closed-/Open-Hat-Samples, nur eines davon in den Hall. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
+| LFO 2 | Ein zweiter LFO pro Voice und ein eigener LFO für Track 7 (wirkt, solange Track 7 klingt, statt des LFO von Voice 6). Test. | VOICE 1-7, LFO-Taste auf dem 2. Bildschirm erneut drücken | Kit | – |
 
 ## Sequencer / Tracks
 

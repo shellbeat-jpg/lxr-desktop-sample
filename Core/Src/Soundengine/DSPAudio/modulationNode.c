@@ -85,6 +85,10 @@ void modNode_originalValueChanged(uint16_t idx)
 	{
 		modNode_setOriginalValueChanged(&voiceSlots[i].u.c.lfo.modTarget,idx);
 	}
+	for(i=0;i<LFO_NUM_EXTRA;i++)	//MOD: extra LFOs
+	{
+		modNode_setOriginalValueChanged(&lfo_extra[i].modTarget,idx);
+	}
 }
 //-----------------------------------------------------------------------
 IN_ITCM_RAM void modNode_resetTargets()
@@ -100,6 +104,7 @@ IN_ITCM_RAM void modNode_resetTargets()
 		const ModulationNode* target = &voiceSlots[i].u.c.lfo.modTarget;
 		paramArray_setParameter(target->destination,target->originalValue);
 	}
+	lfo_extraResetTargets();	//MOD
 
 
 }

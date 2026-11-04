@@ -416,6 +416,14 @@ enum ParamEnums
 	PAR_T7_SENDA,	//MOD: track 7: own sends and pan (0 = as track 6, else value + 1)
 	PAR_T7_SENDB,
 	PAR_T7_PAN,
+	PAR_LFOX_FRQ,	//MOD: the extra LFO shown (2nd LFO of a voice, LFO of track 7), kit data
+	PAR_LFOX_SYN,
+	PAR_LFOX_AMT,
+	PAR_LFOX_WAV,
+	PAR_LFOX_RTG,
+	PAR_LFOX_OFS,
+	PAR_LFOX_VOI,
+	PAR_LFOX_DST,
 
 	
 	//#########################################

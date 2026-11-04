@@ -314,6 +314,22 @@ enum NamesEnum
 	TEXT_T7_SENDA,		//MOD: track 7 sends and pan
 	TEXT_T7_SENDB,
 	TEXT_T7_PAN,
+	TEXT_LFO2_FRQ, 	//MOD: 2nd LFO of a voice (names of the LFO, category "LFO 2")
+	TEXT_LFO2_SYN,
+	TEXT_LFO2_AMT,
+	TEXT_LFO2_WAV,
+	TEXT_LFO2_RTG,
+	TEXT_LFO2_OFS,
+	TEXT_LFO2_VOI,
+	TEXT_LFO2_DST,
+	TEXT_T7LFO_FRQ, 	//MOD: LFO of track 7
+	TEXT_T7LFO_SYN,
+	TEXT_T7LFO_AMT,
+	TEXT_T7LFO_WAV,
+	TEXT_T7LFO_RTG,
+	TEXT_T7LFO_OFS,
+	TEXT_T7LFO_VOI,
+	TEXT_T7LFO_DST,
 
 
 	NUM_NAMES
@@ -500,7 +516,9 @@ enum catNamesEnum
 	CAT_FX,
 	CAT_DJ_FILTER,
 	CAT_VMORPH,
-	CAT_KMORPH
+	CAT_KMORPH,
+	CAT_LFO2,	//MOD: 2nd LFO of a voice
+	CAT_T7LFO	//MOD: LFO of track 7
 };
 //-----------------------------------------------------------------
 // these must correspond with longNames in MenuText.h

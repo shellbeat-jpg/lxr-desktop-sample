@@ -32,6 +32,14 @@ uint8_t kitEngines_ram[NUM_KIT_SLOTS][KIT_DATA_SIZE];
 
 static const char kitEngines_signature[4] = { 'O', 'E', '0', '2' };
 //---------------------------------------------------
+//MOD: an extra LFO (x: 0..5 = 2nd LFO of voice x+1, 6 = track 7) as stock: no target
+static void kitEngines_lfoXStock(uint8_t* s, const uint8_t x)
+{
+	static const uint8_t def[KIT_LFOX_STRIDE] = { 32, 0, 0, 0, 0, 0, 1, 0 };
+	memcpy(s, def, KIT_LFOX_STRIDE);
+	s[LFOX_VOI] = (uint8_t)(x < NUM_VOICE_SLOTS ? x + 1 : NUM_VOICE_SLOTS);
+}
+//---------------------------------------------------
 void kitEngines_setStock(uint8_t* engines)
 {
 	for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
@@ -47,6 +55,8 @@ void kitEngines_setStock(uint8_t* engines)
 	engines[KIT_T7_OFFSET + KIT_T7_SENDA] = 0;
 	engines[KIT_T7_OFFSET + KIT_T7_SENDB] = 0;
 	engines[KIT_T7_OFFSET + KIT_T7_PAN] = 0;
+	for(uint8_t x=0;x<KIT_LFOX_NUM;x++)	//MOD: extra LFOs off
+		kitEngines_lfoXStock(&engines[KIT_LFOX_OFFSET + x*KIT_LFOX_STRIDE], x);
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -78,6 +88,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 4 + KIT_FX3_SIZE;
 	o[0] = 'T'; o[1] = 'R'; o[2] = '7'; o[3] = KIT_T7_SIZE;	//MOD: track 7 waveform, pitch, sends, pan
 	memcpy(&o[4], &engines[KIT_T7_OFFSET], KIT_T7_SIZE);
+	o += 4 + KIT_T7_SIZE;
+	o[0] = 'L'; o[1] = 'F'; o[2] = 'X'; o[3] = KIT_LFOX_SIZE;	//MOD: extra LFOs
+	memcpy(&o[4], &engines[KIT_LFOX_OFFSET], KIT_LFOX_SIZE);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -109,6 +122,16 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 			engines[KIT_T7_OFFSET + 1] = t[5] <= 2 * KIT_T7_COARSE_ZERO ? t[5] : KIT_T7_COARSE_ZERO;
 			for(uint8_t k = KIT_T7_SENDA; k < KIT_T7_SIZE; k++)
 				engines[KIT_T7_OFFSET + k] = (k < n && t[4+k] <= 128) ? t[4+k] : 0;
+		}
+		else if(t[0] == 'L' && t[1] == 'F' && t[2] == 'X' && n >= KIT_LFOX_STRIDE)	//MOD: extra LFOs
+		{
+			for(uint8_t i=0;i<KIT_LFOX_SIZE && i<n;i++)
+			{
+				const uint8_t k = (uint8_t)(i % KIT_LFOX_STRIDE), v = t[4+i];
+				uint8_t* s = &engines[KIT_LFOX_OFFSET + i];
+				if(k == LFOX_VOI)	{ if(v >= 1 && v <= NUM_VOICE_SLOTS) *s = v; }
+				else if(v <= 127)	*s = v;
+			}
 		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;
@@ -356,7 +379,29 @@ void kitEngines_initVoice(const uint8_t slot)
 		return;
 	kitEngines[KIT_SEND_OFFSET + slot] = KIT_SEND_DEFAULT;	//MOD: FX sends
 	kitEngines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
+	kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], slot);	//MOD: 2nd LFO
+	if(slot == NUM_VOICE_SLOTS-1)	//MOD: track 7
+	{
+		kitEngines[KIT_T7_OFFSET] = 0;
+		kitEngines[KIT_T7_OFFSET + 1] = KIT_T7_COARSE_ZERO;
+		memset(&kitEngines[KIT_T7_OFFSET + KIT_T7_SENDA], 0, KIT_T7_SIZE - KIT_T7_SENDA);
+		kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], NUM_VOICE_SLOTS);
+	}
 	kitEngines_reset(slot, kitEngines[slot] % NUM_ENGINES);
+}
+//---------------------------------------------------
+void kitEngines_copySlotData(const uint8_t slot, uint8_t* dst, const uint8_t* src)
+{
+	if(slot >= NUM_VOICE_SLOTS)
+		return;
+	dst[KIT_SEND_OFFSET + slot] = src[KIT_SEND_OFFSET + slot];
+	dst[KIT_SENDB_OFFSET + slot] = src[KIT_SENDB_OFFSET + slot];
+	memcpy(&dst[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], &src[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], KIT_LFOX_STRIDE);
+	if(slot == NUM_VOICE_SLOTS-1)
+	{
+		memcpy(&dst[KIT_T7_OFFSET], &src[KIT_T7_OFFSET], KIT_T7_SIZE);
+		memcpy(&dst[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], &src[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], KIT_LFOX_STRIDE);
+	}
 }
 //---------------------------------------------------
 void kitEngines_factoryKit(uint8_t* params, uint8_t* engines)

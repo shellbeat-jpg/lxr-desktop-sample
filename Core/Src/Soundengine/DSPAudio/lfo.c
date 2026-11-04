@@ -23,6 +23,10 @@
 #include "Soundengine/DSPAudio/Snare.h"
 #include "Soundengine/MIDI/valueShaper.h"
 #include "SampleRom/sampleFlash.h"	//MOD: user waves
+#include "Preset/KitEngines.h"		//MOD: extra LFOs
+#include "menu/menu.h"				//MOD: modTargets
+#include "menu/CcNr2Text.h"
+#include <string.h>
 //-------------------------------------------------------------
 void lfo_init(Lfo *lfo)
 {
@@ -294,6 +298,11 @@ void lfo_recalcSync()
 		Lfo* lfo = &voiceSlots[i].u.c.lfo;
 		lfo->phaseInc = lfo_calcPhaseInc(lfo->freq,lfo->sync);
 	}
+	for(uint8_t i=0;i<LFO_NUM_EXTRA;i++)	//MOD
+	{
+		Lfo* lfo = &lfo_extra[i];
+		lfo->phaseInc = lfo_calcPhaseInc(lfo->freq,lfo->sync);
+	}
 }
 //-------------------------------------------------------------
 uint8_t lfo_getStarts(uint8_t slot, uint8_t* cause)
@@ -303,12 +312,9 @@ uint8_t lfo_getStarts(uint8_t slot, uint8_t* cause)
 	return lfo->starts;
 }
 //-------------------------------------------------------------
-void lfo_retrigger(uint8_t voice)
+//a trigger of voice slot 'voice' for one LFO (own = it is the LFO's own voice)
+static void lfo_retriggerOne(Lfo* lfo, const uint8_t voice, const uint8_t own)
 {
-	//restart the LFOs that are retriggered by this voice
-	for(uint8_t i=0;i<6;i++)
-	{
-		Lfo* lfo = &voiceSlots[i].u.c.lfo;
 		if(lfo->retrigger == voice+1)
 		{
 			lfo->phase = lfo->phaseOffset;
@@ -320,13 +326,13 @@ void lfo_retrigger(uint8_t voice)
 		}
 		//MOD: the cycle LFO steps on each trigger of its retrigger voice, without
 		//retrigger on each trigger of its own voice
-		if(lfo->waveform == LFO_CYCLE && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
+		if(lfo->waveform == LFO_CYCLE && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && own)))
 		{
 			lfo->cycleCount++;
 		}
 		//MOD: one-shot waveforms start (after the delay = offset) on each trigger
 		//of the retrigger voice, without retrigger of the LFO's own voice
-		if(lfo_isOneShot(lfo->waveform) && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && i == voice)))
+		if(lfo_isOneShot(lfo->waveform) && (lfo->retrigger == voice+1 || (lfo->retrigger == 0 && own)))
 		{
 			lfo->phase   = 0;
 			lfo->osDone  = 0;
@@ -337,6 +343,95 @@ void lfo_retrigger(uint8_t voice)
 			if(lfo->waveform == LFO_NOISE_1)
 				lfo->rnd = GetRngValue() / (float)0xffffffff;
 		}
+}
+//-------------------------------------------------------------
+void lfo_retrigger(uint8_t voice)
+{
+	//restart the LFOs that are retriggered by this voice
+	for(uint8_t i=0;i<6;i++)
+		lfo_retriggerOne(&voiceSlots[i].u.c.lfo, voice, i == voice);
+}
+//-------------------------------------------------------------
+//MOD: extra LFOs
+Lfo lfo_extra[LFO_NUM_EXTRA];
+static uint8_t lfo_extraSet[LFO_NUM_EXTRA][KIT_LFOX_STRIDE];	//the settings taken over
+static uint8_t lfo_extraReady = 0;
+static float lfo_extraVal[LFO_NUM_EXTRA];
+
+static const uint8_t* lfo_extraKit(const uint8_t x)
+{
+	return &kitEngines[KIT_LFOX_OFFSET + x * KIT_LFOX_STRIDE];
+}
+//the settings of the kit (the values of the stock LFO parameters, see MidiParser.c)
+static void lfo_extraApply(const uint8_t x, const uint8_t* s)
+{
+	Lfo* lfo = &lfo_extra[x];
+	uint8_t* o = lfo_extraSet[x];
+	if(!lfo_extraReady || o[LFOX_FRQ] != s[LFOX_FRQ] || o[LFOX_SYN] != s[LFOX_SYN])
+	{
+		lfo->sync = s[LFOX_SYN];
+		lfo_setFreq(lfo, s[LFOX_FRQ] / 127.f);
 	}
+	lfo->modTarget.amount = s[LFOX_AMT] / 127.f;
+	lfo->waveform = s[LFOX_WAV] < NUM_LFO_WAVEFORMS ? s[LFOX_WAV] : 0;
+	lfo->retrigger = s[LFOX_RTG] <= NUM_VOICE_SLOTS ? s[LFOX_RTG] : 0;
+	lfo->phaseOffset = (uint32_t)(s[LFOX_OFS] / 127.f * 0xffffffff);
+	if(!lfo_extraReady || o[LFOX_DST] != s[LFOX_DST])
+	{
+		const uint8_t t = s[LFOX_DST] < getNumModTargets() ? s[LFOX_DST] : 0;
+		modNode_setDestination(&lfo->modTarget, t ? (uint8_t)modTargets[t].param : 0);	//as the stock LFO (CC_LFO_TARGET)
+	}
+	memcpy(o, s, KIT_LFOX_STRIDE);
+}
+void lfo_extraCalc(void)
+{
+	if(!lfo_extraReady)
+	{
+		for(uint8_t x=0;x<LFO_NUM_EXTRA;x++)
+			lfo_init(&lfo_extra[x]);
+	}
+	for(uint8_t x=0;x<LFO_NUM_EXTRA;x++)
+	{
+		const uint8_t* s = lfo_extraKit(x);
+		if(!lfo_extraReady || memcmp(s, lfo_extraSet[x], KIT_LFOX_STRIDE) != 0)
+			lfo_extraApply(x, s);
+	}
+	lfo_extraReady = 1;
+	for(uint8_t x=0;x<LFO_NUM_EXTRA;x++)
+	{
+		if(lfo_extra[x].modTarget.destination)	//without target: off
+			lfo_extraVal[x] = lfo_calc(&lfo_extra[x]);
+	}
+}
+uint8_t lfo_t7Active(void)
+{
+	return slot_t7Playing && lfo_extra[LFO_T7].modTarget.destination;
+}
+void lfo_extraDispatch(void)
+{
+	for(uint8_t x=0;x<LFO_T7;x++)
+	{
+		if(lfo_extra[x].modTarget.destination)
+			modNode_updateValue(&lfo_extra[x].modTarget, lfo_extraVal[x]);
+	}
+	if(lfo_t7Active())
+		modNode_updateValue(&lfo_extra[LFO_T7].modTarget, lfo_extraVal[LFO_T7]);
+}
+void lfo_extraResetTargets(void)
+{
+	for(uint8_t x=0;x<LFO_NUM_EXTRA;x++)
+	{
+		const ModulationNode* t = &lfo_extra[x].modTarget;
+		if(t->destination)
+			paramArray_setParameter(t->destination, t->originalValue);
+	}
+}
+void lfo_extraRetrigger(const uint8_t slot, const uint8_t second)
+{
+	for(uint8_t x=0;x<NUM_VOICE_SLOTS;x++)
+		lfo_retriggerOne(&lfo_extra[x], slot, x == slot);
+	//the track 7 LFO: its own trigger (and rtg v6) is a trigger of track 7
+	if(slot != NUM_VOICE_SLOTS-1 || second)
+		lfo_retriggerOne(&lfo_extra[LFO_T7], slot, second);
 }
 //-------------------------------------------------------------

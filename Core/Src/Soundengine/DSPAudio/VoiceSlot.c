@@ -172,6 +172,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	case ENGINE_HIHAT:	HiHat_trigger(&s->u.hat, vel, second, note);		break;
 	default:			Drum_trigger(&s->u.drum, vel, note);				break;
 	}
+	lfo_extraRetrigger(slot, second);	//MOD: 2nd LFOs, track 7 LFO
 
 	//tracks 6 and 7 share slot 6 but each has its own amp decay. Set after the
 	//trigger, which applies the velocity modulation (it may target the decay).
