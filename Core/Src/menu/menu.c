@@ -4040,6 +4040,19 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				if(s > 5)			s = 0;
 				menu_lastStepGrid = s;
 			}
+			else if(menu_activePage == SEQ_PAGE && menu_getSubPage() == 1 && buttonHandler_getShift())
+			{
+				//MOD: SHIFT + click on the step automation page: both locks of the step off
+				activeParameters[PAR_P1_DEST] = 0;
+				activeParameters[PAR_P2_DEST] = 0;
+				activeParameters[PAR_P1_VAL] = 0;
+				activeParameters[PAR_P2_VAL] = 0;
+				menu_parseGlobalParam(PAR_P1_DEST, 0);
+				menu_parseGlobalParam(PAR_P2_DEST, 0);
+				menu_parseGlobalParam(PAR_P1_VAL, 0);
+				menu_parseGlobalParam(PAR_P2_VAL, 0);
+				editModeActive = 0;
+			}
 			else if(editModeActive && menu_isFxPreset(menu_currentParamNr()))
 			{
 				//MOD: load (or save) the selected FX preset, back to the parameters

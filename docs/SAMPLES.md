@@ -225,6 +225,9 @@ A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its ste
 (`P1`/`P2`) is still applied, like a "trigless lock". Patterns that used velocity-0 steps to cut a
 sound no longer do.
 
+**Clear the locks of a step (1.2.11):** SHIFT + encoder click on the step automation page (`dst`
+`val` `dst` `val`) sets both locks of the selected step to off.
+
 ### LFO range display
 
 The edit view of an LFO's `MOD` shows on the left the range its target moves in, e.g. `21..127`:
