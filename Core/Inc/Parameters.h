@@ -428,7 +428,7 @@ enum ParamEnums
 	PAR_FXA_PRS,	//MOD: FX preset list of slot A / B (menu only)
 	PAR_FXB_PRS,
 	PAR_STEP_ACCENT,	//MOD: accent of the selected step (menu only, stored in the step)
-	PAR_REC,			//MOD: WAV recorder mode (menu only, Recorder.h)
+	PAR_REC,			//MOD: unused (was the WAV recorder mode, now PAR_REC_LEN)
 
 	
 	//#########################################
@@ -521,6 +521,8 @@ enum ParamEnums
 	PAR_CUE_VOL,
 	PAR_ACCENT,		//MOD: accent level, 1..127 = +0.2 .. +6 dB (0 = older settings: 64)
 	PAR_RANDOM,		//MOD: strength of the voice randomization, 1..127 (0 = older settings: 32)
+	PAR_REC_LEN,	//MOD: WAV recorder: length 0 x1, 1 x2, 2 x4, 3 until stop (Recorder.h)
+	PAR_REC_START,	//MOD: WAV recorder: start 0 with PLAY, 1 at the next pattern start
 
 	NUM_PARAMS	
 };

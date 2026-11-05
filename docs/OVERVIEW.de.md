@@ -23,8 +23,10 @@ Waser), alles andere aus OE02-Samples+.
 | Schnelle Rolls *(1.2.11, noch nicht veröffentlicht)* | Roll-Raten `24`, `32`, `48` (1/16-Triolen, 1/32, 1/32-Triolen). | PERF (`ROL`) | – | – |
 | Step-Akzent *(1.2.11, noch nicht veröffentlicht)* | Akzent pro Step, `ACA` = Stärke (+0,1 … +6 dB). | Step-Seite (`ACC`), CONFIG 2 (`ACA`) | Pattern (`ACC`), global (`ACA`) | – |
 | Zufalls-Voice *(1.2.11, noch nicht veröffentlicht)* | SHIFT + Encoder-Klick auf einer Voice-Seite variiert die aktive Voice um `RND`; Lautstärke, Pan, Ausgang, Sends, LFO und Engine bleiben. | Voice-Seiten, PERF (`RND`) | Global (`RND`) | – |
-| WAV-Recorder *(1.2.11, noch nicht veröffentlicht)* | Nimmt St1 auf die SD-Karte auf (`REC/RECnnn.WAV`, 16 Bit Stereo): 1, 2 oder 4 Durchläufe des Patterns oder bis Stop. | PERF, letzter Screen (`REC`) | – | – |
+| WAV-Recorder *(1.2.11, noch nicht veröffentlicht)* | Nimmt St1 auf die SD-Karte auf (`REC/RECnnn.WAV`, 16 Bit Stereo): 1, 2 oder 4 Durchläufe des Patterns oder bis Stop; Start mit PLAY oder beim nächsten Pattern-Start. | PERF, letzter Screen (`REC`, `RST`, Encoder-Klick) | Global | – |
 | Modal-Engine *(1.2.11, noch nicht veröffentlicht)* | Fünfte Engine: Physical Modelling einer angeschlagenen Membran, eines Stabs, einer Saite, Glocke, Platte oder eines Glases (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
+| FM2-Engine *(1.2.11, noch nicht veröffentlicht)* | 2-Operator-FM-Percussion: Ratio `RAT`, Index `IDX` mit eigenem Abklingen `IDC`, Feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |
+| Wavetable-Engine *(1.2.11, noch nicht veröffentlicht)* | Durchfährt Sinus › Sägezahn › Rechteck und/oder die User-Waves (`SET`, `POS`), bewegt vom Pitch-EG (`SWP`). Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit | NRPN 98 |
 
 ## Sequencer / Tracks
 

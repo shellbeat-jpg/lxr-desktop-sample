@@ -45,6 +45,8 @@
 #define MENU_AUDIO_OUT_FX	26
 #define MENU_MODAL_MODEL	27	//MOD: modal engine
 #define MENU_MODAL_EXC		28
+#define MENU_FM2_RATIO		29	//MOD: FM2 engine
+#define MENU_WAVE_SET		30	//MOD: wavetable engine
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -401,6 +403,21 @@ const char modalExcNames[][4] =
 		{"mal"},	// mallet (soft pulse)
 		{"nse"},	// noise burst
 };
+//MOD: FM2 engine: modulator : carrier ratios (Fm2Voice.c)
+const char fm2RatioNames[][4] =
+{
+		{16},
+		{".50"}, {".75"}, {"1"}, {"1.4"}, {"1.5"}, {"2"}, {"2.5"}, {"2.8"},
+		{"3"}, {"3.5"}, {"4"}, {"5"}, {"6"}, {"7"}, {"8"}, {"11"},
+};
+//MOD: wavetable engine: the table sets
+const char waveSetNames[][4] =
+{
+		{3},
+		{"bas"},	// sine > triangle > saw > square
+		{"usr"},	// user waves W1..W8
+		{"all"},	// both
+};
 //-----------------------------------------------------------------
 const char mixFmNames[][6] =
 {
@@ -577,6 +594,15 @@ const char shortNames[][4]  =
 	{"hrd"},
 	{"mat"},
 	{"exc"},
+	{"rst"},	//MOD: WAV recorder start
+	{"rat"},	//MOD: FM2 engine
+	{"idx"},
+	{"idc"},
+	{"fbk"},
+	{"set"},	//MOD: wavetable engine
+	{"pos"},
+	{"swp"},
+	{"stp"},
 
 };
 //-----------------------------------------------------------------
@@ -763,6 +789,15 @@ const char longNames[][16] =
 	{"Hardness"},	//MOD
 	{"Material"},	//MOD
 	{"Exciter"},	//MOD
+	{"Rec start"},	//MOD
+	{"Ratio"},		//MOD: FM2
+	{"FM index"},	//MOD
+	{"Index decay"},	//MOD
+	{"Feedback"},	//MOD
+	{"Table set"},	//MOD: wavetable
+	{"Wave pos."},	//MOD
+	{"Pos. sweep"},	//MOD
+	{"Stepped"},	//MOD
 };
 
 

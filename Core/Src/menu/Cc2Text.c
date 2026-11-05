@@ -442,9 +442,9 @@ uint8_t modTargetNameIdx(const uint8_t idx)
 	const uint8_t slot = kitEngines_rolePar2Slot(par);
 	if(slot >= NUM_VOICE_SLOTS || kitEngines[slot] == slot_stockEngine(slot))
 		return pgm_read_byte(&modTargets[idx].nameIdx);
-	const int8_t modal = kitEngines_modalRole(par);	//MOD: its own names
-	if(modal >= 0)
-		return (uint8_t)(TEXT_MDL_MODEL + modal);
+	const uint8_t own = menu_ownRoleText(par);	//MOD: the added engines' own names
+	if(own)
+		return own;
 
 	//engine specific setting of a slot with a non-stock engine: named like the
 	//same role in the engine's stock voice, hidden if it has none there

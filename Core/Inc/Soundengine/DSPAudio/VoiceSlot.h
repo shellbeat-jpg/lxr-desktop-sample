@@ -23,7 +23,9 @@
 #include "Soundengine/DSPAudio/Snare.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/DSPAudio/HiHat.h"
-#include "Soundengine/DSPAudio/ModalVoice.h"	//MOD: test engine
+#include "Soundengine/DSPAudio/ModalVoice.h"	//MOD: test engines
+#include "Soundengine/DSPAudio/Fm2Voice.h"
+#include "Soundengine/DSPAudio/WaveVoice.h"
 #include "Parameters.h"
 
 #define NUM_VOICE_SLOTS	6
@@ -37,6 +39,8 @@ enum VoiceEngine
 	ENGINE_CYMBAL	= 2,
 	ENGINE_HIHAT	= 3,
 	ENGINE_MODAL	= 4,	//MOD: physical model (test)
+	ENGINE_FM2		= 5,	//MOD: 2-operator FM percussion (test)
+	ENGINE_WAVE		= 6,	//MOD: wavetable (test)
 	NUM_ENGINES
 };
 
@@ -50,6 +54,8 @@ typedef struct
 		CymbalVoice	cymbal;
 		HiHatVoice	hat;
 		ModalVoice	modal;
+		Fm2Voice	fm2;
+		WaveVoice	wave;
 	} u;
 	uint8_t		engine;		//enum VoiceEngine
 	float		decay[2];	//slot 6 only: amp decay of track 6 [0] and track 7 [1]
@@ -65,10 +71,10 @@ extern VoiceSlot voiceSlots[NUM_VOICE_SLOTS];
 extern const uint8_t slot_rolePar[NUM_VOICE_SLOTS][NUM_SLOT_ROLES];
 
 //write-only command (NRPN 98, not stored in kits): value = slot*4 + engine for
-//the engines 0..3, MOD: 24 + slot for the modal engine
+//the engines 0..3, MOD: 24 + 6 * (engine - 4) + slot for the engines 4..6
 #define PAR_SLOT_ENGINE	PAR_UNUSED_6
-#define SLOT_ENGINE_CMD_SLOT(v)		((uint8_t)((v) < 24u ? (v)>>2 : (v)-24u))
-#define SLOT_ENGINE_CMD_ENGINE(v)	((uint8_t)((v) < 24u ? (v)&3u : ENGINE_MODAL))
+#define SLOT_ENGINE_CMD_SLOT(v)		((uint8_t)((v) < 24u ? (v)>>2 : ((v)-24u) % 6u))
+#define SLOT_ENGINE_CMD_ENGINE(v)	((uint8_t)((v) < 24u ? (v)&3u : ENGINE_MODAL + ((v)-24u) / 6u))
 
 //the engine every slot has in the stock firmware (and in kits without engine data)
 uint8_t slot_stockEngine(const uint8_t slot);

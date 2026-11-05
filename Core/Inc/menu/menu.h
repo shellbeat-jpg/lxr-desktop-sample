@@ -345,6 +345,15 @@ enum NamesEnum
 	TEXT_MDL_HARD,
 	TEXT_MDL_MAT,
 	TEXT_MDL_EXC,
+	TEXT_REC_START,	//MOD: WAV recorder start
+	TEXT_FM2_RATIO,	//MOD: FM2 engine
+	TEXT_FM2_INDEX,
+	TEXT_FM2_IDEC,
+	TEXT_FM2_FB,
+	TEXT_WT_SET,	//MOD: wavetable engine
+	TEXT_WT_POS,
+	TEXT_WT_SWEEP,
+	TEXT_WT_STEP,
 
 
 	NUM_NAMES
@@ -507,7 +516,16 @@ enum shortNamesEnum
 	SHORT_MDL_INH,
 	SHORT_MDL_HARD,
 	SHORT_MDL_MAT,
-	SHORT_MDL_EXC
+	SHORT_MDL_EXC,
+	SHORT_REC_START,
+	SHORT_FM2_RATIO,
+	SHORT_FM2_INDEX,
+	SHORT_FM2_IDEC,
+	SHORT_FM2_FB,
+	SHORT_WT_SET,
+	SHORT_WT_POS,
+	SHORT_WT_SWEEP,
+	SHORT_WT_STEP
 
 	
 };
@@ -692,7 +710,16 @@ enum longNamesEnum
 	LONG_MDL_INH,
 	LONG_MDL_HARD,
 	LONG_MDL_MAT,
-	LONG_MDL_EXC
+	LONG_MDL_EXC,
+	LONG_REC_START,
+	LONG_FM2_RATIO,
+	LONG_FM2_INDEX,
+	LONG_FM2_IDEC,
+	LONG_FM2_FB,
+	LONG_WT_SET,
+	LONG_WT_POS,
+	LONG_WT_SWEEP,
+	LONG_WT_STEP
 	
 };
 
@@ -802,6 +829,8 @@ enum Datatypes
 extern const enum Datatypes parameter_dtypes[NUM_PARAMS];
 //the type of a parameter, following the engine of its slot (use instead of parameter_dtypes)
 uint16_t menu_paramDtype(const uint16_t par);
+//MOD: the name (TEXT_...) of an engine setting of the added engines, 0 = the drum's
+uint8_t menu_ownRoleText(const uint16_t par);
 extern uint8_t mainParameters[NUM_KIT_SLOTS][END_OF_SOUND_PARAMETERS];		// keeps all kits from sd card in memory
 extern uint8_t activeParameters[NUM_PARAMS];					// keeps the currently used kit in memory -> editBuffer
 //extern uint8_t morphParameters[END_OF_SOUND_PARAMETERS];

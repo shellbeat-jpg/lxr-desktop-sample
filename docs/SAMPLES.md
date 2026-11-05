@@ -593,26 +593,28 @@ press again for the next variation, voice LOAD (or not saving) brings the old so
 
 ## WAV recorder (1.2.11)
 
-`REC` on the last PERF screen records the mix as a WAV file to the SD card, in real time:
-16 bit stereo, 44.1 kHz, the signal of the St1 jacks after FX3, DJ filter and limiter (without a
-cable in St1 the signal of the St2 jacks, see [cue](#cue-on-st2-1211)).
+The last PERF screen records the mix as a WAV file to the SD card, in real time: 16 bit stereo,
+44.1 kHz, the signal of the St1 jacks after FX3, DJ filter and limiter (without a cable in St1 the
+signal of the St2 jacks, see [cue](#cue-on-st2-1211)).
 
-| `REC` | Length |
-|---|---|
-| `off` | no recording / stop |
-| `x1`, `x2`, `x4` | 1, 2 or 4 passes of the longest track of the playing pattern |
-| `end` | until the sequencer stops |
+| Displayed name | Name | Description |
+|---|---|---|
+| `REC` | Record WAV | length: `x1`, `x2`, `x4` = 1, 2 or 4 passes of the longest track of the playing pattern, `end` = until the sequencer stops. Shows `arm` while armed, `rec` while recording |
+| `RST` | Rec start | `ply` = with PLAY, `pat` = at the next pattern start, also while the sequencer runs |
 
-Choosing a length arms the recorder: it creates the next free file `REC/REC001.WAV` … `REC999`
-and reserves the space. The recording starts with the sequencer (PLAY) and ends after the passes,
-at STOP or with `off`; the display shows the file name and its length (`Saved REC003 1:32`).
-`off` while armed deletes the empty file. If the card is too slow, the gaps are counted and
-shown (`2 gaps`): use a fast card (class 10 / U1). Card full: the recording ends there and keeps
-what was written. Loading or saving kits and projects during a recording can cause gaps.
+**Encoder click in the edit view** of `REC` or `RST` arms the recorder: it creates the next free
+file `REC/REC001.WAV` … `REC999` and reserves the space. With `ply` the recording starts with the
+next PLAY; with `pat` at the next start of the pattern (the longest track back at step 1), or
+with PLAY when the sequencer is stopped. It ends after the passes, at STOP, or with another click;
+the display shows the file and its length (`Saved REC003 1:32`). A click while armed deletes the
+empty file again. `REC` and `RST` are global settings (SAVE → Global) and stay as they are after a
+recording. If the card is too slow, the gaps are counted and shown (`2 gaps`): use a fast card
+(class 10 / U1). Card full: the recording ends there and keeps what was written. Loading or
+saving kits and projects during a recording can cause gaps.
 
 ## Modal engine (1.2.11, test)
 
-A fifth voice engine, `modal`: a physical model of a struck body (membrane, bar, string, bell,
+A new voice engine, `modal`: a physical model of a struck body (membrane, bar, string, bell,
 plate, glass). Six resonators ring at the body's mode frequencies; a mallet or a noise burst
 strikes them. Choose it like the other engines (SHIFT + KIT, `modal`); the voice uses the pages
 of the drum engine:
@@ -635,6 +637,38 @@ of restarting them. LFO, velocity and step automation targets on the engine sett
 as in the table. Stored in the kit as engine 4: firmwares without it (OpenElixir-02, OE02-Samples+
 before 1.2.11) play such a voice with its stock engine. MIDI: NRPN 98 value 24 + slot (0 … 5).
 A test: the sound and its parameters may still change.
+
+## FM2 engine (1.2.11, test)
+
+`fm2`: 2-operator FM percussion. A sine carrier is phase modulated by a sine modulator whose
+index has its own decay, with feedback on the modulator: bells, metallic hits, FM toms and
+kicks, snaps. The pitch EG works as for the drum. Drum pages; on the FM page:
+
+| Displayed name | Name | Description |
+|---|---|---|
+| `RAT` | Ratio | modulator : carrier, `.50` `.75` `1` `1.4` `1.5` `2` `2.5` `2.8` `3` `3.5` `4` `5` `6` `7` `8` `11` (non-integer ratios sound inharmonic, metallic) |
+| `IDX` | FM index | modulation depth at the strike (0 = pure sine) |
+| `IDC` | Index decay | how fast the index falls to 0: 5 ms … 4 s (short = a bright attack, then a sine) |
+| `FBK` | Feedback | modulator onto itself: towards noise |
+
+The MOD page keeps the drum's pitch EG (decay, slope, amount); the transient page adds its click
+like with the drum. MIDI: NRPN 98 value 30 + slot.
+
+## Wavetable engine (1.2.11, test)
+
+`wavetable`: an oscillator that scans through a set of single-cycle waves, crossfading between
+neighbours. The pitch EG also sweeps the position, so a hit can start bright and settle on a sine.
+Drum pages; on the FM page:
+
+| Displayed name | Name | Description |
+|---|---|---|
+| `SET` | Table set | `bas` = sine › triangle › saw › square (band limited), `usr` = the user waves W1 … W8 (from `SAMPLES/WAVES`, none: `bas`), `all` = both |
+| `POS` | Wave pos. | position in the set (0 = first wave) |
+| `SWP` | Pos. sweep | how far the pitch EG moves the position up at the strike (with its decay) |
+| `STP` | Stepped | `on` = jumps from wave to wave instead of crossfading |
+
+The MOD page keeps the drum's pitch EG (decay, slope, amount); with the amount at 0 it only sweeps
+the position. LFO or step automation on `POS` scans the table. MIDI: NRPN 98 value 36 + slot.
 
 ## Voice INIT
 

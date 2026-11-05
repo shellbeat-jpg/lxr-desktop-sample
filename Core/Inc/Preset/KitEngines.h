@@ -102,9 +102,9 @@ void kitEngines_apply(void);
 
 //the slot whose engine specific parameter par is, NUM_VOICE_SLOTS if none
 uint8_t kitEngines_rolePar2Slot(const uint16_t par);
-//MOD: the role (0..6) of an engine specific parameter of a slot running the
-//modal engine, -1 for any other parameter
-int8_t kitEngines_modalRole(const uint16_t par);
+//MOD: the role (0..6) of an engine specific parameter of a slot running one of
+//the added engines (modal, FM2, wavetable: *engine), -1 for any other parameter
+int8_t kitEngines_ownRole(const uint16_t par, uint8_t* engine);
 
 //the slot whose sound parameter par is (incl. its modulation targets and slot 6
 //decay B), NUM_VOICE_SLOTS if none

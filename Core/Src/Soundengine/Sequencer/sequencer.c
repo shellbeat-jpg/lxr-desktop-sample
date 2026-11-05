@@ -1876,6 +1876,7 @@ IN_ITCM_RAM void seq_nextStep()
 			}
 
 		}
+		rec_seqPatternStart();	//MOD: WAV recorder armed for the next pattern start
 
 		// a new pattern is about to start
 		// set pendingPattern active

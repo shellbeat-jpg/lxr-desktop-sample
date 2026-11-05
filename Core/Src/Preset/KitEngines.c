@@ -187,11 +187,12 @@ uint8_t kitEngines_rolePar2Slot(const uint16_t par)
 	return NUM_VOICE_SLOTS;
 }
 //---------------------------------------------------
-int8_t kitEngines_modalRole(const uint16_t par)
+int8_t kitEngines_ownRole(const uint16_t par, uint8_t* engine)
 {
 	const uint8_t slot = kitEngines_rolePar2Slot(par);
-	if(slot >= NUM_VOICE_SLOTS || kitEngines[slot] != ENGINE_MODAL)
+	if(slot >= NUM_VOICE_SLOTS || kitEngines[slot] < ENGINE_MODAL)
 		return -1;
+	*engine = kitEngines[slot];
 	for(uint8_t role=0;role<NUM_SLOT_ROLES;role++)
 	{
 		if(slot_rolePar[slot][role] == par)
@@ -473,16 +474,25 @@ static void kitEngines_reset(const uint8_t slot, const uint8_t engine)
 	{
 		activeParameters[kitEngines_smpLenPar(slot)] = 0;	//MOD: sample length "all"
 	}
-	if(engine == ENGINE_MODAL)
+	if(engine >= ENGINE_MODAL)
 	{
-		//MOD: its own settings (the drum's would mean something else): a marimba-like
-		//bar, long amp decay (the modes' damping sets the length)
-		static const uint8_t modalInit[NUM_SLOT_ROLES] = { 1, 70, 30, 0, 80, 60, 0 };
+		//MOD: the added engines' own settings (the drum's would mean something else;
+		//255 = keep the drum's, the pitch EG). Modal: a marimba-like bar, long amp decay
+		static const uint8_t ownInit[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
+		{
+			{ 1, 70, 30, 0, 80, 60, 0 },		//modal
+			{ 2, 255, 255, 255, 50, 40, 0 },	//FM2: ratio 1, index, index decay, no feedback
+			{ 0, 255, 255, 255, 0, 60, 0 },		//wavetable: basic set, sweep
+		};
 		for(uint8_t role=0;role<NUM_SLOT_ROLES;role++)
-			activeParameters[slot_rolePar[slot][role]] = modalInit[role];
-		activeParameters[PAR_VELOD1 + 2*slot] = 110;
-		if(slot == NUM_VOICE_SLOTS-1)
-			activeParameters[PAR_VELOD6_OPEN] = 110;
+			if(ownInit[engine-ENGINE_MODAL][role] != 255)
+				activeParameters[slot_rolePar[slot][role]] = ownInit[engine-ENGINE_MODAL][role];
+		if(engine == ENGINE_MODAL)
+		{
+			activeParameters[PAR_VELOD1 + 2*slot] = 110;
+			if(slot == NUM_VOICE_SLOTS-1)
+				activeParameters[PAR_VELOD6_OPEN] = 110;
+		}
 	}
 
 	//the slot's own LFO and velocity modulation start off (copied targets would

@@ -341,6 +341,15 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_MDL_HARD, CAT_VOICE, LONG_MDL_HARD},/*TEXT_MDL_HARD*/
 		{SHORT_MDL_MAT, CAT_VOICE, LONG_MDL_MAT},/*TEXT_MDL_MAT*/
 		{SHORT_MDL_EXC, CAT_VOICE, LONG_MDL_EXC},/*TEXT_MDL_EXC*/
+		{SHORT_REC_START, CAT_GLOBAL, LONG_REC_START},/*TEXT_REC_START*/
+		{SHORT_FM2_RATIO, CAT_VOICE, LONG_FM2_RATIO},/*TEXT_FM2_RATIO*/
+		{SHORT_FM2_INDEX, CAT_VOICE, LONG_FM2_INDEX},/*TEXT_FM2_INDEX*/
+		{SHORT_FM2_IDEC, CAT_VOICE, LONG_FM2_IDEC},/*TEXT_FM2_IDEC*/
+		{SHORT_FM2_FB, CAT_VOICE, LONG_FM2_FB},/*TEXT_FM2_FB*/
+		{SHORT_WT_SET, CAT_VOICE, LONG_WT_SET},/*TEXT_WT_SET*/
+		{SHORT_WT_POS, CAT_VOICE, LONG_WT_POS},/*TEXT_WT_POS*/
+		{SHORT_WT_SWEEP, CAT_VOICE, LONG_WT_SWEEP},/*TEXT_WT_SWEEP*/
+		{SHORT_WT_STEP, CAT_VOICE, LONG_WT_STEP},/*TEXT_WT_STEP*/
 
 
 };
@@ -694,6 +703,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_CUE_VOL*/			DTYPE_0B127,
 		/*PAR_ACCENT*/			DTYPE_0B127,
 		/*PAR_RANDOM*/			DTYPE_0B127,
+		/*PAR_REC_LEN*/			DTYPE_0B127,
+		/*PAR_REC_START*/		DTYPE_ON_OFF,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -805,6 +816,34 @@ static uint8_t menu_sampleWaveEditText(const uint16_t parNr, const uint8_t val)
 	return 1;
 }
 //---------------------------------------------------------------
+//MOD: names and types of the engine settings of the added engines (modal, FM2,
+//wavetable) by role; 0 = as the drum (the pitch EG of FM2 and wavetable)
+#define MENU_OWN_MENU(m)	(DTYPE_MENU | ((m)<<8))
+static const uint8_t menu_ownText[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
+{
+	{ TEXT_MDL_MODEL, TEXT_MDL_DAMP, TEXT_MDL_POS, TEXT_MDL_INH, TEXT_MDL_HARD, TEXT_MDL_MAT, TEXT_MDL_EXC },
+	{ TEXT_FM2_RATIO, 0, 0, 0, TEXT_FM2_INDEX, TEXT_FM2_IDEC, TEXT_FM2_FB },
+	{ TEXT_WT_SET, 0, 0, 0, TEXT_WT_POS, TEXT_WT_SWEEP, TEXT_WT_STEP },
+};
+static const uint16_t menu_ownDtype[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
+{
+	{ MENU_OWN_MENU(MENU_MODAL_MODEL), DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, MENU_OWN_MENU(MENU_MODAL_EXC) },
+	{ MENU_OWN_MENU(MENU_FM2_RATIO), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127 },
+	{ MENU_OWN_MENU(MENU_WAVE_SET), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, DTYPE_ON_OFF },
+};
+uint8_t menu_ownRoleText(const uint16_t par)
+{
+	uint8_t engine = 0;
+	const int8_t role = kitEngines_ownRole(par, &engine);
+	return role < 0 ? 0 : menu_ownText[engine-ENGINE_MODAL][role];
+}
+static uint16_t menu_ownRoleDtype(const uint16_t par)
+{
+	uint8_t engine = 0;
+	const int8_t role = kitEngines_ownRole(par, &engine);
+	return role < 0 ? 0 : menu_ownDtype[engine-ENGINE_MODAL][role];
+}
+//---------------------------------------------------------------
 //Voice pages of slots that run a non-stock engine: built from the engine's stock
 //page, every parameter moved to the slot's parameter with the same function
 static Page menu_voicePages[VOICE7_PAGE-VOICE1_PAGE+1][NUM_SUB_PAGES];
@@ -854,13 +893,13 @@ void menu_updateVoicePages()
 				}
 				if(page == VOICE7_PAGE && par[i] == PAR_VELOD6_CLOSED)
 					par[i] = PAR_VELOD6_OPEN;	//decay B
-				if(engine == ENGINE_MODAL)
+				if(engine >= ENGINE_MODAL)
 				{
-					//MOD: modal engine: its own names; no oscillator waveform / PWM
-					const int8_t role = kitEngines_modalRole(par[i]);
-					if(role >= 0)
-						text[i] = (uint8_t)(TEXT_MDL_MODEL + role);
-					else if(text[i] == TEXT_WAVEFORM || text[i] == TEXT_PWM)
+					//MOD: added engines: their own names; no oscillator waveform / PWM
+					const uint8_t own = menu_ownRoleText(par[i]);
+					if(own)
+						text[i] = own;
+					else if(kitEngines_ownRole(par[i], &(uint8_t){0}) < 0 && (text[i] == TEXT_WAVEFORM || text[i] == TEXT_PWM))
 					{
 						par[i] = PAR_NONE;
 						text[i] = TEXT_EMPTY;
@@ -946,17 +985,16 @@ static uint16_t menu_stockParam(const uint16_t par)
 
 uint16_t menu_paramDtype(const uint16_t par)
 {
-	const int8_t modal = kitEngines_modalRole(par);	//MOD: modal engine
-	if(modal == 0)	return DTYPE_MENU | (MENU_MODAL_MODEL<<8);
-	if(modal == 6)	return DTYPE_MENU | (MENU_MODAL_EXC<<8);
-	if(modal > 0)	return DTYPE_0B127;
+	const uint16_t own = menu_ownRoleDtype(par);	//MOD: added engines
+	if(own)
+		return own;
 	return parameter_dtypes[menu_stockParam(par)];
 }
 
 //tuning parameters show +-63 around 60 instead of 63
 static uint8_t menu_isTuningParam(const uint16_t parNr)
 {
-	if(kitEngines_modalRole(parNr) >= 0)
+	if(menu_ownRoleDtype(parNr))
 		return 0;
 	switch(menu_stockParam(parNr))
 	{
@@ -1430,7 +1468,7 @@ uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
 //MOD: the FX send level a menu entry shows (kit data), NULL for other parameters
 static uint8_t* menu_sendLevel(const uint16_t p)
 {
-	if(menu_isFxPreset(p) || p == PAR_REC)	//MOD: FX preset list (index), WAV recorder mode
+	if(menu_isFxPreset(p) || p == PAR_REC_LEN || p == PAR_REC_START)	//MOD: FX preset list (index), WAV recorder
 		return &activeParameters[p];
 	if(p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
@@ -1451,14 +1489,19 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 		menu_fxPresetText(v, out, isLong);
 		return 1;
 	}
-	if(p == PAR_REC)	//MOD: WAV recorder: mode, or what it does now
+	if(p == PAR_REC_LEN)	//MOD: WAV recorder: length, or what it does now
 	{
-		static const char* const s[REC_NUM_MODES] = { "off", "x1 ", "x2 ", "x4 ", "end" };
-		static const char* const l[REC_NUM_MODES] = { "off", "1 pass", "2 passes", "4 passes", "until stop" };
-		const uint8_t m = v < REC_NUM_MODES ? v : 0;
+		static const char* const s[REC_LEN_NUM] = { "x1 ", "x2 ", "x4 ", "end" };
+		static const char* const l[REC_LEN_NUM] = { "1 pass", "2 passes", "4 passes", "until stop" };
+		const uint8_t m = v < REC_LEN_NUM ? v : 0;
 		if(rec_state == REC_RUNNING || rec_state == REC_ENDING)	strcpy(out, isLong ? "recording" : "rec");
-		else if(rec_state == REC_ARMED && isLong)	snprintf(out, 17, "armed %s", l[m]);
+		else if(rec_state == REC_ARMED)	{ if(isLong) snprintf(out, 17, "armed %s", l[m]); else strcpy(out, "arm"); }
 		else	strcpy(out, isLong ? l[m] : s[m]);
+		return 1;
+	}
+	if(p == PAR_REC_START)	//MOD: WAV recorder start
+	{
+		strcpy(out, v ? (isLong ? "next pattern" : "pat") : (isLong ? "with Play" : "ply"));
 		return 1;
 	}
 	if(p == PAR_T7_WAVE)	//MOD: track 7 waveform
@@ -2738,7 +2781,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr) || parNr == PAR_REC)
+			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr) || parNr == PAR_REC_LEN || parNr == PAR_REC_START)
 			{
 				//MOD: track 7, right aligned
 				char t[17];
@@ -3987,6 +4030,10 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 		return modalModelNames[0][0];
 	case MENU_MODAL_EXC:
 		return modalExcNames[0][0];
+	case MENU_FM2_RATIO:
+		return fm2RatioNames[0][0];
+	case MENU_WAVE_SET:
+		return waveSetNames[0][0];
 
 	case MENU_FX:
 		return fxNames[0][0];
@@ -4102,6 +4149,12 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 	case MENU_MODAL_EXC:
 		p = MENU_ITEM(modalExcNames);
 		break;
+	case MENU_FM2_RATIO:
+		p = MENU_ITEM(fm2RatioNames);
+		break;
+	case MENU_WAVE_SET:
+		p = MENU_ITEM(waveSetNames);
+		break;
 
 	case MENU_FX:
 		p = MENU_ITEM(fxNames);
@@ -4198,6 +4251,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				menu_parseGlobalParam(PAR_P1_VAL, 0);
 				menu_parseGlobalParam(PAR_P2_VAL, 0);
 				editModeActive = 0;
+			}
+			else if(editModeActive && (menu_currentParamNr() == PAR_REC_LEN || menu_currentParamNr() == PAR_REC_START))
+			{
+				//MOD: WAV recorder: arm / disarm / stop, stay in the edit view
+				rec_toggle(activeParameters[PAR_REC_LEN], activeParameters[PAR_REC_START]);
+				menu_repaintAll();
 			}
 			else if(editModeActive && menu_isFxPreset(menu_currentParamNr()))
 			{
@@ -4485,11 +4544,12 @@ static void menu_encoderChangeParameter(int8_t inc)
 				: paramNr == PAR_T7_COARSE ? 2 * KIT_T7_COARSE_ZERO
 				: (paramNr >= PAR_T7_SENDA && paramNr <= PAR_T7_PAN) ? 128
 				: menu_isFxPreset(paramNr) ? (menu_fxUserRead(), menu_fxPresetCount() - 1)
-				: paramNr == PAR_REC ? REC_NUM_MODES - 1 : 127;	//MOD
+				: paramNr == PAR_REC_LEN ? REC_LEN_NUM - 1
+				: paramNr == PAR_REC_START ? 1 : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
-		if(paramNr == PAR_REC)
-			rec_arm(*s);	//MOD: WAV recorder: arm, change the length, or off
+		if(paramNr == PAR_REC_LEN && rec_state == REC_ARMED)
+			rec_setLength(*s);	//MOD: WAV recorder: an armed recording takes the new length
 		return;
 	}
 	//MOD: FX slot order / delay sync: a list of names

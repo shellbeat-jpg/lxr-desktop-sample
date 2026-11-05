@@ -27,7 +27,7 @@ static volatile uint8_t rec_dropping = 0;
 volatile uint8_t rec_state = REC_IDLE;
 
 static FIL rec_file;
-static uint8_t rec_mode = REC_OFF;
+static uint8_t rec_mode = REC_X1;
 static uint16_t rec_nr = 0;
 static uint32_t rec_target = 0;	/* steps to record, 0 = until stop */
 static uint32_t rec_steps = 0;
@@ -118,36 +118,46 @@ static uint8_t rec_open(void)
 	return 1;
 }
 
-void rec_arm(const uint8_t mode)
+static uint8_t rec_atPattern = 0;	/* start at the next pattern start (else with PLAY) */
+
+static void rec_disarm(void)
 {
-	if(mode == REC_OFF || mode >= REC_NUM_MODES)
+	char p[24];
+	const uint8_t bg = soundengine_backgroundAudioBegin();
+	f_close(&rec_file);
+	rec_path(p, rec_nr);
+	f_unlink(p);
+	soundengine_backgroundAudioEnd(bg);
+	rec_state = REC_IDLE;
+	rec_note("Recording", "off");
+}
+
+void rec_setLength(const uint8_t len)
+{
+	rec_mode = len >= REC_LEN_NUM ? REC_X1 : (uint8_t)(REC_X1 + len);
+}
+
+void rec_toggle(const uint8_t len, const uint8_t atPattern)
+{
+	if(rec_state == REC_RUNNING)
 	{
-		if(rec_state == REC_RUNNING)
-			rec_state = REC_ENDING;		/* finished by rec_process */
-		else if(rec_state == REC_ARMED)
-		{
-			char p[24];
-			const uint8_t bg = soundengine_backgroundAudioBegin();
-			f_close(&rec_file);
-			rec_path(p, rec_nr);
-			f_unlink(p);
-			soundengine_backgroundAudioEnd(bg);
-			rec_state = REC_IDLE;
-			rec_note("Recording", "off");
-		}
-		rec_mode = REC_OFF;
+		rec_state = REC_ENDING;		/* finished by rec_process */
 		return;
 	}
-	rec_mode = mode;
+	if(rec_state == REC_ARMED)
+	{
+		rec_disarm();
+		return;
+	}
 	if(rec_state != REC_IDLE)
-		return;		/* armed or running: only the length changes */
+		return;		/* still writing the last file */
+	rec_setLength(len);
+	rec_atPattern = atPattern != 0;
 	const uint8_t bg = soundengine_backgroundAudioBegin();
 	const uint8_t ok = rec_open();
 	soundengine_backgroundAudioEnd(bg);
 	if(!ok)
 	{
-		rec_mode = REC_OFF;
-		activeParameters[PAR_REC] = REC_OFF;
 		rec_note("Recording", "SD card error");
 		return;
 	}
@@ -158,18 +168,28 @@ void rec_arm(const uint8_t mode)
 	rec_error = 0;
 	rec_state = REC_ARMED;
 	char l2[17];
-	snprintf(l2, sizeof(l2), "REC%03u on Play", (unsigned)rec_nr);
+	snprintf(l2, sizeof(l2), "REC%03u %s", (unsigned)rec_nr,
+			(rec_atPattern && seq_isRunning()) ? "on pattern" : "on Play");
 	rec_note("Recording armed", l2);
 }
 
-void rec_seqStart(void)
+static void rec_begin(const uint32_t stepsDone)
 {
-	if(rec_state != REC_ARMED)
-		return;
 	const uint8_t passes = rec_passes(rec_mode);
 	rec_target = passes ? passes * rec_loopSteps() : 0;
-	rec_steps = 0;
+	rec_steps = stepsDone;
 	rec_state = REC_RUNNING;
+}
+void rec_seqStart(void)
+{
+	if(rec_state == REC_ARMED)
+		rec_begin(0);
+}
+void rec_seqPatternStart(void)
+{
+	/* the step that starts now was not counted (rec_seqStep came first) */
+	if(rec_state == REC_ARMED && rec_atPattern)
+		rec_begin(1);
 }
 void rec_seqStep(void)
 {
@@ -211,8 +231,6 @@ static void rec_finish(void)
 	const FRESULT c = f_close(&rec_file);
 	if(res == FR_OK) res = c;
 	rec_state = REC_IDLE;
-	rec_mode = REC_OFF;
-	activeParameters[PAR_REC] = REC_OFF;
 	char l1[17], l2[17];
 	const uint32_t s = rec_bytes / (REC_RATE * 4u);
 	snprintf(l1, sizeof(l1), "%s REC%03u", (res == FR_OK && !rec_error) ? "Saved" : "Error", (unsigned)rec_nr);

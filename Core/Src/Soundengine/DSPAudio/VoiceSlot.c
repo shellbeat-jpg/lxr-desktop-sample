@@ -55,6 +55,8 @@ static void slot_initEngine(VoiceSlot* s, const uint8_t slot)
 	case ENGINE_CYMBAL:	Cymbal_init(&s->u.cymbal, slot);	break;
 	case ENGINE_HIHAT:	HiHat_init(&s->u.hat, slot);		break;
 	case ENGINE_MODAL:	Modal_init(&s->u.modal, slot);		break;
+	case ENGINE_FM2:	Fm2_init(&s->u.fm2, slot);			break;
+	case ENGINE_WAVE:	Wave_init(&s->u.wave, slot);		break;
 	default:			Drum_init(&s->u.drum, slot);		break;
 	}
 }
@@ -184,6 +186,8 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	case ENGINE_CYMBAL:	Cymbal_trigger(&s->u.cymbal, vel, note);			break;
 	case ENGINE_HIHAT:	HiHat_trigger(&s->u.hat, vel, second, note);		break;
 	case ENGINE_MODAL:	Modal_trigger(&s->u.modal, vel, note);				break;
+	case ENGINE_FM2:	Fm2_trigger(&s->u.fm2, vel, note);					break;
+	case ENGINE_WAVE:	Wave_trigger(&s->u.wave, vel, note);				break;
 	default:			Drum_trigger(&s->u.drum, vel, note);				break;
 	}
 	lfo_extraRetrigger(slot, second);	//MOD: 2nd LFOs, track 7 LFO
@@ -276,6 +280,18 @@ static void slot_setFmRole(OscInfo* modOsc, OscInfo* modOsc2, float* modAmount1,
 	}
 }
 //---------------------------------------------------
+//MOD: roles 1-3 of the FM2 and wavetable engines: the pitch EG, as for the drum
+static uint8_t slot_setPitchEgRole(DecayEg* eg, float* amount, const uint8_t role, const uint8_t itg)
+{
+	switch(role)
+	{
+	case 1:	DecayEg_setDecay(eg, itg);					return 1;
+	case 2:	*amount = slot_calcPitchModAmount(itg);		return 1;
+	case 3:	DecayEg_setSlope(eg, itg);					return 1;
+	default:											return 0;
+	}
+}
+//---------------------------------------------------
 uint8_t slot_setRoleParameter(const uint16_t par, const uint8_t itg, const float flt, const uint8_t isFloatModulator)
 {
 	for(uint8_t slot=0;slot<NUM_VOICE_SLOTS;slot++)
@@ -300,6 +316,14 @@ uint8_t slot_setRoleParameter(const uint16_t par, const uint8_t itg, const float
 				break;
 			case ENGINE_MODAL:
 				Modal_setRole(&s->u.modal, role, itg, flt, isFloatModulator);
+				break;
+			case ENGINE_FM2:
+				if(!slot_setPitchEgRole(&s->u.fm2.oscPitchEg, &s->u.fm2.egPitchModAmount, role, itg))
+					Fm2_setRole(&s->u.fm2, role, itg, flt, isFloatModulator);
+				break;
+			case ENGINE_WAVE:
+				if(!slot_setPitchEgRole(&s->u.wave.oscPitchEg, &s->u.wave.egPitchModAmount, role, itg))
+					Wave_setRole(&s->u.wave, role, itg, flt, isFloatModulator);
 				break;
 			case ENGINE_HIHAT:
 				if(role != 6)
