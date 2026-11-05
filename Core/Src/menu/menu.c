@@ -42,6 +42,10 @@
 #include "front.h"
 
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: accent
+#include "Soundengine/DSPAudio/random.h"	//MOD: voice randomization
+#include "Soundengine/Recorder.h"	//MOD: WAV recorder
+#include "Preset/voiceMorph.h"
 #include "Soundengine/Soundengine.h"
 
 
@@ -326,6 +330,17 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_FX_PRESET, CAT_FX, LONG_FX_PRESET},/*TEXT_FX_PRESET*/
 		{SHORT_CUE_MIX, CAT_GLOBAL, LONG_CUE_MIX},/*TEXT_CUE_MIX*/
 		{SHORT_CUE_VOL, CAT_GLOBAL, LONG_CUE_VOL},/*TEXT_CUE_VOL*/
+		{SHORT_STEP_ACCENT, CAT_STEP, LONG_STEP_ACCENT},/*TEXT_STEP_ACCENT*/
+		{SHORT_ACCENT, CAT_GLOBAL, LONG_ACCENT},/*TEXT_ACCENT*/
+		{SHORT_RANDOM, CAT_GLOBAL, LONG_RANDOM},/*TEXT_RANDOM*/
+		{SHORT_REC, CAT_GLOBAL, LONG_REC},/*TEXT_REC*/
+		{SHORT_MDL_MODEL, CAT_VOICE, LONG_MDL_MODEL},/*TEXT_MDL_MODEL*/
+		{SHORT_MDL_DAMP, CAT_VOICE, LONG_MDL_DAMP},/*TEXT_MDL_DAMP*/
+		{SHORT_MDL_POS, CAT_VOICE, LONG_MDL_POS},/*TEXT_MDL_POS*/
+		{SHORT_MDL_INH, CAT_VOICE, LONG_MDL_INH},/*TEXT_MDL_INH*/
+		{SHORT_MDL_HARD, CAT_VOICE, LONG_MDL_HARD},/*TEXT_MDL_HARD*/
+		{SHORT_MDL_MAT, CAT_VOICE, LONG_MDL_MAT},/*TEXT_MDL_MAT*/
+		{SHORT_MDL_EXC, CAT_VOICE, LONG_MDL_EXC},/*TEXT_MDL_EXC*/
 
 
 };
@@ -623,6 +638,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 								DTYPE_MENU | (MENU_RETRIGGER<<8), DTYPE_0B127, DTYPE_VOICE_LFO, DTYPE_TARGET_SELECTION_LFO,
 		/*PAR_OSX*/				DTYPE_0B127,
 		/*PAR_FXA_PRS, PAR_FXB_PRS*/	DTYPE_0B127, DTYPE_0B127,
+		/*PAR_STEP_ACCENT*/		DTYPE_ON_OFF,
+		/*PAR_REC*/				DTYPE_0B127,
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -675,6 +692,8 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_FX_PREFADER*/		DTYPE_ON_OFF,
 		/*PAR_CUE_MIX*/			DTYPE_0B127,	//MOD
 		/*PAR_CUE_VOL*/			DTYPE_0B127,
+		/*PAR_ACCENT*/			DTYPE_0B127,
+		/*PAR_RANDOM*/			DTYPE_0B127,
 };
 //---------------------------------------------------------------
 //MOD: sample start (PWM) and length parameters. Returns the sample the voice
@@ -835,6 +854,18 @@ void menu_updateVoicePages()
 				}
 				if(page == VOICE7_PAGE && par[i] == PAR_VELOD6_CLOSED)
 					par[i] = PAR_VELOD6_OPEN;	//decay B
+				if(engine == ENGINE_MODAL)
+				{
+					//MOD: modal engine: its own names; no oscillator waveform / PWM
+					const int8_t role = kitEngines_modalRole(par[i]);
+					if(role >= 0)
+						text[i] = (uint8_t)(TEXT_MDL_MODEL + role);
+					else if(text[i] == TEXT_WAVEFORM || text[i] == TEXT_PWM)
+					{
+						par[i] = PAR_NONE;
+						text[i] = TEXT_EMPTY;
+					}
+				}
 
 				//slot 6 has decay A (d1, voice 6) and B (d2, voice 7) whatever the
 				//engine, the other slots one decay (also for a hi-hat)
@@ -915,12 +946,18 @@ static uint16_t menu_stockParam(const uint16_t par)
 
 uint16_t menu_paramDtype(const uint16_t par)
 {
+	const int8_t modal = kitEngines_modalRole(par);	//MOD: modal engine
+	if(modal == 0)	return DTYPE_MENU | (MENU_MODAL_MODEL<<8);
+	if(modal == 6)	return DTYPE_MENU | (MENU_MODAL_EXC<<8);
+	if(modal > 0)	return DTYPE_0B127;
 	return parameter_dtypes[menu_stockParam(par)];
 }
 
 //tuning parameters show +-63 around 60 instead of 63
 static uint8_t menu_isTuningParam(const uint16_t parNr)
 {
+	if(kitEngines_modalRole(parNr) >= 0)
+		return 0;
 	switch(menu_stockParam(parNr))
 	{
 	case PAR_COARSE1: case PAR_COARSE2: case PAR_COARSE3: case PAR_COARSE4: case PAR_COARSE5: case PAR_COARSE6:
@@ -1071,7 +1108,17 @@ static uint8_t menu_morphEditHeld = 0;
 static uint8_t menu_fxKnobShown = 0;
 static uint32_t menu_fxKnobTimer = 0;
 //MOD: cue overlay (SHIFT + step button 1-7), shown for 1.5 s like the knob overlay
-static uint8_t menu_cueShown = 0;
+static uint8_t menu_cueShown = 0;	//1: cue, 2: a note (menu_showNote)
+static char menu_note[2][17];
+void menu_showNote(const char* l1, const char* l2)
+{
+	snprintf(menu_note[0], 17, "%s", l1);
+	snprintf(menu_note[1], 17, "%s", l2);
+	menu_cueShown = 2;
+	menu_fxKnobShown = 0;
+	menu_fxKnobTimer = systick_ticks;
+	menu_repaintAll();
+}
 void menu_showCue(void)
 {
 	menu_cueShown = 1;
@@ -1083,6 +1130,12 @@ static void menu_repaintCue(void)
 {
 	memset(&editDisplayBuffer[0][0], ' ', 16);
 	memset(&editDisplayBuffer[1][0], ' ', 16);
+	if(menu_cueShown == 2)
+	{
+		memcpy(&editDisplayBuffer[0][0], menu_note[0], strlen(menu_note[0]));
+		memcpy(&editDisplayBuffer[1][0], menu_note[1], strlen(menu_note[1]));
+		return;
+	}
 	memcpy(&editDisplayBuffer[0][0], mixer_cueTracks ? "Cue on St2" : "Cue off", mixer_cueTracks ? 10 : 7);
 	for(uint8_t t=0;t<7;t++)
 		editDisplayBuffer[1][t] = (mixer_cueTracks & (1u << t)) ? (char)('1' + t) : '-';
@@ -1285,6 +1338,75 @@ static void menu_fxPresetClick(const uint16_t p)
 }
 static void menu_encoderChangeParameter(int8_t inc);
 static uint16_t menu_currentParamNr(void);
+static uint8_t menu_waveSkipGap(const uint8_t v, const int16_t dir);
+//MOD: SHIFT + encoder click on a voice page (outside the edit view): randomize the
+//sound of the active voice by "rnd" (PERF page). Pages OSC .. filter; the LFO and MIX
+//pages (volume, pan, output ...), engine, sends and modulation targets stay.
+static float menu_randomAmount = 0.25f;
+static uint8_t menu_randomUnit(void)
+{
+	return (uint8_t)(GetRngValue() & 0xFFu);
+}
+static void menu_randomizeVoice(void)
+{
+	if(menu_activePage > VOICE7_PAGE)
+		return;
+	const float amt = menu_randomAmount;
+	uint8_t changed = 0;
+	for(uint8_t sub=0;sub<6;sub++)
+	{
+		const Page* pg = menu_getPage(menu_activePage, sub);
+		for(uint8_t i=0;i<8;i++)
+		{
+			const uint16_t p = pgm_read_word(&pg->bot1 + i);
+			if(p == PAR_NONE || p >= END_OF_SOUND_PARAMETERS || p == PAR_CHOKE_GROUP)
+				continue;	//the choke group is a kit setting (the AEG page shows it)
+			if(p >= PAR_AUDIO_OUT1 && p <= PAR_AUDIO_OUT6)
+				continue;
+			const uint16_t dt = menu_paramDtype(p);
+			int16_t lo = 0, hi = 127;
+			uint8_t pick = 0;	//choice: a random entry with the probability "amt"
+			switch(dt & 0xFF)
+			{
+			case DTYPE_0B127: case DTYPE_PM63: case DTYPE_NOTE_NAME:	break;
+			case DTYPE_0B100:	hi = 100;	break;
+			case DTYPE_0B15:	hi = 15;	break;
+			case DTYPE_1B16:	lo = 1; hi = 16;	break;
+			case DTYPE_1B64:	lo = 1; hi = 64;	break;
+			case DTYPE_ON_OFF: case DTYPE_0b1:	hi = 1; pick = 1;	break;
+			case DTYPE_MENU:	hi = (int16_t)getMaxEntriesForMenu((uint8_t)(dt >> 8)) - 1; pick = 1;	break;
+			default:	continue;	//targets, voice numbers, 0..255
+			}
+			if(hi <= lo)
+				continue;
+			int16_t v = activeParameters[p];
+			if(pick)
+			{
+				if(menu_randomUnit() < (uint8_t)(amt * 255.f))
+					v = (int16_t)(lo + (int16_t)(GetRngValue() % (uint32_t)(hi - lo + 1)));
+			}
+			else
+			{
+				const float r = menu_randomUnit() / 127.5f - 1.f;	//-1 .. 1
+				v = (int16_t)(v + r * amt * (float)(hi - lo) + (r < 0 ? -0.5f : 0.5f));
+			}
+			if(v < lo) v = lo;
+			if(v > hi) v = hi;
+			if((dt & 0xFF) == DTYPE_MENU && (dt >> 8) == MENU_WAVEFORM)
+				v = menu_waveSkipGap((uint8_t)v, 1);
+			if(v == activeParameters[p])
+				continue;
+			activeParameters[p] = (uint8_t)v;
+			if(p < 128)	frontPanel_sendData(MIDI_CC, (uint8_t)p, (uint8_t)v);
+			else		frontPanel_sendData(CC_2, (uint8_t)(p - 128), (uint8_t)v);
+			voiceMorph_paramEdited(p);
+			changed++;
+		}
+	}
+	char l2[17];
+	snprintf(l2, sizeof(l2), "%u%% %u changed", (unsigned)(amt * 100.f + 0.5f), (unsigned)changed);
+	menu_showNote("Random voice", l2);
+}
 //MOD: edit view of OSX, CHK or MRV: a voice button switches that voice (as the
 //encoder does for the active voice)
 uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
@@ -1308,7 +1430,7 @@ uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
 //MOD: the FX send level a menu entry shows (kit data), NULL for other parameters
 static uint8_t* menu_sendLevel(const uint16_t p)
 {
-	if(menu_isFxPreset(p))	//MOD: FX preset list (index)
+	if(menu_isFxPreset(p) || p == PAR_REC)	//MOD: FX preset list (index), WAV recorder mode
 		return &activeParameters[p];
 	if(p >= PAR_FX_SEND1 && p <= PAR_FX_SEND6)
 		return &kitEngines[KIT_SEND_OFFSET + (p - PAR_FX_SEND1)];
@@ -1327,6 +1449,16 @@ static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const 
 	if(menu_isFxPreset(p))	//MOD: FX preset
 	{
 		menu_fxPresetText(v, out, isLong);
+		return 1;
+	}
+	if(p == PAR_REC)	//MOD: WAV recorder: mode, or what it does now
+	{
+		static const char* const s[REC_NUM_MODES] = { "off", "x1 ", "x2 ", "x4 ", "end" };
+		static const char* const l[REC_NUM_MODES] = { "off", "1 pass", "2 passes", "4 passes", "until stop" };
+		const uint8_t m = v < REC_NUM_MODES ? v : 0;
+		if(rec_state == REC_RUNNING || rec_state == REC_ENDING)	strcpy(out, isLong ? "recording" : "rec");
+		else if(rec_state == REC_ARMED && isLong)	snprintf(out, 17, "armed %s", l[m]);
+		else	strcpy(out, isLong ? l[m] : s[m]);
 		return 1;
 	}
 	if(p == PAR_T7_WAVE)	//MOD: track 7 waveform
@@ -2606,7 +2738,7 @@ void menu_repaintGeneric()
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
-			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr))
+			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr) || parNr == PAR_REC)
 			{
 				//MOD: track 7, right aligned
 				char t[17];
@@ -3851,6 +3983,10 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 		return ppqInNames[0][0];
 	case MENU_MIX_FM:
 		return mixFmNames[0][0];
+	case MENU_MODAL_MODEL:
+		return modalModelNames[0][0];
+	case MENU_MODAL_EXC:
+		return modalExcNames[0][0];
 
 	case MENU_FX:
 		return fxNames[0][0];
@@ -3960,6 +4096,12 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 	case MENU_MIX_FM:
 		p = MENU_ITEM(mixFmNames);
 		break;
+	case MENU_MODAL_MODEL:
+		p = MENU_ITEM(modalModelNames);
+		break;
+	case MENU_MODAL_EXC:
+		p = MENU_ITEM(modalExcNames);
+		break;
 
 	case MENU_FX:
 		p = MENU_ITEM(fxNames);
@@ -4039,6 +4181,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				if(s == 5 && !lfo)	s = 0;
 				if(s > 5)			s = 0;
 				menu_lastStepGrid = s;
+			}
+			else if(!editModeActive && menu_activePage <= VOICE7_PAGE && buttonHandler_getShift())
+			{
+				menu_randomizeVoice();	//MOD
 			}
 			else if(menu_activePage == SEQ_PAGE && menu_getSubPage() == 1 && buttonHandler_getShift())
 			{
@@ -4338,9 +4484,12 @@ static void menu_encoderChangeParameter(int8_t inc)
 				: paramNr == PAR_T7_WAVE ? getMaxEntriesForMenu(MENU_WAVEFORM)
 				: paramNr == PAR_T7_COARSE ? 2 * KIT_T7_COARSE_ZERO
 				: (paramNr >= PAR_T7_SENDA && paramNr <= PAR_T7_PAN) ? 128
-				: menu_isFxPreset(paramNr) ? (menu_fxUserRead(), menu_fxPresetCount() - 1) : 127;	//MOD
+				: menu_isFxPreset(paramNr) ? (menu_fxUserRead(), menu_fxPresetCount() - 1)
+				: paramNr == PAR_REC ? REC_NUM_MODES - 1 : 127;	//MOD
 		*s = (uint8_t)(v < 0 ? 0 : v > max ? max : v);
 		activeParameters[paramNr] = *s;
+		if(paramNr == PAR_REC)
+			rec_arm(*s);	//MOD: WAV recorder: arm, change the length, or off
 		return;
 	}
 	//MOD: FX slot order / delay sync: a list of names
@@ -5207,6 +5356,18 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 	case PAR_FX_PREFADER:	//MOD
 		if(value > 1) value = activeParameters[paramNr] = 0;
 		mixer_preFader = value;
+		break;
+	case PAR_STEP_ACCENT:	//MOD: accent of the selected step
+		if(value > 1) value = activeParameters[paramNr] = 1;
+		seq_setStepAccent(value);
+		break;
+	case PAR_ACCENT:	//MOD: +0.2 .. +6 dB (0: older settings)
+		if(value == 0 || value > 127) value = activeParameters[paramNr] = 64;
+		slot_accentAmount = 1.f + value / 127.f;
+		break;
+	case PAR_RANDOM:	//MOD: voice randomization (0: older settings)
+		if(value == 0 || value > 127) value = activeParameters[paramNr] = 32;
+		menu_randomAmount = value / 127.f;
 		break;
 	case PAR_CUE_MIX:	//MOD: cue (0) .. main (127) on St2
 		if(value > 127) value = activeParameters[paramNr] = 0;

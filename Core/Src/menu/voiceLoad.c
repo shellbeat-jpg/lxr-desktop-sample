@@ -25,7 +25,7 @@ static uint8_t voiceLoad_voice;		//track 0-6 (6 = 2nd trigger of slot 6)
 static uint8_t voiceLoad_kit;		//position in the kit list of the listed project
 
 static const char* const voiceLoad_voiceNames[7] = { "Drum 1", "Drum 2", "Drum 3", "Snare", "Cymbal", "CL HH", "OP HH" };
-static const char* const voiceLoad_engineNames[NUM_ENGINES] = { "drm", "snr", "cym", "hht" };
+static const char* const voiceLoad_engineNames[NUM_ENGINES] = { "drm", "snr", "cym", "hht", "mdl" };
 
 //MOD voice INIT: an "INIT" row between "Change Project" and kit 0. Its menu
 //loads the voice's INIT (project template, else global template, else the

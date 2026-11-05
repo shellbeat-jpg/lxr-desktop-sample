@@ -52,7 +52,7 @@ void frontParser_parseNrpn(uint8_t value)
 	if(paramNr == PAR_SLOT_ENGINE)
 	{
 		//engine command (the sound engine has already switched): not stored in the kit
-		kitEngines_assign((uint8_t)(value>>2), (uint8_t)(value&3));
+		kitEngines_assign(SLOT_ENGINE_CMD_SLOT(value), SLOT_ENGINE_CMD_ENGINE(value));
 		return;
 	}
 

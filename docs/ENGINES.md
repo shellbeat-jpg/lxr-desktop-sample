@@ -2,7 +2,8 @@
 
 > From [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/blob/v1.2/docs/ENGINES.md)
 > by Moritz Waser (tunefish), the base of this fork, unchanged below this note. See
-> [SAMPLES.md](SAMPLES.md) for what this fork adds.
+> [SAMPLES.md](SAMPLES.md) for what this fork adds, among it a fifth engine, `modal` (engine 4,
+> NRPN 98 value 24 + slot; see [SAMPLES.md](SAMPLES.md#modal-engine-1211-test)).
 
 Each of the 6 voice slots can run any of the 4 engines: drum, snare, cymbal or hi-hat. Track 7
 is always the second trigger of slot 6, for any engine: track 6 plays with decay A, track 7 with

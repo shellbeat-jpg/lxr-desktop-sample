@@ -187,6 +187,19 @@ uint8_t kitEngines_rolePar2Slot(const uint16_t par)
 	return NUM_VOICE_SLOTS;
 }
 //---------------------------------------------------
+int8_t kitEngines_modalRole(const uint16_t par)
+{
+	const uint8_t slot = kitEngines_rolePar2Slot(par);
+	if(slot >= NUM_VOICE_SLOTS || kitEngines[slot] != ENGINE_MODAL)
+		return -1;
+	for(uint8_t role=0;role<NUM_SLOT_ROLES;role++)
+	{
+		if(slot_rolePar[slot][role] == par)
+			return (int8_t)role;
+	}
+	return -1;
+}
+//---------------------------------------------------
 static void kitEngines_sendPar(const uint8_t par)
 {
 	if(par < 128)
@@ -459,6 +472,17 @@ static void kitEngines_reset(const uint8_t slot, const uint8_t engine)
 	if(kitEngines_smpLenPar(slot) != PAR_NONE)
 	{
 		activeParameters[kitEngines_smpLenPar(slot)] = 0;	//MOD: sample length "all"
+	}
+	if(engine == ENGINE_MODAL)
+	{
+		//MOD: its own settings (the drum's would mean something else): a marimba-like
+		//bar, long amp decay (the modes' damping sets the length)
+		static const uint8_t modalInit[NUM_SLOT_ROLES] = { 1, 70, 30, 0, 80, 60, 0 };
+		for(uint8_t role=0;role<NUM_SLOT_ROLES;role++)
+			activeParameters[slot_rolePar[slot][role]] = modalInit[role];
+		activeParameters[PAR_VELOD1 + 2*slot] = 110;
+		if(slot == NUM_VOICE_SLOTS-1)
+			activeParameters[PAR_VELOD6_OPEN] = 110;
 	}
 
 	//the slot's own LFO and velocity modulation start off (copied targets would

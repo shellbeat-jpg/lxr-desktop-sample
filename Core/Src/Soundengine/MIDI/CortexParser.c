@@ -730,7 +730,10 @@ static void frontParser_handleSeqCC()
 		break;
 
 	case FRONT_SEQ_NOTE:
-		seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep].note = cortex_midiMsg.data2;
+		{	//MOD: keep the accent (bit 7)
+			Step* st = &seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep];
+			st->note = (uint8_t)((st->note & 0x80u) | (cortex_midiMsg.data2 & 0x7fu));
+		}
 		break;
 
 	case FRONT_SEQ_VOLUME:
@@ -930,7 +933,9 @@ static void frontParser_handleSeqCC()
 
 		uart_sendFrontpanelByte(FRONT_SEQ_CC);
 		uart_sendFrontpanelByte(FRONT_SEQ_NOTE);
-		uart_sendFrontpanelByte(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].note);
+		uart_sendFrontpanelByte(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].note & 0x7fu);
+		//MOD: the accent goes straight to the menu (same chip)
+		activeParameters[PAR_STEP_ACCENT] = seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].note >> 7;
 
 		uart_sendFrontpanelByte(FRONT_SEQ_CC);
 		uart_sendFrontpanelByte(FRONT_SEQ_PROB);

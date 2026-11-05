@@ -15,6 +15,7 @@
 #include <string.h>
 #include "menu/menu.h"
 #include "Soundengine/DSPAudio/mixer.h"
+#include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: accent
 #include "math.h"
 #include "stdlib.h"
 
@@ -282,10 +283,11 @@ void adc_checkFaders()
 //------------------------------------------------------------------------
 float adc_getFaderVolumeRaw(uint8_t idx)
 {
+	//MOD: times the accent of the slot's last trigger
 #if USE_FADER_VOLUME
-	return adc_faderValues[idx];
+	return adc_faderValues[idx] * slot_accentGain[idx];
 #else
-	return 1.f;
+	return slot_accentGain[idx];
 #endif
 }
 //MOD: with pre-fader sends the mixer applies the fader after the sends

@@ -13,6 +13,7 @@
 
 #include "Soundengine/DSPAudio/mixer.h"
 #include "Soundengine/DSPAudio/DjFilter.h"
+#include "Soundengine/Recorder.h"	//MOD
 #include "Soundengine/config.h"
 #include "Soundengine/AudioCodecManager.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
@@ -672,6 +673,7 @@ IN_ITCM_RAM static inline void mixer_calcVoiceAsync(VoiceSlot* s)
 	case ENGINE_SNARE:	Snare_calcAsync(&s->u.snare);		break;
 	case ENGINE_CYMBAL:	Cymbal_calcAsync(&s->u.cymbal);	break;
 	case ENGINE_HIHAT:	HiHat_calcAsync(&s->u.hat);		break;
+	case ENGINE_MODAL:	Modal_calcAsync(&s->u.modal);		break;
 	default:			calcDrumVoiceAsync(&s->u.drum);	break;
 	}
 }
@@ -682,6 +684,7 @@ IN_ITCM_RAM static inline void mixer_calcVoiceSyncBlock(VoiceSlot* s, int16_t* b
 	case ENGINE_SNARE:	Snare_calcSyncBlock(&s->u.snare, buf, OUTPUT_DMA_SIZE);		break;
 	case ENGINE_CYMBAL:	Cymbal_calcSyncBlock(&s->u.cymbal, buf, OUTPUT_DMA_SIZE);	break;
 	case ENGINE_HIHAT:	HiHat_calcSyncBlock(&s->u.hat, buf, OUTPUT_DMA_SIZE);		break;
+	case ENGINE_MODAL:	Modal_calcSyncBlock(&s->u.modal, buf, OUTPUT_DMA_SIZE);		break;
 	default:			calcDrumVoiceSyncBlock(&s->u.drum, buf, OUTPUT_DMA_SIZE);		break;
 	}
 }
@@ -887,6 +890,8 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	//bring the sums back into the 16-bit range of the DACs
 	mixer_limitBlock(&mixer_limiterGain[0], mix, output);
 	mixer_limitBlock(&mixer_limiterGain[1], mix2, output2);
+	if(rec_state == REC_RUNNING)	//MOD: WAV recorder: St1 (on the jacks of St2 without a cable in St1)
+		rec_push((l1_Available && r1_Available) ? output2 : output);
 /*
 	if(activeParameters[UNUSED_PAR_GLO_SAT])
 	{

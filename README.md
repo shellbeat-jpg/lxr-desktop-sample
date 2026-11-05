@@ -48,6 +48,11 @@ All modulation and step automation targets with their display names: [docs/MOD_T
 | OSX *(1.2.11, not released yet)* | Exclude single voices from the global sample rate (`SR` / `0sr`). | PERF (`OSX`, on/off for the active voice) | Kit | – |
 | FX presets *(1.2.11, not released yet)* | List for FX1/FX2: 17 factory presets (delay, distortion, compressor, ring mod) and 8 user presets per project; load/save with an encoder click. | FX setup page (`PRS`) | user: project (`FXPRESET.BIN`) | – |
 | Cue *(1.2.11, not released yet)* | Pre-listening on St2 (pre-fader, also muted tracks); `CMX` cue/main mix, `CVL` level. | SHIFT + step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
+| Fast rolls *(1.2.11, not released yet)* | Roll rates `24`, `32`, `48` (1/16 triplets, 1/32, 1/32 triplets). | PERF (`ROL`) | – | – |
+| Step accent *(1.2.11, not released yet)* | Accent per step, `ACA` = level (+0.1 … +6 dB). | Step page (`ACC`), CONFIG 2 (`ACA`) | Pattern (`ACC`), global (`ACA`) | – |
+| Random voice *(1.2.11, not released yet)* | SHIFT + encoder click on a voice page varies the active voice by `RND`; volume, pan, output, sends, LFO and engine stay. | Voice pages, PERF (`RND`) | Global (`RND`) | – |
+| WAV recorder *(1.2.11, not released yet)* | Records St1 to the SD card (`REC/RECnnn.WAV`, 16 bit stereo): 1, 2 or 4 passes of the pattern or until stop. | PERF, last screen (`REC`) | – | – |
+| Modal engine *(1.2.11, not released yet)* | Fifth engine: physical model of a struck membrane, bar, string, bell, plate or glass (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 
 ### Sequencer / tracks
 

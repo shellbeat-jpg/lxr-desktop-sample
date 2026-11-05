@@ -43,6 +43,8 @@
 #define MENU_STEP_FLAM	 	24
 #define MENU_STEP_SHIFT	 	25
 #define MENU_AUDIO_OUT_FX	26
+#define MENU_MODAL_MODEL	27	//MOD: modal engine
+#define MENU_MODAL_EXC		28
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -284,7 +286,7 @@ const char lfoWaveNames[][4]  =
 //-----------------------------------------------------------------
 const char rollRateNames[][4]  =
 {
-	{6},		//number of entries
+	{9},		//number of entries (MOD: with 24, 32, 48)
 	{"One"},		
 	{"1/1"},		
 	{"1/2"},
@@ -380,6 +382,24 @@ const char midiRoutingNames[][6] =
 		{"A2M"},
 		{"M2U"},
 		{"M2A"},
+};
+//-----------------------------------------------------------------
+//MOD: modal engine: the resonator models and exciters
+const char modalModelNames[][4] =
+{
+		{6},	// number of entries
+		{"mem"},	// membrane
+		{"bar"},	// free bar (marimba)
+		{"str"},	// string / tube (harmonic)
+		{"bel"},	// bell
+		{"plt"},	// plate
+		{"gls"},	// glass / bowl
+};
+const char modalExcNames[][4] =
+{
+		{2},	// number of entries
+		{"mal"},	// mallet (soft pulse)
+		{"nse"},	// noise burst
 };
 //-----------------------------------------------------------------
 const char mixFmNames[][6] =
@@ -546,6 +566,17 @@ const char shortNames[][4]  =
 	{"prs"},	//MOD: FX preset
 	{"cmx"},	//MOD: cue mix
 	{"cvl"},	//MOD: cue level
+	{"acc"},	//MOD: step accent
+	{"aca"},	//MOD: accent level
+	{"rnd"},	//MOD: randomization strength
+	{"rec"},	//MOD: WAV recorder
+	{"mdl"},	//MOD: modal engine
+	{"dmp"},
+	{"pos"},
+	{"inh"},
+	{"hrd"},
+	{"mat"},
+	{"exc"},
 
 };
 //-----------------------------------------------------------------
@@ -721,6 +752,17 @@ const char longNames[][16] =
 	{"Preset"},		//MOD
 	{"Cue mix"},	//MOD
 	{"Cue level"},	//MOD
+	{"Accent"},		//MOD
+	{"Accent lvl"},	//MOD
+	{"Random"},		//MOD
+	{"Record WAV"},	//MOD
+	{"Model"},		//MOD: modal engine
+	{"Damping"},	//MOD
+	{"Strike pos."},	//MOD
+	{"Inharmonic"},	//MOD
+	{"Hardness"},	//MOD
+	{"Material"},	//MOD
+	{"Exciter"},	//MOD
 };
 
 

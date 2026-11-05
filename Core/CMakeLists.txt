@@ -81,6 +81,7 @@ add_library(lxr_dsp OBJECT
     Src/Soundengine/DSPAudio/dither.c
     Src/Soundengine/DSPAudio/DrumVoice.c
     Src/Soundengine/DSPAudio/HiHat.c
+    Src/Soundengine/DSPAudio/ModalVoice.c
     Src/Soundengine/DSPAudio/lfo.c
     Src/Soundengine/DSPAudio/mixer.c
     Src/Soundengine/DSPAudio/modulationNode.c
@@ -118,6 +119,7 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/FIFO.c
     Src/Soundengine/FxBus.c
     Src/Soundengine/Soundengine.c
+    Src/Soundengine/Recorder.c
     Src/Soundengine/TriggerOut.c
 )
 
@@ -175,6 +177,7 @@ set(LXR_ITCM_SOURCES
     Src/Soundengine/DSPAudio/DjFilter.c
     Src/Soundengine/DSPAudio/DrumVoice.c
     Src/Soundengine/DSPAudio/HiHat.c
+    Src/Soundengine/DSPAudio/ModalVoice.c
     Src/Soundengine/DSPAudio/lfo.c
     Src/Soundengine/DSPAudio/mixer.c
     Src/Soundengine/DSPAudio/modulationNode.c

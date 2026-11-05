@@ -360,4 +360,6 @@ uint8_t seq_getStepIndex(uint8_t trackNr);
 PatternSet* get_seq_patternSet_p(void);
 uint8_t seq_getActiveAutomationTrack(void);
 
+//MOD: accent of the selected step (stored in bit 7 of its note)
+void seq_setStepAccent(const uint8_t on);
 #endif /* SEQUENCER_H_ */

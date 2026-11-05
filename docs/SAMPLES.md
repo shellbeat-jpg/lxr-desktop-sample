@@ -566,6 +566,76 @@ the LFO. Selecting another page or voice starts with the LFO again.
 - The settings are kit data (part `LFX`, also in voice load and INIT templates): not morphed,
   not recorded as step automation, no MIDI CC.
 
+## Fast rolls: 1/24, 1/32, 1/48 (1.2.11)
+
+The PERF roll rate `ROL` has three more values between `16` and `64`: `24` (1/16 triplets),
+`32` (1/32 notes) and `48` (1/32 triplets). They work like the other rates and follow the tempo;
+the repeats sit on the sequencer's tick grid (24 ticks per 1/16 step), like the flams.
+
+## Step accent (1.2.11)
+
+Each step can be accented: `ACC` on the first step page (after `PRB`), on/off for the selected
+step. An accented step plays louder by `ACA` (CONFIG, second page, last position, global):
+1 … 127 = +0.1 … +6 dB, default 64 (about +3.5 dB). The accent raises the voice's fader level for
+that trigger (so with `PRE` = `ON` the sends stay as they are); the next trigger without accent
+plays at the normal level again. Stored in the step (bit 7 of its note; older patterns have no
+accents, other firmwares play an accented step with a wrong pitch). Copying a step or a pattern
+copies its accents.
+
+## Random voice (1.2.11)
+
+SHIFT + encoder click on a voice page (OSC, AEG, MOD, FM, transient, filter; not in the edit
+view) changes the sound of the active voice at random, by the strength `RND` (PERF page, after
+`CVL`, global, default 32): values move by up to ±`RND`/127 of their range around the current
+setting, switch-like values (waveform, filter type, …) change with that probability. The volume,
+pan, output, sends, LFO, choke group and engine stay. The display shows how many values changed;
+press again for the next variation, voice LOAD (or not saving) brings the old sound back.
+
+## WAV recorder (1.2.11)
+
+`REC` on the last PERF screen records the mix as a WAV file to the SD card, in real time:
+16 bit stereo, 44.1 kHz, the signal of the St1 jacks after FX3, DJ filter and limiter (without a
+cable in St1 the signal of the St2 jacks, see [cue](#cue-on-st2-1211)).
+
+| `REC` | Length |
+|---|---|
+| `off` | no recording / stop |
+| `x1`, `x2`, `x4` | 1, 2 or 4 passes of the longest track of the playing pattern |
+| `end` | until the sequencer stops |
+
+Choosing a length arms the recorder: it creates the next free file `REC/REC001.WAV` … `REC999`
+and reserves the space. The recording starts with the sequencer (PLAY) and ends after the passes,
+at STOP or with `off`; the display shows the file name and its length (`Saved REC003 1:32`).
+`off` while armed deletes the empty file. If the card is too slow, the gaps are counted and
+shown (`2 gaps`): use a fast card (class 10 / U1). Card full: the recording ends there and keeps
+what was written. Loading or saving kits and projects during a recording can cause gaps.
+
+## Modal engine (1.2.11, test)
+
+A fifth voice engine, `modal`: a physical model of a struck body (membrane, bar, string, bell,
+plate, glass). Six resonators ring at the body's mode frequencies; a mallet or a noise burst
+strikes them. Choose it like the other engines (SHIFT + KIT, `modal`); the voice uses the pages
+of the drum engine:
+
+| Page | Displayed name | Name | Description |
+|---|---|---|---|
+| OSC | `COA`, `FIN` | Coarse, Fine | the pitch of the first mode (the note follows) |
+| MOD | `DMP` | Damping | decay time of the modes, 30 ms … 6 s |
+| MOD | `INH` | Inharmonic | stiffness: the higher modes spread upwards (piano-like strings, detuned bars) |
+| MOD | `POS` | Strike pos. | edge (0) … centre (127): modes with a node at the strike position get quiet |
+| FM | `HRD` | Hardness | soft (0: long pulse, dark) … hard (127: click, bright) mallet |
+| FM | `MAT` | Material | 0 = all modes ring equally long (metal) … 127 = high modes die fast (wood) |
+| FM | `MDL` | Model | `mem` membrane, `bar` free bar (marimba), `str` string/tube, `bel` bell, `plt` plate, `gls` glass/bowl |
+| FM | `EXC` | Exciter | `mal` mallet pulse, `nse` noise burst |
+
+The amp EG still applies (new voice: decay 110, so the damping sets the length), so do the filter,
+the transient sample (it strikes the resonators too, e.g. a click or noise as exciter), the
+distortion, the LFO, velocity and the mix page. A new strike adds to the ringing modes instead
+of restarting them. LFO, velocity and step automation targets on the engine settings are named
+as in the table. Stored in the kit as engine 4: firmwares without it (OpenElixir-02, OE02-Samples+
+before 1.2.11) play such a voice with its stock engine. MIDI: NRPN 98 value 24 + slot (0 … 5).
+A test: the sound and its parameters may still change.
+
 ## Voice INIT
 
 Hold **LOAD** and press the step button of a voice (1-7). From kit 0 turn the encoder one step back:
@@ -603,5 +673,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.10 were tried on the device
-before their release. Host tests (Linux, gcc) for import and playback:
+before their release. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.

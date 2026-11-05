@@ -23,6 +23,7 @@
 #include "Soundengine/DSPAudio/Snare.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/DSPAudio/HiHat.h"
+#include "Soundengine/DSPAudio/ModalVoice.h"	//MOD: test engine
 #include "Parameters.h"
 
 #define NUM_VOICE_SLOTS	6
@@ -35,6 +36,7 @@ enum VoiceEngine
 	ENGINE_SNARE	= 1,
 	ENGINE_CYMBAL	= 2,
 	ENGINE_HIHAT	= 3,
+	ENGINE_MODAL	= 4,	//MOD: physical model (test)
 	NUM_ENGINES
 };
 
@@ -47,6 +49,7 @@ typedef struct
 		SnareVoice	snare;
 		CymbalVoice	cymbal;
 		HiHatVoice	hat;
+		ModalVoice	modal;
 	} u;
 	uint8_t		engine;		//enum VoiceEngine
 	float		decay[2];	//slot 6 only: amp decay of track 6 [0] and track 7 [1]
@@ -61,8 +64,11 @@ extern VoiceSlot voiceSlots[NUM_VOICE_SLOTS];
 //kit format: never change it.
 extern const uint8_t slot_rolePar[NUM_VOICE_SLOTS][NUM_SLOT_ROLES];
 
-//write-only command (NRPN 98, not stored in kits): value = slot*4 + engine
+//write-only command (NRPN 98, not stored in kits): value = slot*4 + engine for
+//the engines 0..3, MOD: 24 + slot for the modal engine
 #define PAR_SLOT_ENGINE	PAR_UNUSED_6
+#define SLOT_ENGINE_CMD_SLOT(v)		((uint8_t)((v) < 24u ? (v)>>2 : (v)-24u))
+#define SLOT_ENGINE_CMD_ENGINE(v)	((uint8_t)((v) < 24u ? (v)&3u : ENGINE_MODAL))
 
 //the engine every slot has in the stock firmware (and in kits without engine data)
 uint8_t slot_stockEngine(const uint8_t slot);
@@ -89,6 +95,11 @@ extern uint8_t slot_t7Playing;
 extern uint8_t slot_cueOnly[NUM_VOICE_SLOTS];
 extern uint8_t slot_triggerCueOnly;
 void slot_clearCueOnly(const uint8_t track);	//the track was unmuted (7: all)
+//MOD: accent: slot_accentGain[slot] = the gain of the slot's last trigger (accented step:
+//slot_accentAmount, else 1); the sequencer sets slot_triggerAccent around the trigger
+extern float slot_accentGain[NUM_VOICE_SLOTS];
+extern float slot_accentAmount;
+extern uint8_t slot_triggerAccent;
 
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);

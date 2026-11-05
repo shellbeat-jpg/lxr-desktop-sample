@@ -20,6 +20,11 @@ Waser), alles andere aus OE02-Samples+.
 | OSX *(1.2.11, noch nicht veröffentlicht)* | Einzelne Voices von der globalen Samplerate (`SR` / `0sr`) ausnehmen. | PERF (`OSX`, an/aus für die aktive Voice) | Kit | – |
 | FX presets *(1.2.11, noch nicht veröffentlicht)* | Liste für FX1/FX2: 17 Werks-Presets (Delay, Distortion, Kompressor, Ring-Mod) und 8 eigene pro Projekt; Laden/Speichern per Encoder-Klick. | FX-Setup-Seite (`PRS`) | eigene: Projekt (`FXPRESET.BIN`) | – |
 | Cue *(1.2.11, noch nicht veröffentlicht)* | Vorhören auf St2 (vor dem Fader, auch gemutete Tracks); `CMX` Cue/Main-Mix, `CVL` Pegel. | SHIFT + Step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
+| Schnelle Rolls *(1.2.11, noch nicht veröffentlicht)* | Roll-Raten `24`, `32`, `48` (1/16-Triolen, 1/32, 1/32-Triolen). | PERF (`ROL`) | – | – |
+| Step-Akzent *(1.2.11, noch nicht veröffentlicht)* | Akzent pro Step, `ACA` = Stärke (+0,1 … +6 dB). | Step-Seite (`ACC`), CONFIG 2 (`ACA`) | Pattern (`ACC`), global (`ACA`) | – |
+| Zufalls-Voice *(1.2.11, noch nicht veröffentlicht)* | SHIFT + Encoder-Klick auf einer Voice-Seite variiert die aktive Voice um `RND`; Lautstärke, Pan, Ausgang, Sends, LFO und Engine bleiben. | Voice-Seiten, PERF (`RND`) | Global (`RND`) | – |
+| WAV-Recorder *(1.2.11, noch nicht veröffentlicht)* | Nimmt St1 auf die SD-Karte auf (`REC/RECnnn.WAV`, 16 Bit Stereo): 1, 2 oder 4 Durchläufe des Patterns oder bis Stop. | PERF, letzter Screen (`REC`) | – | – |
+| Modal-Engine *(1.2.11, noch nicht veröffentlicht)* | Fünfte Engine: Physical Modelling einer angeschlagenen Membran, eines Stabs, einer Saite, Glocke, Platte oder eines Glases (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 
 ## Sequencer / Tracks
 

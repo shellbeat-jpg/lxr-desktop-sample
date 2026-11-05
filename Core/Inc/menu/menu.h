@@ -334,6 +334,17 @@ enum NamesEnum
 	TEXT_FX_PRESET,	//MOD: FX preset list
 	TEXT_CUE_MIX,	//MOD: cue
 	TEXT_CUE_VOL,
+	TEXT_STEP_ACCENT,	//MOD: accent
+	TEXT_ACCENT,
+	TEXT_RANDOM,		//MOD: voice randomization strength
+	TEXT_REC,			//MOD: WAV recorder
+	TEXT_MDL_MODEL,		//MOD: modal engine (roles 0..6)
+	TEXT_MDL_DAMP,
+	TEXT_MDL_POS,
+	TEXT_MDL_INH,
+	TEXT_MDL_HARD,
+	TEXT_MDL_MAT,
+	TEXT_MDL_EXC,
 
 
 	NUM_NAMES
@@ -485,7 +496,18 @@ enum shortNamesEnum
 	SHORT_OSX,
 	SHORT_FX_PRESET,
 	SHORT_CUE_MIX,
-	SHORT_CUE_VOL
+	SHORT_CUE_VOL,
+	SHORT_STEP_ACCENT,
+	SHORT_ACCENT,
+	SHORT_RANDOM,
+	SHORT_REC,
+	SHORT_MDL_MODEL,
+	SHORT_MDL_DAMP,
+	SHORT_MDL_POS,
+	SHORT_MDL_INH,
+	SHORT_MDL_HARD,
+	SHORT_MDL_MAT,
+	SHORT_MDL_EXC
 
 	
 };
@@ -659,7 +681,18 @@ enum longNamesEnum
 	LONG_OSX,
 	LONG_FX_PRESET,
 	LONG_CUE_MIX,
-	LONG_CUE_VOL
+	LONG_CUE_VOL,
+	LONG_STEP_ACCENT,
+	LONG_ACCENT,
+	LONG_RANDOM,
+	LONG_REC,
+	LONG_MDL_MODEL,
+	LONG_MDL_DAMP,
+	LONG_MDL_POS,
+	LONG_MDL_INH,
+	LONG_MDL_HARD,
+	LONG_MDL_MAT,
+	LONG_MDL_EXC
 	
 };
 
@@ -857,6 +890,8 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value);
 uint8_t menu_voiceButtonEdit(const uint8_t voiceNr);
 //MOD: show the cued tracks for a moment (SHIFT + step button 1-7)
 void menu_showCue(void);
+//MOD: a note on the display for 1.5 s (two lines of 16 characters)
+void menu_showNote(const char* l1, const char* l2);
 extern uint8_t menu_fxPresetLoading;	//MOD: an FX preset is loaded (no page change)
 //-----------------------------------------------------------------
 /** all parameters are send to the cortex soundchip. called after loading a preset into the avr ram*/

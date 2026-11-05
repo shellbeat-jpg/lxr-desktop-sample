@@ -54,6 +54,7 @@ static void slot_initEngine(VoiceSlot* s, const uint8_t slot)
 	case ENGINE_SNARE:	Snare_init(&s->u.snare, slot);		break;
 	case ENGINE_CYMBAL:	Cymbal_init(&s->u.cymbal, slot);	break;
 	case ENGINE_HIHAT:	HiHat_init(&s->u.hat, slot);		break;
+	case ENGINE_MODAL:	Modal_init(&s->u.modal, slot);		break;
 	default:			Drum_init(&s->u.drum, slot);		break;
 	}
 }
@@ -103,6 +104,9 @@ uint8_t slot_chokeGroup = 0;
 uint8_t slot_t7Playing = 0;	//MOD: track 7 sends
 uint8_t slot_cueOnly[NUM_VOICE_SLOTS];	//MOD: cue
 uint8_t slot_triggerCueOnly = 0;
+float slot_accentGain[NUM_VOICE_SLOTS] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };	//MOD: accent
+float slot_accentAmount = 1.5f;
+uint8_t slot_triggerAccent = 0;
 void slot_clearCueOnly(const uint8_t track)
 {
 	if(track >= 7)	memset(slot_cueOnly, 0, sizeof(slot_cueOnly));
@@ -159,6 +163,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 
 	slot_chokeOthers(track, slot);	//MOD
 	slot_cueOnly[slot] = slot_triggerCueOnly;	//MOD: cue
+	slot_accentGain[slot] = slot_triggerAccent ? slot_accentAmount : 1.f;	//MOD: accent
 
 	//MOD: track 7 can play its own waveform and pitch on the shared voice of slot 6
 	{
@@ -178,6 +183,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	case ENGINE_SNARE:	Snare_trigger(&s->u.snare, vel, note);				break;
 	case ENGINE_CYMBAL:	Cymbal_trigger(&s->u.cymbal, vel, note);			break;
 	case ENGINE_HIHAT:	HiHat_trigger(&s->u.hat, vel, second, note);		break;
+	case ENGINE_MODAL:	Modal_trigger(&s->u.modal, vel, note);				break;
 	default:			Drum_trigger(&s->u.drum, vel, note);				break;
 	}
 	lfo_extraRetrigger(slot, second);	//MOD: 2nd LFOs, track 7 LFO
@@ -291,6 +297,9 @@ uint8_t slot_setRoleParameter(const uint16_t par, const uint8_t itg, const float
 				else
 					slot_setFmRole(&s->u.cymbal.modOsc, &s->u.cymbal.modOsc2, &s->u.cymbal.fmModAmount1,
 							&s->u.cymbal.fmModAmount2, role, itg, flt, isFloatModulator);
+				break;
+			case ENGINE_MODAL:
+				Modal_setRole(&s->u.modal, role, itg, flt, isFloatModulator);
 				break;
 			case ENGINE_HIHAT:
 				if(role != 6)

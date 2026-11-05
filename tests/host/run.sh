@@ -13,3 +13,5 @@ gcc -O1 -w -DIN_ITCM_RAM= "-DSF_READ_FLASH_KB()=2048" "-DSF_BIG_AVAILABLE()=host
     "$R/Core/Src/Soundengine/DSPAudio/Oscillator.c" "$R/Core/Src/SampleRom/sampleFlash.c" -lm
 echo "== Import (Schritt 1)"; ./import_test
 echo "== Wiedergabe (Schritt 2)"; ./play_test
+gcc -O1 -w -I"$R/Core/Inc" -o modal_test "$R/tests/host/modal.c" -lm
+echo "== Modal-Engine"; ./modal_test

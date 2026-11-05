@@ -49,6 +49,7 @@ typedef struct ImageFileHeaderStruct
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/MIDI/Uart.h"
 #include "SampleRom/sampleFlash.h"
+#include "Soundengine/Recorder.h"	//MOD
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -985,6 +986,7 @@ lcd_process_display_interrupt = 1;
 	//  menu_tick();
 	  adc_checkPots();
 	  soundengine_process();
+	  rec_process();	//MOD: WAV recorder: write to the card
 	//  menu_tick();
 	  screensaver_check();
 	//  menu_tick();

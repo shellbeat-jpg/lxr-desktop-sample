@@ -427,6 +427,8 @@ enum ParamEnums
 	PAR_OSX,		//MOD: voices without the global sample rate (bit = slot), kit data
 	PAR_FXA_PRS,	//MOD: FX preset list of slot A / B (menu only)
 	PAR_FXB_PRS,
+	PAR_STEP_ACCENT,	//MOD: accent of the selected step (menu only, stored in the step)
+	PAR_REC,			//MOD: WAV recorder mode (menu only, Recorder.h)
 
 	
 	//#########################################
@@ -517,6 +519,8 @@ enum ParamEnums
 	//MOD: cue on St2: mix cue (0) .. main (127), cue level (100 = unity, 0 = older settings: 100)
 	PAR_CUE_MIX,
 	PAR_CUE_VOL,
+	PAR_ACCENT,		//MOD: accent level, 1..127 = +0.2 .. +6 dB (0 = older settings: 64)
+	PAR_RANDOM,		//MOD: strength of the voice randomization, 1..127 (0 = older settings: 32)
 
 	NUM_PARAMS	
 };

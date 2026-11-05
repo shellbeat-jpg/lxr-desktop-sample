@@ -9,6 +9,9 @@ The targets of the step automation (`P1`/`P2`, step page `dst`), the LFOs (`dst`
 - **Edit view** (encoder pressed): category and full name.
 - Waveform targets: `wav` = main oscillator, `fwv` = FM / modulator oscillator, `cwv` = transient (click).
 - With another engine on a slot, the targets that engine doesn't have show `off` and are skipped.
+- With the modal engine (1.2.11, test) on a slot, its 7 engine settings take the places of the
+  engine specific targets of the drum: `mdl` Model, `dmp` Damping, `pos` Strike pos., `inh`
+  Inharmonic, `hrd` Hardness, `mat` Material, `exc` Exciter (e.g. step `dst` `1dm`).
 - Value of a `wav` lock (`val`): 0 … 5 = standard waveforms, 6 … 36 = samples S1 … S31, 37 … 44 = user waves W1 … W8.
 
 ## All voices

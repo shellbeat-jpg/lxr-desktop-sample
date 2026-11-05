@@ -40,6 +40,7 @@
 #include "Soundengine/CpuMeter.h"
 #include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: slot_stopLoops
 #include "Soundengine/DSPAudio/mixer.h"		//MOD: cue
+#include "Soundengine/Recorder.h"				//MOD: WAV recorder
 
 void seq_setPendingPatternActive();
 
@@ -51,6 +52,8 @@ uint8_t seq_prescaleCounter = 0;
 
 uint8_t seq_masterStepCnt=0;				/** keeps track of the played steps between 0 and 127 independent from the track counters*/
 uint8_t seq_rollRate = 1;				//start with roll rate = 1/16
+//MOD: rolls faster than 1/16 (1/24, 1/32, 1/48): the distance in flam ticks (24 per 1/16), 0 = none
+static uint8_t seq_rollFast = 0;
 uint8_t seq_rollState = 0;					/**< each bit represents a voice. if bit is set, roll is active*/
 
 static int8_t 	seq_stepIndex[NUM_TRACKS];	/**< we have 16 steps con 4 bars = 64 steps.
@@ -508,6 +511,9 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 
 	if(voiceNr > 6) return;
 	if(seq_ctlMute & (1u << voiceNr)) return;	//MOD: muted by a trigger track
+	//MOD: accent: bit 7 of the step's note (the note itself is 0..127)
+	const uint8_t accent = note >> 7;
+	note &= 0x7fu;
 
 	//the step index is -1 while stopped (e.g. rolls): no step to take automation and velocity from
 	const int8_t step = seq_stepIndex[voiceNr];
@@ -542,9 +548,11 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 	//MOD: a muted track gets here only when it is cued: heard on the cue only, no MIDI note
 	const uint8_t cueOnly = (seq_mutedTracks >> voiceNr) & 1u;
 	slot_triggerCueOnly = cueOnly;
+	slot_triggerAccent = accent;	//MOD
 	//Trigger internal synth voice
 	voiceControl_noteOn(voiceNr, note, vol);
 	slot_triggerCueOnly = 0;
+	slot_triggerAccent = 0;
 	if(cueOnly)
 		return;
 
@@ -1278,7 +1286,7 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t T)
 		}
 		seq_slowRoll(track);	//MOD
 		//roll on this track's own steps (as seq_nextStep does for the 1/16 tracks)
-		if(seq_rollRate != 0xff && (seq_rollState & (1<<track)) && (seq_stepIndex[track] % seq_rollRate) == 0)
+		if(seq_rollRate != 0xff && !seq_rollFast && (seq_rollState & (1<<track)) && (seq_stepIndex[track] % seq_rollRate) == 0)
 		{
 			const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_stepIndex[track]].note;
 			seq_triggerVoice(track, ROLL_VOLUME, note);
@@ -1578,6 +1586,27 @@ uint8_t seq_getTrackGrid(uint8_t trackNr)
 	return g < SEQ_NUM_GRIDS ? g : 0;
 }
 //------------------------------------------------------------------------------
+//MOD: rolls faster than 1/16, on the flam ticks (24 per 1/16 step); two steps make 48
+//ticks, so that 1/24 (every 16 ticks) also keeps its place against the steps
+static void seq_fastRoll(const uint8_t idx)
+{
+	static uint8_t odd = 0;
+	if(idx == 0)
+		odd ^= 1u;
+	if(!seq_rollFast || !seq_rollState)
+		return;
+	const uint8_t t = (uint8_t)(odd * 24u + idx);
+	if(t % seq_rollFast)
+		return;
+	for(uint8_t track=0;track<NUM_TRACKS;track++)
+	{
+		if(!(seq_rollState & (1u << track)) || seq_stepIndex[track] < 0)
+			continue;
+		const uint8_t note = seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_stepIndex[track]].note;
+		seq_triggerVoice(track, ROLL_VOLUME, note);
+		seq_addNote(track, ROLL_VOLUME, note);
+	}
+}
 void seq_processFlam(uint8_t idx)
 {
 	if(!seq_running)
@@ -1727,6 +1756,7 @@ void seq_processFlam(uint8_t idx)
 #endif
 		}
 	}
+	seq_fastRoll(idx);	//MOD: rolls faster than 1/16
 }
 
 void seq_MidiSyncQueue(uint8_t cnt)
@@ -1770,6 +1800,7 @@ __attribute__((noinline)) static void seq_switchPatternNow(void)
 IN_ITCM_RAM void seq_nextStep()
 {
   midi_process_block = 1;
+	rec_seqStep();	//MOD: WAV recorder: count the steps
 	led_blinkHandler(); //blink leds in sync to tempo/seq
 
 	if(!seq_running)
@@ -1973,7 +2004,7 @@ IN_ITCM_RAM void seq_nextStep()
 
 
 	//---- check if the roll mode has to trigger the voice
-	if(seq_rollRate!=0xff) //not in oneshot mode
+	if(seq_rollRate!=0xff && !seq_rollFast) //not in oneshot mode (MOD: fast rolls in seq_fastRoll)
 	{
 		if(seq_rollState & (1<<i))
 		{
@@ -2499,6 +2530,7 @@ void seq_setRunning(uint8_t isRunning)
 	if(!seq_running)
 	{
 		slot_stopLoops();	//MOD: loops (amp decay 127) don't play on after stop
+		rec_seqStop();	//MOD: WAV recorder
 		preset_touchTimer(PRESET_PAT_TIMER);
 		//moved to seq_resetPosition()
 	} else {
@@ -2509,6 +2541,7 @@ void seq_setRunning(uint8_t isRunning)
 		seq_prescaleCounter = 0;
 		seq_sendRealtime(MIDI_START);
 		trigger_reset(1);
+		rec_seqStart();	//MOD: WAV recorder (armed)
 	}
 
 	/*
@@ -2730,10 +2763,23 @@ void seq_setRollRate(uint8_t rate)
 	{"12"},
 				*/
 
+	seq_rollFast = 0;	//MOD
 	switch(rate)
 	{
 	case 0:
 		seq_rollRate = 0xfe;
+		break;
+	case 6:	//MOD: 1/24, 1/32, 1/48 on the flam ticks (seq_fastRoll)
+		seq_rollFast = 16;
+		seq_rollRate = 0;
+		break;
+	case 7:
+		seq_rollFast = 12;
+		seq_rollRate = 0;
+		break;
+	case 8:
+		seq_rollFast = 8;
+		seq_rollRate = 0;
 		break;
 	case 1: // 1/1
 		seq_rollRate = 15;
@@ -3353,4 +3399,10 @@ static void seq_setStepIndexToStart()
 	}
 	seq_gridReset();	//MOD
 }
-
+extern uint8_t frontParser_activeStep;
+//MOD: accent of the selected step (bit 7 of its note) of the shown pattern and active track
+void seq_setStepAccent(const uint8_t on)
+{
+	Step* st = &seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep];
+	st->note = (uint8_t)((st->note & 0x7fu) | (on ? 0x80u : 0u));
+}
