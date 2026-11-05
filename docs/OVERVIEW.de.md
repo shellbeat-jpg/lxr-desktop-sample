@@ -15,11 +15,11 @@ Waser), alles andere aus OE02-Samples+.
 | Samples | Max. 31 WAVs, 5,9 s Gesamtlänge (mit `BIGFLASH` ≈ 17,8 s). Parameter Start und Länge in ms mit Fade, Loops mit Crossfade, Declick beim Retrigger. | VOICE (OSC `WAV`, `STA`, `LEN`) | Kit, Samples im Flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 100–105 (`STA` / Voice 1–6), NRPN 93, 94, 97 (`LEN` / Voice 1–3) |
 | User-Waves | Bis zu 8 WAVs aus `SAMPLES/WAVES` als Single-Cycle (1024 Punkte): Oszillator-Wellenformen `W1`…`W8` (feste Werte nach `S1`…`S31`) und LFO-Formen `W1`…`W8` (durchlaufend) / `W1.`…`W8.` (One-Shot); eigene Nummerierung. | VOICE (OSC `WAV`, LFO `WAV`) | Kit (Nummer), Waves im Flash | CC 2–5, 7, 8 (`WAV` / Voice 1–6), NRPN 27–32 (LFO `WAV` / Voice 1–6) |
 | Choke | Voices der Choke-Gruppe blenden sich gegenseitig aus (≈ 2 ms). | VOICE (AEG `CHK`) | Kit | NRPN 99 |
-| Track 7 | Eigene Wellenform bzw. eigenes Sample, Tonhöhe, Sends und Panorama für Track 7 auf der gemeinsamen Voice von Slot 6, z. B. Closed-/Open-Hat-Samples, nur eines davon in den Hall. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
-| LFO 2 | Ein zweiter LFO pro Voice und ein eigener LFO für Track 7 (wirkt, solange Track 7 klingt, statt des LFO von Voice 6). Test. | VOICE 1-7, LFO-Taste auf dem 2. Bildschirm erneut drücken | Kit | – |
-| OSX | Einzelne Voices von der globalen Samplerate (`SR` / `0sr`) ausnehmen. | PERF (`OSX`, an/aus für die aktive Voice) | Kit | – |
-| FX presets | Liste für FX1/FX2: 17 Werks-Presets (Delay, Distortion, Kompressor, Ring-Mod) und 8 eigene pro Projekt; Laden/Speichern per Encoder-Klick. | FX-Setup-Seite (`PRS`) | eigene: Projekt (`FXPRESET.BIN`) | – |
-| Cue | Vorhören auf St2 (vor dem Fader, auch gemutete Tracks); `CMX` Cue/Main-Mix, `CVL` Pegel. | SHIFT + Step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
+| Track 7 *(1.2.11, noch nicht veröffentlicht)* | Eigene Wellenform bzw. eigenes Sample, Tonhöhe, Sends und Panorama für Track 7 auf der gemeinsamen Voice von Slot 6, z. B. Closed-/Open-Hat-Samples, nur eines davon in den Hall. | VOICE 7 (OSC `WAV`, `COA`; AEG `SNA`, `SNB`; MIX `PAN`) | Kit | – |
+| LFO 2 *(1.2.11, noch nicht veröffentlicht)* | Ein zweiter LFO pro Voice und ein eigener LFO für Track 7 (wirkt, solange Track 7 klingt, statt des LFO von Voice 6). Test. | VOICE 1-7, LFO-Taste auf dem 2. Bildschirm erneut drücken | Kit | – |
+| OSX *(1.2.11, noch nicht veröffentlicht)* | Einzelne Voices von der globalen Samplerate (`SR` / `0sr`) ausnehmen. | PERF (`OSX`, an/aus für die aktive Voice) | Kit | – |
+| FX presets *(1.2.11, noch nicht veröffentlicht)* | Liste für FX1/FX2: 17 Werks-Presets (Delay, Distortion, Kompressor, Ring-Mod) und 8 eigene pro Projekt; Laden/Speichern per Encoder-Klick. | FX-Setup-Seite (`PRS`) | eigene: Projekt (`FXPRESET.BIN`) | – |
+| Cue *(1.2.11, noch nicht veröffentlicht)* | Vorhören auf St2 (vor dem Fader, auch gemutete Tracks); `CMX` Cue/Main-Mix, `CVL` Pegel. | SHIFT + Step 1–7, PERF (`CMX`, `CVL`) | Global (`CMX`, `CVL`) | – |
 
 ## Sequencer / Tracks
 
