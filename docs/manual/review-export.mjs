@@ -16,6 +16,20 @@ let style = src.match(/<style>([\s\S]*?)<\/style>/)[1];
 // fonts as data URIs (the artifact serves no font files)
 style = style.replace(/url\((fonts\/[\w.-]+\.woff2)\)/g, (_, f) =>
 	'url(data:font/woff2;base64,' + readFileSync(join(here, f)).toString('base64') + ')');
+const de = /<html lang="de"/.test(src);
+const T = de ? {
+	title: 'Ergänzung Review', h1: 'OE02-Samples+ Ergänzung',
+	hint: 'In einen Text klicken, ändern, dann speichern. Rot markierte Seiten sind zu voll für das PDF.',
+	none: 'Keine Änderungen', save: 'Speichern', dirty: 'Ungespeicherte Änderungen', saving: 'Speichert …', saved: 'Gespeichert',
+	conflict: 'Jemand anderes hat zuerst gespeichert: die Seite lädt dessen Fassung', readonly: 'Nur lesen: Speichern nicht möglich',
+	failed: 'Nicht gespeichert – bitte erneut versuchen', readonlyHere: 'Hier nur lesen', over: 'Zu voll: Seite ', badge: 'Text zu lang für diese Seite'
+} : {
+	title: 'Supplement Review', h1: 'OE02-Samples+ Supplement',
+	hint: 'Click into any text to change it, then save. Pages marked red are too full for the PDF.',
+	none: 'No changes', save: 'Save', dirty: 'Unsaved changes', saving: 'Saving…', saved: 'Saved',
+	conflict: 'Someone else saved first: the page reloads with their version', readonly: 'Read only: you can’t save this page',
+	failed: 'Not saved – try again', readonlyHere: 'Read only here', over: 'Too full: page ', badge: 'text too long for this page'
+};
 const body = src.slice(src.indexOf('<body>') + 6, src.lastIndexOf('<script>'));
 const docScript = src.slice(src.lastIndexOf('<script>') + 8, src.lastIndexOf('</script>'));
 // the diagrams inline, marked with their file name for the import
@@ -28,7 +42,7 @@ const doc = body.replace(/\{\{svg:([\w.-]+)\}\}/g, (_, f) =>
 		.replace('<svg ', `<svg data-src="${f}" `).trim());
 
 const ui = `
-<title>Supplement Review</title>
+<title>${T.title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>${style}</style>
 <style>
@@ -58,15 +72,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 #doc [contenteditable]:focus { outline: 1px dashed #1f5fbf; outline-offset: 1px; }
 #doc [contenteditable]:hover { background: rgba(31,95,191,.05); }
 #doc .overflowing { box-shadow: inset 0 -3px 0 #c2281d; }
-#doc .page.has-over::after { content: "text too long for this page"; position: absolute; top: 3mm; right: 4mm; font: 600 7pt system-ui, sans-serif; color: #fff; background: #c2281d; padding: .6mm 2mm; border-radius: 1mm; }
+#doc .page.has-over::after { content: "${T.badge}"; position: absolute; top: 3mm; right: 4mm; font: 600 7pt system-ui, sans-serif; color: #fff; background: #c2281d; padding: .6mm 2mm; border-radius: 1mm; }
 @media (prefers-reduced-motion: no-preference) { #bar .state { transition: color .2s; } }
 </style>
 <header id="bar">
-  <h1>OE02-Samples+ Supplement</h1>
-  <span class="hint">Click into any text to change it, then save. Pages marked red are too full for the PDF.</span>
+  <h1>${T.h1}</h1>
+  <span class="hint">${T.hint}</span>
   <span class="over" id="over"></span>
-  <span class="state" id="state">No changes</span>
-  <button id="save" type="button" disabled>Save</button>
+  <span class="state" id="state">${T.none}</span>
+  <button id="save" type="button" disabled>${T.save}</button>
 </header>
 <div id="desk"><main id="doc">${doc}</main></div>
 `;
@@ -107,7 +121,7 @@ const script = `<script>
       p.classList.toggle('has-over', over);
       if (over) pages.push(p.dataset.n);
     });
-    overEl.textContent = pages.length ? 'Too full: page ' + pages.join(', ') : '';
+    overEl.textContent = pages.length ? ${JSON.stringify(T.over)} + pages.join(', ') : '';
   }
   document.fonts.ready.then(checkOver);
 
@@ -115,7 +129,7 @@ const script = `<script>
   let dirty = false, artifact = null, timer = 0;
   function setState(t, cls) { stateEl.textContent = t; stateEl.className = 'state ' + (cls || ''); }
   docEl.addEventListener('input', () => {
-    dirty = true; setState('Unsaved changes', 'dirty'); saveBtn.disabled = !artifact;
+    dirty = true; setState(${JSON.stringify(T.dirty)}, 'dirty'); saveBtn.disabled = !artifact;
     clearTimeout(timer); timer = setTimeout(checkOver, 300);
   });
   // plain text only when pasting
@@ -137,19 +151,19 @@ const script = `<script>
   }
   saveBtn.addEventListener('click', async () => {
     if (!artifact || !dirty) return;
-    saveBtn.disabled = true; setState('Saving…');
-    try { await artifact.publish(savedDocument()); dirty = false; setState('Saved', 'saved'); }
+    saveBtn.disabled = true; setState(${JSON.stringify(T.saving)});
+    try { await artifact.publish(savedDocument()); dirty = false; setState(${JSON.stringify(T.saved)}, 'saved'); }
     catch (e) {
       const code = e && e.code;
-      if (code === 'conflict') setState('Someone else saved first: the page reloads with their version', 'dirty');
-      else if (code === 'not_granted' || code === 'not_writer') setState('Read only: you can’t save this page', 'dirty');
-      else { setState('Not saved – try again', 'dirty'); saveBtn.disabled = false; }
+      if (code === 'conflict') setState(${JSON.stringify(T.conflict)}, 'dirty');
+      else if (code === 'not_granted' || code === 'not_writer') setState(${JSON.stringify(T.readonly)}, 'dirty');
+      else { setState(${JSON.stringify(T.failed)}, 'dirty'); saveBtn.disabled = false; }
     }
   });
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   window.claude && window.claude.use && window.claude.use('artifact').then(a => {
     artifact = a;
-    if (!a) setState('Read only here');
+    if (!a) setState(${JSON.stringify(T.readonlyHere)});
     else if (dirty) saveBtn.disabled = false;
   });
 })();
