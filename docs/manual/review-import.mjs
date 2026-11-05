@@ -1,5 +1,5 @@
 // Takes the text of an edited review page (review-export.mjs) back into supplement.html.
-// Usage: node docs/manual/review-import.mjs REVIEWED.html
+// Usage: node docs/manual/review-import.mjs REVIEWED.html [supplement.de.html]
 // Replaces the pages of supplement.html (between <body> and its script) with those of
 // the review page; the inlined diagrams become their placeholders again.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -21,7 +21,7 @@ const doc = m[1]
 	.replace(/<\/?tbody>/g, '')
 	.replace(/<(path|rect|line|circle|ellipse|polyline|polygon|use|stop)\b([^>]*)><\/\1>/g, '<$1$2/>');
 
-const p = join(here, 'supplement.html');
+const p = join(here, process.argv[3] || 'supplement.html');
 const src = readFileSync(p, 'utf8');
 const a = src.indexOf('<body>') + 6, b = src.lastIndexOf('<script>');
 writeFileSync(p, src.slice(0, a) + doc + src.slice(b));

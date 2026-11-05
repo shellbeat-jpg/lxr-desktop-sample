@@ -13,6 +13,9 @@
 #include <string.h>
 #include "Soundengine/Sequencer/sequencer.h"	/* seq_getBpm: auto release */
 
+/* the knee of the saturation curve, in full scale (the sum before the limiter) */
+#define MB_SAT_HEAD		3.f
+
 typedef struct { float b0, b1, b2, a1, a2; } mb_Coef;
 
 static struct
@@ -20,7 +23,7 @@ static struct
 	uint8_t  last[MB_NUM_PARAMS];	/* settings the coefficients were made for */
 	uint8_t  valid;
 	/* saturation */
-	float    drive, satOut;
+	float    drive, satOut, satWet;
 	float    bias;					/* asymmetry: largest operating point (BIA) */
 	float    bEnv;					/* level envelope into the curve (level dependent bias) */
 	float    bAtt, bRel;
@@ -148,8 +151,16 @@ static inline float mb_softclip(float x);
 static void mb_update(const uint8_t* s)
 {
 	const float sat = s[MB_SAT] / 127.f;
-	mb.drive  = 1.f + 15.f * sat * sat;		/* up to +24 dB into the curve */
-	mb.satOut = 1.f / sqrtf(mb.drive);
+	/* up to +24 dB into the curve. The curve works with headroom: the bus is unlimited
+	 * before the limiter (the voice sums go above full scale), so the knee sits at
+	 * MB_SAT_HEAD x full scale, low SAT values leave a loud mix nearly clean. SAT 1 .. 16
+	 * also fade the saturated signal in. */
+	{
+		const float d = 1.f + 15.f * sat * sat;
+		mb.drive  = d / MB_SAT_HEAD;
+		mb.satOut = MB_SAT_HEAD / sqrtf(d);
+		mb.satWet = sat * 8.f > 1.f ? 1.f : sat * 8.f;
+	}
 	/* bias, level dependent (like a tube stage): the operating point moves from 0
 	 * (quiet: symmetric) towards b (loud: asymmetric, even harmonics) with the level
 	 * into the curve; its offset is subtracted per sample */
@@ -234,7 +245,7 @@ static inline float mb_saturate(const float x, const uint8_t ch, const float b, 
 {
 	const float lo = mb_biquad(&mb.lp, mb.z[1][ch], mb_biquad(&mb.lp, mb.z[0][ch], x));
 	const float hi = mb_biquad(&mb.hp, mb.z[3][ch], mb_biquad(&mb.hp, mb.z[2][ch], x));
-	return lo + (mb_softclip(hi * mb.drive + b) - off) * mb.satOut;
+	return lo + hi + ((mb_softclip(hi * mb.drive + b) - off) * mb.satOut - hi) * mb.satWet;
 }
 /* fast log2 / exp2 for the compressor (per sample): error below 0.01 dB in level,
  * 0.1 % in gain. The library functions cost several hundred cycles each. */
@@ -290,15 +301,16 @@ static void mb_blockBias(const float* L, const float* R, const uint32_t n)
 }
 IN_ITCM_RAM __attribute__((noinline)) static void mb_blockSat(float* L, float* R, const uint32_t n)
 {
-	const float drive = mb.drive, out = mb.satOut;
+	const float drive = mb.drive, out = mb.satOut, wet = mb.satWet;
 	const float* const bB = mb_bB;
 	const float* const bO = mb_bO;
 	if(!mb.split)
 	{
 		for(uint32_t i = 0; i < n; i++)
 		{
-			L[i] = (mb_softclip(L[i] * drive + bB[i]) - bO[i]) * out;
-			R[i] = (mb_softclip(R[i] * drive + bB[i]) - bO[i]) * out;
+			const float l = L[i], r = R[i];
+			L[i] = l + ((mb_softclip(l * drive + bB[i]) - bO[i]) * out - l) * wet;
+			R[i] = r + ((mb_softclip(r * drive + bB[i]) - bO[i]) * out - r) * wet;
 		}
 		return;
 	}

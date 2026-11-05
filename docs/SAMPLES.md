@@ -438,7 +438,10 @@ the DJ filter and the limiter): saturation, a compressor and an EQ, in any order
 
 - **SHIFT + FX three times** (FX1 → FX2 → FX3, then FX1 again). Stored in the kit (kit extra
   block; older kits: off).
-- `SAT` saturation (0 = off): soft clipping, up to +24 dB into the curve, level compensated.
+- `SAT` saturation (0 = off): soft clipping, up to +24 dB into the curve, level compensated. The
+  curve has headroom (its knee at 3 × full scale, as the sum before the limiter goes above full
+  scale), and `SAT` 1 … 16 also fade the saturated signal in: low values leave a loud mix nearly
+  clean (1.2.11; before, `SAT` 1 already distorted it).
   Symmetric, so it adds odd harmonics (3rd, 5th …): edgier, more bite. `BIA` (last FX3 page)
   makes the curve asymmetric depending on the level, like a tube stage: quiet signals stay
   symmetric and clear, loud ones get even harmonics (2nd, 4th …: octaves, fuller and warmer).

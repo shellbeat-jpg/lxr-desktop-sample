@@ -1,6 +1,6 @@
 // Builds an editable review page of the manual supplement (for a claude.ai artifact
 // with the "artifact" capability: the reviewer edits the text in place and saves).
-// Usage: node docs/manual/review-export.mjs OUT.html
+// Usage: node docs/manual/review-export.mjs OUT.html [supplement.de.html]
 // The page keeps supplement.html's markup inside <main id="doc">; review-import.mjs
 // puts the edited text back into supplement.html.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -11,7 +11,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const out = process.argv[2];
 if (!out) { console.error('usage: node review-export.mjs OUT.html'); process.exit(1); }
 
-const src = readFileSync(join(here, 'supplement.html'), 'utf8');
+const src = readFileSync(join(here, process.argv[3] || 'supplement.html'), 'utf8');
 let style = src.match(/<style>([\s\S]*?)<\/style>/)[1];
 // fonts as data URIs (the artifact serves no font files)
 style = style.replace(/url\((fonts\/[\w.-]+\.woff2)\)/g, (_, f) =>
