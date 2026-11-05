@@ -438,7 +438,11 @@ uint8_t getModTargetIdxFromGapIdx(uint8_t v, uint8_t gapidx)
 
 uint8_t modTargetNameIdx(const uint8_t idx)
 {
-	const uint16_t par = pgm_read_word(&modTargets[idx].param);
+	uint16_t par = pgm_read_word(&modTargets[idx].param);
+	//MOD: the main oscillator waveform of voice 4 / 6 with an added engine stands for
+	//the engine setting the stock snare / hi-hat doesn't have (slot_modDestination)
+	if((par == PAR_OSC_WAVE_SNARE && kitEngines[3] >= ENGINE_MODAL) || (par == PAR_WAVE1_HH && kitEngines[5] >= ENGINE_MODAL))
+		par = par == PAR_OSC_WAVE_SNARE ? slot_rolePar[3][0] : slot_rolePar[5][6];
 	const uint8_t slot = kitEngines_rolePar2Slot(par);
 	if(slot >= NUM_VOICE_SLOTS || kitEngines[slot] == slot_stockEngine(slot))
 		return pgm_read_byte(&modTargets[idx].nameIdx);

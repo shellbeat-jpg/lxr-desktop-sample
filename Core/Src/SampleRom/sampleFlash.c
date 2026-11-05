@@ -24,6 +24,7 @@
  */
 
 #include "SampleRom/sampleFlash.h"
+#include "SampleRom/wtBuild.h"
 #include "main.h"
 #include "ff.h"
 #include "lcd.h"
@@ -36,6 +37,10 @@
 #define SF_FOLDER       "/SAMPLES"
 #define SF_LOOP_FOLDER  "/SAMPLES/LOOPS"
 #define SF_WAVE_FOLDER  "/SAMPLES/WAVES"
+#define SF_TABLE_FOLDER "/SAMPLES/TABLES"
+#define SF_TABLE_MAGIC  "LXRTBL01"
+#define SF_TABLES_AT    (SF_REGION_START + 0x600u)
+#define SF_USR_INTER    3u	/* in-between frames of the set from the user waves */
 #define SF_WAVES_AT     (SF_REGION_START + 0x400u)
 #define SF_READ_FRAMES  256u
 #define SF_BIG_FILE     "/SAMPLES/BIGFLASH"
@@ -48,12 +53,15 @@ static void sf_capSeconds(char* out);
 #define SF_CAPACITY     (sf_end - SF_DATA_START)          /* bytes for PCM data */
 
 /* the header must fit into the reserved header area */
-typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= 0x400u && 0x400u + sizeof(SampleFlashWaves) <= SF_HEADER_SIZE) ? 1 : -1];
+typedef char sf_headerFits[(sizeof(SampleFlashHeader) <= 0x400u && 0x400u + sizeof(SampleFlashWaves) <= 0x600u && 0x600u + sizeof(SampleFlashTables) <= SF_HEADER_SIZE) ? 1 : -1];
 
 typedef struct
 {
 	char     name[13];
-	uint8_t  loop;         /* from SF_LOOP_FOLDER; 2 = from SF_WAVE_FOLDER */
+	uint8_t  loop;         /* from SF_LOOP_FOLDER; 2 = from SF_WAVE_FOLDER, 3 = SF_TABLE_FOLDER */
+	uint16_t cycle;        /* MOD: tables: points per cycle from a "clm " chunk, 0 = none */
+	uint8_t  bytesPerSample; /* MOD: 2; tables also 3 (24 bit) and 4 (32 bit float) */
+	uint8_t  isFloat;
 	uint32_t fsize;
 	uint16_t channels;
 	uint32_t rate;
@@ -65,6 +73,22 @@ typedef struct
 static sf_FileInfo sf_files[SF_MAX_SAMPLES];
 static sf_FileInfo sf_waveFiles[SF_MAX_WAVES];        /* MOD */
 static uint8_t sf_waveCount = 0;                       /* MOD: files found in SF_WAVE_FOLDER */
+static sf_FileInfo sf_tableFiles[SF_MAX_TABLES - 1u];  /* MOD: files in SF_TABLE_FOLDER */
+static uint8_t sf_tableCount = 0;
+static SampleFlashTables sf_newTables;
+/* MOD: building a set: in the recorder's buffer (unused while importing at boot) */
+typedef struct
+{
+	WtSpectrum prev, cur, mix;
+	int16_t frame[WT_FRAME_SIZE];
+	WtWork work;
+} sf_SetWork;
+void* rec_scratch(uint32_t bytes);
+static sf_SetWork* sf_set;
+#define sf_specPrev	(sf_set->prev)
+#define sf_specCur	(sf_set->cur)
+#define sf_specMix	(sf_set->mix)
+#define sf_frame	(sf_set->frame)
 static SampleFlashHeader sf_newHeader;                 /* built in RAM, written last */
 static SampleFlashWaves sf_newWaves;                   /* MOD */
 static int16_t sf_readBuf[SF_READ_FRAMES * 2u];        /* stereo frames */
@@ -103,13 +127,19 @@ static uint8_t sf_wavesValid(void)
 		&& memcmp(sf_flashWaves->magic, SF_WAVE_MAGIC, 8) == 0
 		&& sf_flashWaves->count >= 1u && sf_flashWaves->count <= SF_MAX_WAVES;
 }
+static const SampleFlashTables* const sf_flashTables = (const SampleFlashTables*)SF_TABLES_AT;
+static uint8_t sf_tablesMagic(void)
+{
+	return memcmp(sf_flashTables->magic, SF_TABLE_MAGIC, 8) == 0 && sf_flashTables->count >= 1u
+		&& sf_flashTables->count <= SF_MAX_TABLES;
+}
 static uint8_t sf_headerValid(const SampleFlashHeader* h)
 {
 	if(memcmp(h->magic, SF_MAGIC, 8) == 0)
 	{
-		//MOD: an import of user waves only has no samples
+		//MOD: an import of user waves (or wave sets) only has no samples
 		if(h->count > SF_MAX_SAMPLES) return 0;
-		return h->count > 0u || sf_wavesValid();
+		return h->count > 0u || sf_wavesValid() || sf_tablesMagic();
 	}
 	if(memcmp(h->magic, SF_MAGIC_V2, 8) != 0) return 0;	/* before the user waves */
 	if(h->count == 0 || h->count > SF_MAX_SAMPLES) return 0;
@@ -130,6 +160,21 @@ const int16_t* sampleFlash_wave(uint8_t k)
 const char* sampleFlash_waveName(uint8_t k)
 {
 	return k < sf_waveCache ? sf_flashWaves->name[k] : "";
+}
+/* MOD: wave sets */
+static uint8_t sf_tableCache = 0;	/* the directory is valid */
+const int16_t* sampleFlash_table(uint8_t k, uint8_t* frames)
+{
+	*frames = 0;
+	if(!sf_tableCache || k >= SF_MAX_TABLES) return NULL;
+	const SampleFlashTable* t = &sf_flashTables->table[k];
+	if(t->frames == 0u || t->frames > WT_MAX_FRAMES) return NULL;
+	*frames = (uint8_t)t->frames;
+	return (const int16_t*)t->offset;
+}
+const char* sampleFlash_tableName(uint8_t k)
+{
+	return (sf_tableCache && k < SF_MAX_TABLES) ? sf_flashTables->table[k].name : "";
 }
 /*----------------------------------------------------------------------------*/
 const SampleFlashHeader* sampleFlash_getHeader(void)
@@ -191,6 +236,7 @@ static void sf_setCache(void)
 {
 	sf_cache = sf_headerValid(sf_flashHeader) ? sf_flashHeader : NULL;
 	sf_waveCache = (sf_cache && sf_wavesValid()) ? (uint8_t)sf_flashWaves->count : 0u;
+	sf_tableCache = (sf_cache && memcmp(sf_flashHeader->magic, SF_MAGIC, 8) == 0 && sf_tablesMagic()) ? 1u : 0u;
 }
 static SampleFlashResult sf_finish(SampleFlashResult r)
 {
@@ -249,7 +295,7 @@ static uint16_t sf_le16(const uint8_t* b) { return (uint16_t)(b[0] | (b[1] << 8)
 
 static void sf_path(char* path, uint32_t size, const sf_FileInfo* fi)
 {
-	snprintf(path, size, "%s/%s", fi->loop == 2 ? SF_WAVE_FOLDER : fi->loop ? SF_LOOP_FOLDER : SF_FOLDER, fi->name);
+	snprintf(path, size, "%s/%s", fi->loop == 3 ? SF_TABLE_FOLDER : fi->loop == 2 ? SF_WAVE_FOLDER : fi->loop ? SF_LOOP_FOLDER : SF_FOLDER, fi->name);
 }
 /* returns SF_OK_IMPORTED on success (used as "ok" here) */
 static SampleFlashResult sf_parseWav(sf_FileInfo* fi)
@@ -283,15 +329,36 @@ static SampleFlashResult sf_parseWav(sf_FileInfo* fi)
 			haveFmt = 1;
 			if(f_lseek(&sf_file, f_tell(&sf_file) + (len - 16) + (len & 1u)) != FR_OK) { res = SF_ERR_READ; goto done; }
 		}
+		else if(memcmp(ch, "clm ", 4) == 0 && fi->loop == 3)
+		{
+			/* MOD: Serum / Vital wavetable: "<!>2048 ..." = points per cycle */
+			char t[16];
+			const uint32_t n = len < sizeof(t) - 1u ? len : sizeof(t) - 1u;
+			if(f_read(&sf_file, t, n, &br) != FR_OK || br != n) { res = SF_ERR_READ; goto done; }
+			t[n] = 0;
+			uint32_t v = 0;
+			for(const char* q = t; *q; q++)
+			{
+				if(*q >= '0' && *q <= '9') { v = v * 10u + (uint32_t)(*q - '0'); if(v > 65535u) break; }
+				else if(v) break;
+			}
+			fi->cycle = (uint16_t)(v <= 65535u ? v : 0u);
+			if(f_lseek(&sf_file, f_tell(&sf_file) + (len - n) + (len & 1u)) != FR_OK) { res = SF_ERR_READ; goto done; }
+		}
 		else if(memcmp(ch, "data", 4) == 0)
 		{
 			if(!haveFmt) goto done;
-			/* PCM (1) or WAVE_FORMAT_EXTENSIBLE (0xFFFE), 16 bit, mono/stereo */
-			if((format != 1 && format != 0xFFFE) || bits != 16) goto done;
+			/* PCM (1) or WAVE_FORMAT_EXTENSIBLE (0xFFFE), 16 bit, mono/stereo;
+			 * MOD: tables also 24 bit and 32 bit float (3) */
+			fi->bytesPerSample = 2;
+			fi->isFloat = 0;
+			if(fi->loop == 3 && (format == 3 || format == 0xFFFE) && bits == 32) { fi->bytesPerSample = 4; fi->isFloat = 1; }
+			else if(fi->loop == 3 && (format == 1 || format == 0xFFFE) && bits == 24) fi->bytesPerSample = 3;
+			else if((format != 1 && format != 0xFFFE) || bits != 16) goto done;
 			if(fi->channels != 1 && fi->channels != 2) goto done;
 			fi->dataOffset = f_tell(&sf_file);
 			fi->dataBytes  = len;
-			fi->frames     = len / (2u * fi->channels);
+			fi->frames     = len / ((uint32_t)fi->bytesPerSample * fi->channels);
 			if(fi->frames == 0) goto done;
 			res = SF_OK_IMPORTED;
 			goto done;
@@ -383,6 +450,10 @@ static uint8_t sf_scanFolder(uint32_t* signature)
 	sf_waveCount = 0;
 	sf_scanDirInto(SF_WAVE_FOLDER, 2, &sf_waveCount, sf_waveFiles, SF_MAX_WAVES);   /* optional */
 	sf_sort(sf_waveFiles, sf_waveCount);
+	/* MOD: the wave set files, T1 = first name */
+	sf_tableCount = 0;
+	sf_scanDirInto(SF_TABLE_FOLDER, 3, &sf_tableCount, sf_tableFiles, SF_MAX_TABLES - 1u);   /* optional */
+	sf_sort(sf_tableFiles, sf_tableCount);
 
 	/* insertion sort -> deterministic slot order */
 	sf_sort(sf_files, n);
@@ -400,6 +471,12 @@ static uint8_t sf_scanFolder(uint32_t* signature)
 		h = sf_fnv(h, (const uint8_t*)"W", 1);
 		h = sf_fnv(h, (const uint8_t*)sf_waveFiles[i].name, 13);
 		h = sf_fnv(h, (const uint8_t*)&sf_waveFiles[i].fsize, 4);
+	}
+	h = sf_fnv(h, (const uint8_t*)"TBL1", 4);	/* MOD: the format of the wave sets */
+	for(uint8_t i = 0; i < sf_tableCount; i++)
+	{
+		h = sf_fnv(h, (const uint8_t*)sf_tableFiles[i].name, 13);
+		h = sf_fnv(h, (const uint8_t*)&sf_tableFiles[i].fsize, 4);
 	}
 	*signature = h;
 	return n;
@@ -511,6 +588,111 @@ static SampleFlashResult sf_writeWave(const sf_FileInfo* fi, uint32_t addr, uint
 	return sf_programBytes(addr, pts, sizeof(pts)) ? SF_OK_IMPORTED : SF_ERR_FLASH;
 }
 /*----------------------------------------------------------------------------*/
+/* MOD: wave sets (wtBuild.h). The points per cycle of a table file: from its
+ * "clm " chunk (Serum, Vital), else 2048 for long files (Serum without the
+ * chunk), 256 (WaveEdit: 64 x 256), one cycle for short files. */
+static uint32_t sf_tableCycle(const sf_FileInfo* fi)
+{
+	if(fi->cycle >= 8u && fi->cycle <= fi->frames) return fi->cycle;
+	if(fi->frames > 16384u && fi->frames % 2048u == 0u) return 2048u;
+	if(fi->frames >= 512u && fi->frames % 256u == 0u) return 256u;
+	if(fi->frames <= 4096u) return fi->frames;
+	return 2048u;
+}
+/* frames of the set of a table file (0 if unusable) */
+static uint32_t sf_tableFrames(const sf_FileInfo* fi)
+{
+	const uint32_t L = sf_tableCycle(fi);
+	uint32_t used, total;
+	uint8_t inter;
+	wtBuild_plan(L >= 8u ? fi->frames / L : 0u, WT_MAX_INTER, &used, &inter, &total);
+	return total;
+}
+static uint32_t sf_userSetFrames(const uint8_t waves)
+{
+	uint32_t used, total;
+	uint8_t inter;
+	wtBuild_plan(waves, SF_USR_INTER, &used, &inter, &total);
+	return total;
+}
+/* one sample of a table file (left channel), through the read window */
+static float sf_tableSample(const sf_FileInfo* fi, uint32_t i, uint32_t* winStart, uint32_t* winLen, uint8_t* ok)
+{
+	const uint32_t fb = (uint32_t)fi->bytesPerSample * fi->channels;	/* bytes per frame */
+	const uint32_t cap = (uint32_t)sizeof(sf_readBuf) / fb;
+	if(i >= fi->frames) i = fi->frames - 1u;
+	if(i < *winStart || i >= *winStart + *winLen)
+	{
+		UINT br;
+		uint32_t n = fi->frames - i;
+		if(n > cap) n = cap;
+		if(f_lseek(&sf_file, fi->dataOffset + i * fb) != FR_OK
+				|| f_read(&sf_file, sf_readBuf, n * fb, &br) != FR_OK || br != n * fb)
+		{
+			*ok = 0;
+			return 0.f;
+		}
+		*winStart = i;
+		*winLen = n;
+	}
+	const uint8_t* p = (const uint8_t*)sf_readBuf + (i - *winStart) * fb;
+	if(fi->isFloat)
+	{
+		float f;
+		memcpy(&f, p, 4);
+		return (f == f) ? f * 32767.f : 0.f;	/* NaN: 0 */
+	}
+	if(fi->bytesPerSample == 3)
+		return (float)((int32_t)((uint32_t)p[0] << 8 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 24) >> 8) * (1.f / 256.f);
+	return (float)(int16_t)(p[0] | p[1] << 8);
+}
+/* a set from cycles: of a table file (fi) or of the user waves in the flash
+ * (waves, SF_WAVE_POINTS each); programmed at addr. Returns the frames written. */
+static SampleFlashResult sf_writeSet(const sf_FileInfo* fi, const int16_t* waves, uint32_t n, uint32_t L,
+		uint8_t maxInter, uint32_t addr, uint32_t* framesOut, uint32_t* checksum)
+{
+	uint32_t used, total;
+	uint8_t inter;
+	wtBuild_plan(n, maxInter, &used, &inter, &total);
+	sf_set = (sf_SetWork*)rec_scratch(sizeof(sf_SetWork));
+	if(!sf_set) return SF_ERR_FLASH;
+	wtBuild_setWork(&sf_set->work);
+	uint32_t h = 2166136261u, winStart = 0, winLen = 0;
+	uint8_t ok = 1;
+	if(fi)
+	{
+		char path[32];
+		sf_path(path, sizeof(path), fi);
+		if(f_open(&sf_file, path, FA_READ | FA_OPEN_EXISTING) != FR_OK) return SF_ERR_READ;
+	}
+	for(uint32_t i = 0; i < used && ok; i++)
+	{
+		const uint32_t src = wtBuild_source(n, used, i);
+		wtBuild_begin(L);
+		for(uint32_t k = 0; k < L && ok; k++)
+			wtBuild_add(fi ? sf_tableSample(fi, src * L + k, &winStart, &winLen, &ok) : (float)waves[src * L + k]);
+		wtBuild_end(&sf_specCur);
+		for(uint8_t j = 1; i && j <= inter; j++)
+		{
+			wtBuild_mix(&sf_specPrev, &sf_specCur, (float)j / (float)(inter + 1u), &sf_specMix);
+			wtBuild_render(&sf_specMix, sf_frame);
+			h = sf_fnv(h, (const uint8_t*)sf_frame, sizeof(sf_frame));
+			if(!sf_programBytes(addr, sf_frame, sizeof(sf_frame))) { if(fi) f_close(&sf_file); return SF_ERR_FLASH; }
+			addr += sizeof(sf_frame);
+		}
+		wtBuild_render(&sf_specCur, sf_frame);
+		h = sf_fnv(h, (const uint8_t*)sf_frame, sizeof(sf_frame));
+		if(!sf_programBytes(addr, sf_frame, sizeof(sf_frame))) { if(fi) f_close(&sf_file); return SF_ERR_FLASH; }
+		addr += sizeof(sf_frame);
+		memcpy(&sf_specPrev, &sf_specCur, sizeof(sf_specPrev));
+	}
+	if(fi) f_close(&sf_file);
+	if(!ok) return SF_ERR_READ;
+	*framesOut = total;
+	*checksum = h;
+	return SF_OK_IMPORTED;
+}
+/*----------------------------------------------------------------------------*/
 static void sf_showResult(SampleFlashResult r, const char* name, uint8_t count, uint32_t totalFrames)
 {
 	char l2[17];
@@ -566,7 +748,10 @@ void sampleFlash_showStatus(void)
 	sf_setCache();
 	const SampleFlashHeader* h = sf_cache;
 	const uint32_t skipped = h ? h->reserved[0] + h->reserved[1] : 0u;
+	uint8_t tbl = 0;	/* MOD: wave set files */
+	for(uint8_t k = 1; k < SF_MAX_TABLES; k++) { uint8_t f; if(sampleFlash_table(k, &f)) tbl++; }
 	if(h == NULL)                   snprintf(l1, sizeof(l1), "Samples: none");
+	else if(tbl)                    snprintf(l1, sizeof(l1), "S:%u W:%u T:%u", (unsigned)h->count, (unsigned)sf_waveCache, (unsigned)tbl);
 	else if(sf_waveCache)	/* MOD: "S:12 W:3 skp:1" */
 	{
 		if(skipped && skipped <= 99u)
@@ -581,7 +766,8 @@ void sampleFlash_showStatus(void)
 	if(h)
 	{
 		const uint32_t cap  = ((h->reserved[2] & 3u) ? SF_BIG_END : SF_REGION_END) - SF_DATA_START;
-		const uint32_t used = (uint32_t)(((uint64_t)h->totalFrames * 10u) / 44100u);
+		const uint32_t setFrames = sf_tableCache ? sf_flashTables->reserved / 2u : 0u;	/* MOD: wave sets */
+		const uint32_t used = (uint32_t)(((uint64_t)(h->totalFrames + setFrames) * 10u) / 44100u);
 		const uint32_t avl  = (cap / 2u) * 10u / 44100u;
 		snprintf(l2, sizeof(l2), "Used %lu.%lu/%lu.%lus", (unsigned long)(used / 10u), (unsigned long)(used % 10u),
 		         (unsigned long)(avl / 10u), (unsigned long)(avl % 10u));
@@ -692,8 +878,42 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		needed += bytes;
 		kept++;
 	}
+	/* MOD: the wave sets after the samples: the set from the user waves, then the
+	 * table files; what doesn't fit any more is skipped */
+	uint32_t setBytes[SF_MAX_TABLES];
+	memset(setBytes, 0, sizeof(setBytes));
+	if(waves)
+	{
+		const uint32_t b = sf_userSetFrames(waves) * WT_FRAME_SIZE * 2u;
+		if(needed + b <= SF_CAPACITY) { setBytes[0] = b; needed += b; }
+		else { if(full == 0) strncpy(fullName, "user waves", 12); full++; }
+	}
+	uint8_t tables = 0;
+	for(uint8_t i = 0; i < sf_tableCount; i++)
+	{
+		SampleFlashResult r = sf_parseWav(&sf_tableFiles[i]);
+		const uint32_t frames = r == SF_OK_IMPORTED ? sf_tableFrames(&sf_tableFiles[i]) : 0u;
+		if(r == SF_ERR_FORMAT || r == SF_ERR_READ || frames == 0u)	/* a damaged table file: skipped */
+		{
+			if(skipped == 0) strncpy(skipName, sf_tableFiles[i].name, 12);
+			skipped++;
+			continue;
+		}
+		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_tableFiles[i].name, 0, 0); return sf_finish(r); }
+		const uint32_t b = frames * WT_FRAME_SIZE * 2u;
+		if(needed + b > SF_CAPACITY)
+		{
+			if(full == 0) strncpy(fullName, sf_tableFiles[i].name, 12);
+			full++;
+			continue;
+		}
+		if(tables != i) sf_tableFiles[tables] = sf_tableFiles[i];
+		setBytes[1u + tables] = b;
+		needed += b;
+		tables++;
+	}
 	if(skipped) sf_showSkipped("Not 16bit, skip:", skipped, skipName);
-	if(kept == 0 && full)
+	if(kept == 0 && full && waves == 0 && tables == 0)
 	{
 		char l1[17];
 		sf_fmtSeconds(l1, wanted);
@@ -707,7 +927,7 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		snprintf(l1, sizeof(l1), "Full(%ss) skip:", s);
 		sf_showSkipped(l1, full, fullName);
 	}
-	if(kept == 0 && waves == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
+	if(kept == 0 && waves == 0 && tables == 0) return sf_finish(SF_ERR_FORMAT);   /* nothing usable, flash untouched */
 	count = kept;
 
 	/* 2. erase - code runs from flash, so the CPU stalls ~1-2 s per sector */
@@ -760,6 +980,36 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		addr += (sf_files[i].frames * 2u + 3u) & ~3u;
 		totalFrames += sf_files[i].frames;
 	}
+	/* MOD: the wave sets */
+	memset(&sf_newTables, 0, sizeof(sf_newTables));
+	if(res == SF_OK_IMPORTED && setBytes[0])
+	{
+		sf_invalidateCache();	/* the user waves are read back from the flash */
+		sf_lcd("Import tables", "user waves");
+		SampleFlashTable* t = &sf_newTables.table[0];
+		t->offset = addr;
+		res = sf_writeSet(NULL, (const int16_t*)sf_newWaves.offset, waves, SF_WAVE_POINTS, SF_USR_INTER, addr, &t->frames, &t->checksum);
+		failName = "user waves";
+		addr += setBytes[0];
+	}
+	for(uint8_t i = 0; i < tables && res == SF_OK_IMPORTED; i++)
+	{
+		char l2[17];
+		snprintf(l2, sizeof(l2), "%-12.12s", sf_tableFiles[i].name);
+		sf_lcd("Import tables", l2);
+		SampleFlashTable* t = &sf_newTables.table[1u + i];
+		strncpy(t->name, sf_tableFiles[i].name, 12);
+		t->offset = addr;
+		const uint32_t L = sf_tableCycle(&sf_tableFiles[i]);
+		res = sf_writeSet(&sf_tableFiles[i], NULL, sf_tableFiles[i].frames / L, L, WT_MAX_INTER, addr, &t->frames, &t->checksum);
+		failName = sf_tableFiles[i].name;
+		addr += setBytes[1u + i];
+	}
+	for(uint8_t i = 0; i < SF_MAX_TABLES; i++)
+	{
+		if(sf_newTables.table[i].frames) sf_newTables.count++;
+		sf_newTables.reserved += setBytes[i];	/* memory of the sets (status line) */
+	}
 
 	/* 4. verify every sample by reading the flash back */
 	if(res == SF_OK_IMPORTED)
@@ -780,6 +1030,15 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 			uint32_t h = sf_fnv(2166136261u, (const uint8_t*)e->offset, bytes);
 			if(h != e->checksum) { res = SF_ERR_VERIFY; failName = e->name; break; }
 		}
+		for(uint8_t i = 0; i < SF_MAX_TABLES && res == SF_OK_IMPORTED; i++)	/* MOD: the wave sets */
+		{
+			const SampleFlashTable* t = &sf_newTables.table[i];
+			if(t->frames && sf_fnv(2166136261u, (const uint8_t*)t->offset, t->frames * WT_FRAME_SIZE * 2u) != t->checksum)
+			{
+				res = SF_ERR_VERIFY;
+				failName = i ? t->name : "user waves";
+			}
+		}
 	}
 
 	/* 5. header: everything but the magic first, the magic last */
@@ -794,7 +1053,9 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		sf_newHeader.reserved[2] = ((sf_end == SF_BIG_END && SF_DATA_START + needed > SF_REGION_END) ? 1u : 0u)
 		                         | (sf_end == SF_BIG_END ? 2u : 0u);
 		const uint32_t rest = sizeof(SampleFlashHeader) - 8u;
+		if(sf_newTables.count) memcpy(sf_newTables.magic, SF_TABLE_MAGIC, 8);
 		if((waves && !sf_programBytes(SF_WAVES_AT, &sf_newWaves, (sizeof(SampleFlashWaves) + 3u) & ~3u)) ||
+		   (sf_newTables.count && !sf_programBytes(SF_TABLES_AT, &sf_newTables, (sizeof(SampleFlashTables) + 3u) & ~3u)) ||
 		   !sf_programBytes(SF_REGION_START + 8u, ((const uint8_t*)&sf_newHeader) + 8u, rest) ||
 		   !sf_programBytes(SF_REGION_START, SF_MAGIC, 8u))
 		{
@@ -814,7 +1075,7 @@ SampleFlashResult sampleFlash_importAtBoot(void)
 	uint32_t signature = 0;
 	uint8_t count = sf_scanFolder(&signature);
 	if(count == 0xFF) return sf_finish(SF_NO_FOLDER);   /* feature not used, old samples stay usable */
-	if(count == 0 && sf_waveCount == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
+	if(count == 0 && sf_waveCount == 0 && sf_tableCount == 0)    { sf_showResult(SF_NO_FOLDER, "", 0, 0); return sf_finish(SF_NO_FOLDER); }
 
 	/* the big flash request is part of the signature: adding or removing
 	 * BIGFLASH imports again */

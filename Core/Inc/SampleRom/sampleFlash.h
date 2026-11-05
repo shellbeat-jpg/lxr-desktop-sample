@@ -59,6 +59,25 @@ typedef struct
 	char     name[SF_MAX_WAVES][16];   /* 8.3 file names */
 } SampleFlashWaves;      /* 32 + 8*16 = 160 bytes */
 
+/* MOD: wave sets of the wavetable engine (wtBuild.h): set 0 is built from the
+ * user waves, sets 1..4 from the files in /SAMPLES/TABLES. Directory at
+ * SF_REGION_START + 0x600; the frames lie in the sample memory. */
+#define SF_MAX_TABLES        5u
+typedef struct
+{
+	char     name[16];   /* 8.3 file name ("" for set 0) */
+	uint32_t offset;     /* absolute flash address of frames * WT_FRAME_SIZE int16 */
+	uint32_t frames;     /* 0 = no set */
+	uint32_t checksum;   /* FNV-1a over the frames */
+} SampleFlashTable;      /* 28 bytes */
+typedef struct
+{
+	char     magic[8];   /* "LXRTBL01" */
+	uint32_t count;      /* sets with frames */
+	uint32_t reserved;
+	SampleFlashTable table[SF_MAX_TABLES];
+} SampleFlashTables;     /* 16 + 5*28 = 156 bytes */
+
 /* Result codes, also shown on the LCD. */
 typedef enum
 {
@@ -108,6 +127,10 @@ float sampleFlash_rangeValue(uint8_t base, float amount, float val);
 uint8_t sampleFlash_getWaveCount(void);
 const int16_t* sampleFlash_wave(uint8_t k);
 const char* sampleFlash_waveName(uint8_t k);
+/* MOD: wave set k (0 = from the user waves, 1..4 = TABLES): its frames and their
+ * number, NULL / 0 if not stored; the file name */
+const int16_t* sampleFlash_table(uint8_t k, uint8_t* frames);
+const char* sampleFlash_tableName(uint8_t k);
 
 /* Flash size of the chip in KB (from its flash size register). */
 uint16_t sampleFlash_chipKB(void);

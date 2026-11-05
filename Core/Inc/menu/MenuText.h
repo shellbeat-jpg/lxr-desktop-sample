@@ -47,6 +47,7 @@
 #define MENU_MODAL_EXC		28
 #define MENU_FM2_RATIO		29	//MOD: FM2 engine
 #define MENU_WAVE_SET		30	//MOD: wavetable engine
+#define MENU_WAVE_SCAN		31
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -413,10 +414,22 @@ const char fm2RatioNames[][4] =
 //MOD: wavetable engine: the table sets
 const char waveSetNames[][4] =
 {
-		{3},
-		{"bas"},	// sine > triangle > saw > square
-		{"usr"},	// user waves W1..W8
+		{7},
+		{"bas"},	// sine > triangle > square > saw
+		{"usr"},	// from the user waves W1..W8
 		{"all"},	// both
+		{"t1"},		// /SAMPLES/TABLES, first name
+		{"t2"},
+		{"t3"},
+		{"t4"},
+};
+const char waveScanNames[][4] =
+{
+		{4},
+		{"smo"},	// smooth
+		{"stp"},	// stepped
+		{"pp"},		// back and forth (ping-pong)
+		{"pps"},	// back and forth, stepped
 };
 //-----------------------------------------------------------------
 const char mixFmNames[][6] =
@@ -602,7 +615,7 @@ const char shortNames[][4]  =
 	{"set"},	//MOD: wavetable engine
 	{"pos"},
 	{"swp"},
-	{"stp"},
+	{"scn"},
 
 };
 //-----------------------------------------------------------------
@@ -797,7 +810,7 @@ const char longNames[][16] =
 	{"Table set"},	//MOD: wavetable
 	{"Wave pos."},	//MOD
 	{"Pos. sweep"},	//MOD
-	{"Stepped"},	//MOD
+	{"Scan mode"},	//MOD
 };
 
 

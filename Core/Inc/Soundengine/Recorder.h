@@ -34,6 +34,9 @@ void rec_seqStop(void);
 void rec_push(const int16_t* st1);
 /* main loop: writes the buffer, finishes the file */
 void rec_process(void);
+/* the ring buffer as working memory while the recorder is idle (sample import at
+ * boot), NULL if too small or in use */
+void* rec_scratch(uint32_t bytes);
 /* the file number shown */
 uint16_t rec_fileNr(void);
 

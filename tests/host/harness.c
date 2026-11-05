@@ -3,6 +3,7 @@
 #include "ff.h"
 #include "lcd.h"
 #include "SampleRom/sampleFlash.h"
+#include "SampleRom/wtBuild.h"
 #include <sys/mman.h>
 void* dw_open(const char*); const char* dw_next(void*); void dw_close(void*);
 #include <sys/stat.h>
@@ -10,10 +11,12 @@ void* dw_open(const char*); const char* dw_next(void*); void dw_close(void*);
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 static char root[512];
 int eraseCalls=0, badErase=0, badProg=0, progCount=0, failAfter=-1, locked=1;
 int bigOk=1, bigErase=0, failUpper=0, maxSector=0;
 uint8_t host_bigAvailable(void){ return (uint8_t)bigOk; }
+void* rec_scratch(uint32_t n){ static char b[16384] __attribute__((aligned(8))); return n<=sizeof b ? b : 0; }
 HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef* e, uint32_t* err){
   eraseCalls++; if(locked) badErase++;
   if(e->Sector>=6 && e->Sector<=11) memset((void*)(uintptr_t)(0x08080000+(e->Sector-6)*0x40000),0xFF,0x40000);
@@ -60,6 +63,27 @@ static void wav(const char* name,int ch,int bits,int rate,int frames,int extraCh
   fwrite("data",1,4,f);fwrite(&data,4,1,f);
   for(int i=0;i<frames;i++)for(int k=0;k<ch;k++){ int v=(i*37+k*1000+ (int)(name[0])*11)%30000-15000; if(bits==16){short s=v;fwrite(&s,2,1,f);} else {int s=v<<8;fwrite(&s,3,1,f);} }
   fclose(f);}
+/* MOD: a wavetable file in /SAMPLES/TABLES: cycles of L points (cycle c: a sine
+ * with harmonic 1..c+1, phase shifted by c*0.3 rad), 16 bit or 32 bit float,
+ * optionally with a Serum "clm " chunk */
+static void table(const char* name,int L,int cycles,int isFloat,int clm,int ch){
+  char b[600];snprintf(b,600,"%s/SAMPLES/TABLES/%s",root,name);FILE* f=fopen(b,"wb");
+  int bps=isFloat?4:2, frames=L*cycles, data=frames*ch*bps, fmtlen=16; char cl[16]; int cll=0;
+  if(clm){ cll=snprintf(cl,16,"<!>%d 1000",L); if(cll&1) cl[cll++]=0; }
+  int riff=4+8+fmtlen+(clm?8+cll:0)+8+data;
+  fwrite("RIFF",1,4,f);fwrite(&riff,4,1,f);fwrite("WAVE",1,4,f);
+  fwrite("fmt ",1,4,f);fwrite(&fmtlen,4,1,f);short fmt=isFloat?3:1,c=ch,bb=bps*8;int rate=44100,br=rate*ch*bps;short ba=ch*bps;
+  fwrite(&fmt,2,1,f);fwrite(&c,2,1,f);fwrite(&rate,4,1,f);fwrite(&br,4,1,f);fwrite(&ba,2,1,f);fwrite(&bb,2,1,f);
+  if(clm){fwrite("clm ",1,4,f);fwrite(&cll,4,1,f);fwrite(cl,1,cll,f);}
+  fwrite("data",1,4,f);fwrite(&data,4,1,f);
+  for(int cy=0;cy<cycles;cy++)for(int i=0;i<L;i++){ double x=0; for(int h=1;h<=cy+1&&h<6;h++) x+=sin(2*M_PI*h*i/L+cy*0.3*h)/h; x*=0.5;
+    for(int k=0;k<ch;k++){ if(isFloat){float v=(float)x;fwrite(&v,4,1,f);} else {short s=(short)(x*32000);fwrite(&s,2,1,f);} } }
+  fclose(f);}
+/* frame f, level l of a set: the sample nearest to a sine of the fundamental at phase 0? */
+static double tbl_fundPhase(const int16_t* fr,int l){ int n=WT_LEVEL_LEN(l); const int16_t* p=fr+WT_LEVEL_OFS(l); double re=0,im=0;
+  for(int i=0;i<n;i++){ re+=p[i]*cos(2*M_PI*i/n); im+=p[i]*sin(2*M_PI*i/n);} return atan2(re,im); }
+static double tbl_harm(const int16_t* fr,int l,int h){ int n=WT_LEVEL_LEN(l); const int16_t* p=fr+WT_LEVEL_OFS(l); double re=0,im=0;
+  for(int i=0;i<n;i++){ re+=p[i]*cos(2*M_PI*h*i/n); im+=p[i]*sin(2*M_PI*h*i/n);} return sqrt(re*re+im*im)*2/n; }
 static int expect(const char* name,int ch,int frames,const SampleFlashEntry* e){
   /* recompute expected mono data and compare with flash */
   const int16_t* p=(const int16_t*)(uintptr_t)e->offset;
@@ -177,6 +201,34 @@ int main(){
   RUN("19 nur Waves, keine Samples"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getCount()==0 && sampleFlash_getWaveCount()==2 && sampleFlash_getHeader()!=NULL,"gueltig ohne Samples");
   system("mv sd3/*.WAV sd/SAMPLES/; rm -rf sd3 sd/SAMPLES/WAVES");
   RUN("20 WAVES-Ordner entfernt"); CHECK(last==SF_OK_IMPORTED && sampleFlash_getWaveCount()==0 && sampleFlash_getCount()>0,"keine Waves mehr, Samples wieder da");
+  /* MOD: wave sets from /SAMPLES/TABLES and from the user waves */
+  system("mkdir -p sd/SAMPLES/TABLES sd/SAMPLES/WAVES sd4; mv sd/SAMPLES/*.WAV sd4/ 2>/dev/null; true");
+  wav("WAVES/1A.WAV",1,16,44100,600,0); wav("WAVES/2B.WAV",1,16,44100,333,0);
+  table("1SERUM.WAV",2048,4,1,1,1);   /* 32 bit float, clm 2048, 4 cycles */
+  table("2WEDIT.WAV",256,64,0,0,2);    /* 16 bit stereo, 64 x 256, no chunk */
+  table("3BIG.WAV",2048,100,0,1,1);    /* 100 cycles: 64 picked */
+  { char b[600]; snprintf(b,600,"%s/SAMPLES/TABLES/4BAD.WAV",root); FILE* f=fopen(b,"wb"); fputs("nonsense",f); fclose(f); }
+  RUN("21 Wave-Sets (Serum float, WaveEdit, gross, kaputt)");
+  { uint8_t n0=0,n1=0,n2=0,n3=0,n4=0; const int16_t* t0=sampleFlash_table(0,&n0); const int16_t* t1=sampleFlash_table(1,&n1);
+    const int16_t* t2=sampleFlash_table(2,&n2); const int16_t* t3=sampleFlash_table(3,&n3); sampleFlash_table(4,&n4);
+    CHECK(last==SF_OK_IMPORTED && t0 && n0==2+3,"Set aus 2 User-Waves: 2 + 3 Zwischenwellen");
+    CHECK(t1 && n1==4+3*7 && !strcmp(sampleFlash_tableName(1),"1SERUM.WAV"),"Serum (clm 2048, float): 4 Zyklen + je 7 Zwischenwellen = 25");
+    CHECK(t2 && n2==64,"WaveEdit 64 x 256 ohne clm erkannt: 64 Frames");
+    CHECK(t3 && n3==64,"100 Zyklen: 64 gleichmaessig ausgewaehlt");
+    CHECK(n4==0,"kaputte Datei uebersprungen");
+    int aligned=1; for(int f=0;f<n1&&t1;f++) for(int l=0;l<6;l++) if(fabs(tbl_fundPhase(t1+f*WT_FRAME_SIZE,l))>0.05) aligned=0;
+    CHECK(aligned,"alle Frames und Stufen: Grundton bei Phase 0 (ausgerichtet)");
+    double pk=0; for(int i=0;t1&&i<256;i++) if(abs(t1[i])>pk) pk=abs(t1[i]);
+    CHECK(pk>29000 && pk<=30001,"Frame normalisiert (Spitze 30000)");
+    CHECK(t1 && tbl_harm(t1,0,2)<50 && tbl_harm(t1+24*WT_FRAME_SIZE,0,2)>3000,"Frame 0 reiner Sinus, letzter Frame mit 2. Oberton");
+    double h2a=t1?tbl_harm(t1+7*WT_FRAME_SIZE,0,2):0, h2b=t1?tbl_harm(t1+8*WT_FRAME_SIZE,0,2):0;   /* in-between before cycle 1 / cycle 1 */
+    CHECK(h2a>0.5*h2b && h2a<h2b,"Zwischenwelle: Oberton waechst stetig zum naechsten Zyklus");
+    CHECK(t1 && tbl_harm(t1+24*WT_FRAME_SIZE,5,4)<50 && tbl_harm(t1+24*WT_FRAME_SIZE,5,3)>1000 && tbl_harm(t1+24*WT_FRAME_SIZE,0,4)>1000,"Stufe mit 3 Obertoenen: Oberton 4 weg, 3 bleibt");
+    sampleFlash_showStatus(); CHECK(strstr(lcdbuf,"T:3")!=NULL,"Statuszeile zeigt 3 Tabellen");
+  }
+  RUN("22 Neustart mit Wave-Sets"); CHECK(last==SF_OK_UNCHANGED,"kein erneuter Import");
+  system("rm -rf sd/SAMPLES/TABLES sd/SAMPLES/WAVES; mv sd4/*.WAV sd/SAMPLES/; rm -rf sd4");
+  RUN("23 TABLES entfernt"); { uint8_t n=0; CHECK(last==SF_OK_IMPORTED && sampleFlash_table(1,&n)==NULL && sampleFlash_table(0,&n)==NULL,"keine Sets mehr"); }
   CHECK(badErase==0,"NIE ein anderer Sektor als 6-11 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}

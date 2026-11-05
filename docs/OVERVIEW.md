@@ -26,7 +26,7 @@ Waser), everything else from OE02-Samples+.
 | WAV recorder *(1.2.11, not released yet)* | Records St1 to the SD card (`REC/RECnnn.WAV`, 16 bit stereo): 1, 2 or 4 passes of the pattern or until stop; starts with PLAY or at the next pattern start. | PERF, last screen (`REC`, `RST`, encoder click) | Global | – |
 | Modal engine *(1.2.11, not released yet)* | Fifth engine: physical model of a struck membrane, bar, string, bell, plate or glass (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2 engine *(1.2.11, not released yet)* | 2-operator FM percussion: ratio `RAT`, index `IDX` with its own decay `IDC`, feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |
-| Wavetable engine *(1.2.11, not released yet)* | Scans sine › saw › square and/or the user waves (`SET`, `POS`), swept by the pitch EG (`SWP`). Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit | NRPN 98 |
+| Wavetable engine *(1.2.11, not released yet)* | Scans sine › triangle › square › saw, a set made from the user waves or 4 own sets from `SAMPLES/TABLES` (Serum, Vital, WaveEdit); lined-up frames, real in-between waves, band limited; `SWP` sweep by the pitch EG, `SCN` smooth, stepped or back and forth. Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit; sets: sample memory | NRPN 98 |
 
 ## Sequencer / tracks
 

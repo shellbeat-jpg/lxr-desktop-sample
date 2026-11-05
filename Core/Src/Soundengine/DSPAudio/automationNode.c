@@ -12,6 +12,7 @@
  */
 
 #include "Soundengine/DSPAudio/automationNode.h"
+#include "Soundengine/DSPAudio/VoiceSlot.h"	//MOD: slot_modDestination
 
 //-------------------------------------------------------------
 void autoNode_init(AutomationNode* node)
@@ -37,8 +38,8 @@ void autoNode_setDestination(AutomationNode* node, uint16_t dest)
 		midiParser_ccHandler(msg,0, 0, 0.f);
 	}
 
-	//set new destination
-	node->destination = dest;
+	//set new destination (MOD: engine settings of voice 4 and 6, VoiceSlot.h)
+	node->destination = dest == NO_AUTOMATION ? dest : slot_modDestination(dest);
 }
 //-------------------------------------------------------------
 void autoNode_updateValue(AutomationNode* node, uint8_t val)

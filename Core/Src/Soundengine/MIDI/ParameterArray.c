@@ -106,6 +106,10 @@
 #endif
 }
 //---------------------------------------------------------------------
+//MOD: the engine settings without a stock parameter (role 0 of slot 4, role 6 of
+//slot 6): a value to read for the LFO/velocity/automation targets (the setting
+//itself goes to the engine through slot_setRoleParameter)
+static uint8_t paramArray_unusedRole[2];
 void parameterArray_init()
 {
 
@@ -743,6 +747,12 @@ void parameterArray_init()
 
 	parameterArray[PAR_FX_DELAY_TYPE].ptr 		= &fxBus.delay.delayType;
 	parameterArray[PAR_FX_DELAY_TYPE].type 		= TYPE_UINT8;
+
+	//MOD: role 0 of slot 4 and role 6 of slot 6 (paramArray_unusedRole)
+	parameterArray[PAR_UNUSED_3].ptr 		= &paramArray_unusedRole[0];
+	parameterArray[PAR_UNUSED_3].type 		= TYPE_UINT8;
+	parameterArray[PAR_UNUSED_4].ptr 		= &paramArray_unusedRole[1];
+	parameterArray[PAR_UNUSED_4].type 		= TYPE_UINT8;
 
 
 

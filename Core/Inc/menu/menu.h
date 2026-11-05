@@ -353,7 +353,7 @@ enum NamesEnum
 	TEXT_WT_SET,	//MOD: wavetable engine
 	TEXT_WT_POS,
 	TEXT_WT_SWEEP,
-	TEXT_WT_STEP,
+	TEXT_WT_SCAN,
 
 
 	NUM_NAMES
@@ -525,7 +525,7 @@ enum shortNamesEnum
 	SHORT_WT_SET,
 	SHORT_WT_POS,
 	SHORT_WT_SWEEP,
-	SHORT_WT_STEP
+	SHORT_WT_SCAN
 
 	
 };
@@ -719,7 +719,7 @@ enum longNamesEnum
 	LONG_WT_SET,
 	LONG_WT_POS,
 	LONG_WT_SWEEP,
-	LONG_WT_STEP
+	LONG_WT_SCAN
 	
 };
 

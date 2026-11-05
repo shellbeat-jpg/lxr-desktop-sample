@@ -67,6 +67,7 @@ add_library(lxr_preset OBJECT
     Src/Preset/voiceMorph.c
     Src/Preset/presetManager.c
     Src/SampleRom/sampleFlash.c
+    Src/SampleRom/wtBuild.c
 )
 
 # DSP building blocks, drum voices and master effects.
@@ -84,6 +85,7 @@ add_library(lxr_dsp OBJECT
     Src/Soundengine/DSPAudio/ModalVoice.c
     Src/Soundengine/DSPAudio/Fm2Voice.c
     Src/Soundengine/DSPAudio/WaveVoice.c
+    Src/Soundengine/DSPAudio/WaveBasic.c
     Src/Soundengine/DSPAudio/lfo.c
     Src/Soundengine/DSPAudio/mixer.c
     Src/Soundengine/DSPAudio/modulationNode.c

@@ -35,6 +35,11 @@ static uint32_t rec_bytes = 0;
 static uint8_t rec_error = 0;
 
 uint16_t rec_fileNr(void) { return rec_nr; }
+/* the ring as working memory before the recorder is used (sample import at boot) */
+void* rec_scratch(const uint32_t bytes)
+{
+	return (bytes <= sizeof(rec_ring) && rec_state == REC_IDLE) ? (void*)rec_ring : (void*)0;
+}
 
 static void rec_path(char* p, const uint16_t nr)
 {

@@ -82,6 +82,12 @@ uint8_t slot_stockEngine(const uint8_t slot);
 //initialize all slots with their stock engines
 void slot_init(void);
 
+//MOD: the parameter a modulation or step automation of par acts on. The main
+//oscillator waveform targets of voice 4 and voice 6 stand for the engine settings
+//the stock snare (role 0) and hi-hat (role 6) don't have, while the slot runs one
+//of the added engines (modal, FM2, wavetable), which have no oscillator waveform.
+uint16_t slot_modDestination(const uint16_t par);
+
 //change the engine of a slot. The voice is re-initialized (LFO and fader
 //smoothing are kept); its sound parameters have to be sent again afterwards.
 void slot_setEngine(const uint8_t slot, const uint8_t engine);

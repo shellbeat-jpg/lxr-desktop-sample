@@ -127,6 +127,8 @@ void modNode_setDestination(ModulationNode* vm, uint16_t dest)
 	//is needed to really get the original value
 	modNode_resetTargets();
 
+	dest = slot_modDestination(dest);	//MOD: engine settings of voice 4 and 6 (VoiceSlot.h)
+
 	//restore old value to original TODO isn't this already being done above for all nodes?
 	//paramArray_setParameter(vm->destination,vm->originalValue);
 

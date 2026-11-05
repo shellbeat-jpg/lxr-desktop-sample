@@ -349,7 +349,7 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_WT_SET, CAT_VOICE, LONG_WT_SET},/*TEXT_WT_SET*/
 		{SHORT_WT_POS, CAT_VOICE, LONG_WT_POS},/*TEXT_WT_POS*/
 		{SHORT_WT_SWEEP, CAT_VOICE, LONG_WT_SWEEP},/*TEXT_WT_SWEEP*/
-		{SHORT_WT_STEP, CAT_VOICE, LONG_WT_STEP},/*TEXT_WT_STEP*/
+		{SHORT_WT_SCAN, CAT_VOICE, LONG_WT_SCAN},/*TEXT_WT_SCAN*/
 
 
 };
@@ -823,13 +823,13 @@ static const uint8_t menu_ownText[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
 {
 	{ TEXT_MDL_MODEL, TEXT_MDL_DAMP, TEXT_MDL_POS, TEXT_MDL_INH, TEXT_MDL_HARD, TEXT_MDL_MAT, TEXT_MDL_EXC },
 	{ TEXT_FM2_RATIO, 0, 0, 0, TEXT_FM2_INDEX, TEXT_FM2_IDEC, TEXT_FM2_FB },
-	{ TEXT_WT_SET, 0, 0, 0, TEXT_WT_POS, TEXT_WT_SWEEP, TEXT_WT_STEP },
+	{ TEXT_WT_SET, 0, 0, 0, TEXT_WT_POS, TEXT_WT_SWEEP, TEXT_WT_SCAN },
 };
 static const uint16_t menu_ownDtype[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
 {
 	{ MENU_OWN_MENU(MENU_MODAL_MODEL), DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, MENU_OWN_MENU(MENU_MODAL_EXC) },
 	{ MENU_OWN_MENU(MENU_FM2_RATIO), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127 },
-	{ MENU_OWN_MENU(MENU_WAVE_SET), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, DTYPE_ON_OFF },
+	{ MENU_OWN_MENU(MENU_WAVE_SET), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, MENU_OWN_MENU(MENU_WAVE_SCAN) },
 };
 uint8_t menu_ownRoleText(const uint16_t par)
 {
@@ -4034,6 +4034,8 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 		return fm2RatioNames[0][0];
 	case MENU_WAVE_SET:
 		return waveSetNames[0][0];
+	case MENU_WAVE_SCAN:
+		return waveScanNames[0][0];
 
 	case MENU_FX:
 		return fxNames[0][0];
@@ -4154,6 +4156,9 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		break;
 	case MENU_WAVE_SET:
 		p = MENU_ITEM(waveSetNames);
+		break;
+	case MENU_WAVE_SCAN:
+		p = MENU_ITEM(waveScanNames);
 		break;
 
 	case MENU_FX:

@@ -6,7 +6,8 @@ both taken unchanged from [OpenElixir-02 v1.2](https://github.com/tunefish777/op
 
 ## Importing samples
 
-(User waves for oscillators and LFOs: see [User waves](#user-waves-1210).)
+(User waves for oscillators and LFOs: see [User waves](#user-waves-1210); wave sets for the
+wavetable engine in `SAMPLES/TABLES`: see [Wavetable engine](#wavetable-engine-1211-test).)
 
 1. Create the folder `SAMPLES` in the top folder of the SD card and copy WAV files into it. Loop
    samples go into the subfolder `SAMPLES/LOOPS`.
@@ -656,19 +657,58 @@ like with the drum. MIDI: NRPN 98 value 30 + slot.
 
 ## Wavetable engine (1.2.11, test)
 
-`wavetable`: an oscillator that scans through a set of single-cycle waves, crossfading between
-neighbours. The pitch EG also sweeps the position, so a hit can start bright and settle on a sine.
-Drum pages; on the FM page:
+`wavetable`: an oscillator that scans through a set of single-cycle waves (frames). The pitch EG
+also sweeps the position, so a hit can start bright and settle on a sine. Drum pages; on the FM
+page:
 
 | Displayed name | Name | Description |
 |---|---|---|
-| `SET` | Table set | `bas` = sine › triangle › saw › square (band limited), `usr` = the user waves W1 … W8 (from `SAMPLES/WAVES`, none: `bas`), `all` = both |
-| `POS` | Wave pos. | position in the set (0 = first wave) |
-| `SWP` | Pos. sweep | how far the pitch EG moves the position up at the strike (with its decay) |
-| `STP` | Stepped | `on` = jumps from wave to wave instead of crossfading |
+| `SET` | Table set | `bas` = sine › triangle › square › saw, `usr` = made from the user waves W1 … W8 (`SAMPLES/WAVES`), `all` = `bas`, then `usr`, `t1` … `t4` = the wave sets of `SAMPLES/TABLES` (missing set: `bas`) |
+| `POS` | Wave pos. | position in the set: 0 = first frame, 127 = last |
+| `SWP` | Pos. sweep | how far the pitch EG moves the position up at the strike; it moves back to `POS` as the EG decays |
+| `SCN` | Scan mode | `smo` = crossfade between neighbouring frames, `stp` = frame by frame, `pp` = back and forth: the first half of the range runs through the set, the second half back (an LFO saw then scans forth and back without a jump), `pps` = back and forth, frame by frame |
+
+**How a set is played.** The position (`POS` + `SWP` × pitch EG, plus LFO or step automation on
+`POS`, limited to 0 … 127) is spread evenly over the frames of the set; between two frames the
+engine crossfades. All frames are prepared when they are made:
+
+- **Lined up:** each frame is turned so that its fundamental starts at the same phase. Crossfades
+  then don't cancel the fundamental (no thin middle).
+- **In-between frames:** between two waves of a set the frames are calculated from their
+  harmonics (level and phase of each one interpolated), not mixed: the timbre changes like in a
+  real morph. `bas` has 7 between each pair (25 frames), `usr` 3, a table file up to 7 (at most 64
+  frames per set).
+- **Band limited by pitch:** each frame has versions with 127, 63, 31, 15, 7 and 3 harmonics. The
+  engine takes the one that stays below about 20 kHz at the played pitch, crossfading between them
+  while the pitch moves (no aliasing, no jump at octave borders). Above about 6.6 kHz it fades to a
+  sine.
+
+**Own sets:** WAV files in `SAMPLES/TABLES` (up to 4, `t1` = first name), imported at the start
+like the samples:
+
+| | |
+|---|---|
+| Format | WAV, 16 bit, 24 bit or 32 bit float, mono or stereo (left channel) |
+| Cycle length | from the file's `clm` chunk (Serum and Vital write it, e.g. 2048), without it: 2048 for long files divisible by 2048, otherwise 256 (WaveEdit, 64 × 256); a short file (up to 4096 points) is one cycle |
+| Frames | the cycles in file order; more than 64: 64 evenly picked; fewer: in-between frames added (up to 7 per pair, 64 frames at most) |
+| Memory | 1.25 KB per frame (256 points plus the band limited versions): a set of 64 frames about 80 KB = 0.9 s of samples |
+| Priority | after the samples: what doesn't fit any more is skipped (as samples) |
+
+The set `usr` is made from the user waves in the same way (with 3 in-between frames per pair; 8
+waves: 29 frames, 36 KB). The start screen shows the number of sets (`S:12 W:3 T:2`); the memory
+used includes them. Importing tables takes a few seconds (the harmonics of every cycle are
+calculated).
 
 The MOD page keeps the drum's pitch EG (decay, slope, amount); with the amount at 0 it only sweeps
-the position. LFO or step automation on `POS` scans the table. MIDI: NRPN 98 value 36 + slot.
+the position. MIDI: NRPN 98 value 36 + slot.
+
+## Modulation targets of the added engines (1.2.11)
+
+The settings of `modal`, `fm2` and `wavetable` are LFO, velocity and step automation targets on
+every voice, named as on their pages (e.g. LFO `dst` `pos`, step `dst` `1po`). On voice 4 the
+first setting (`MDL`, `RAT`, `SET`) and on voice 6/7 the last one (`EXC`, `FBK`, `SCN`) have no
+place of their own in the stock target list; there they take the place of the oscillator
+waveform target (`wav`), which these engines don't have. Kits keep their targets.
 
 ## Voice INIT
 

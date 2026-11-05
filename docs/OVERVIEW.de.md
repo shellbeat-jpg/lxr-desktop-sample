@@ -26,7 +26,7 @@ Waser), alles andere aus OE02-Samples+.
 | WAV-Recorder *(1.2.11, noch nicht veröffentlicht)* | Nimmt St1 auf die SD-Karte auf (`REC/RECnnn.WAV`, 16 Bit Stereo): 1, 2 oder 4 Durchläufe des Patterns oder bis Stop; Start mit PLAY oder beim nächsten Pattern-Start. | PERF, letzter Screen (`REC`, `RST`, Encoder-Klick) | Global | – |
 | Modal-Engine *(1.2.11, noch nicht veröffentlicht)* | Fünfte Engine: Physical Modelling einer angeschlagenen Membran, eines Stabs, einer Saite, Glocke, Platte oder eines Glases (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2-Engine *(1.2.11, noch nicht veröffentlicht)* | 2-Operator-FM-Percussion: Ratio `RAT`, Index `IDX` mit eigenem Abklingen `IDC`, Feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |
-| Wavetable-Engine *(1.2.11, noch nicht veröffentlicht)* | Durchfährt Sinus › Sägezahn › Rechteck und/oder die User-Waves (`SET`, `POS`), bewegt vom Pitch-EG (`SWP`). Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit | NRPN 98 |
+| Wavetable-Engine *(1.2.11, noch nicht veröffentlicht)* | Durchfährt Sinus › Dreieck › Rechteck › Sägezahn, ein Set aus den User-Waves oder 4 eigene Sets aus `SAMPLES/TABLES` (Serum, Vital, WaveEdit); ausgerichtete Frames, echte Zwischenwellen, höhenbegrenzt; `SWP` Sweep durch den Pitch-EG, `SCN` weich, stufig oder vor und zurück. Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit; Sets: Sample-Speicher | NRPN 98 |
 
 ## Sequencer / Tracks
 

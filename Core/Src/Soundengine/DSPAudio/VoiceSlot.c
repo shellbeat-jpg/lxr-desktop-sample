@@ -280,6 +280,15 @@ static void slot_setFmRole(OscInfo* modOsc, OscInfo* modOsc2, float* modAmount1,
 	}
 }
 //---------------------------------------------------
+uint16_t slot_modDestination(const uint16_t par)
+{
+	if(par == PAR_OSC_WAVE_SNARE && voiceSlots[3].engine >= ENGINE_MODAL)
+		return slot_rolePar[3][0];
+	if(par == PAR_WAVE1_HH && voiceSlots[5].engine >= ENGINE_MODAL)
+		return slot_rolePar[5][6];
+	return par;
+}
+//---------------------------------------------------
 //MOD: roles 1-3 of the FM2 and wavetable engines: the pitch EG, as for the drum
 static uint8_t slot_setPitchEgRole(DecayEg* eg, float* amount, const uint8_t role, const uint8_t itg)
 {
