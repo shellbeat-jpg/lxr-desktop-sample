@@ -142,7 +142,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h1 data-toc><b>1</b> &gt; Einführung</h1>
+      <h1 data-toc><b>1</b> &gt; HINWEISE</h1>
       <p>Diese Ergänzung beschreibt, was die Firmware <b>OE02-Samples+ 1.2.11</b> dem LXR-02 und seinem Handbuch hinzufügt. Alles hier nicht Erwähnte funktioniert wie im Handbuch beschrieben.</p>
       <p>OE02-Samples+ baut auf <b>OpenElixir-02 1.2</b> von Moritz Waser auf. Funktionen aus OpenElixir-02 sind mit <span class="oe">OE</span> markiert; alles andere ist neu in OE02-Samples+. Die Kapitel folgen dem Handbuch: Speicher, Voices, Sequencer, Performance-Modus, Effekte, globale Einstellungen und MIDI.</p>
       <h2 data-toc>1.1. Zu den Tabellen</h2>
@@ -264,13 +264,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <p>Neue Werte und Parameter auf der OSC-Seite:</p>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>wav</td><td>Waveform</td><td>nach <b>sin tri saw rec noi pwm</b>: die Samples <b>S1</b> … <b>S31</b>, dann die Waves <b>W1</b> … <b>W8</b>. Unbelegte Sample-Slots werden beim Drehen übersprungen. Die Edit-Ansicht zeigt den Dateinamen, <b>L</b> für einen Loop und den Slot.</td></tr>
-        <tr><td>sta</td><td>Start</td><td>anstelle von <b>pwm</b>, solange ein Sample gewählt ist: wo das Sample beginnt, in ms (0 = Anfang).</td></tr>
-        <tr><td>len</td><td>Length</td><td>Drum 1–3, 5. Parameter: wie lange das Sample spielt, in ms (0 = <b>all</b>, bis zum Ende).</td></tr>
+        <tr><td>wav</td><td>Waveform</td><td>Analog (Default)<br>Samples <b>S1</b> … <b>S31<br></b>Waves <b>W1</b> … <b>W8</b>. <br>Unbelegte Sample-Slots werden beim Drehen übersprungen.</td></tr>
+        <tr><td>sta*</td><td>Start</td><td>ms (DRUM, CYMBAL, 0 = Anfang)</td></tr>
+        <tr><td>len*</td><td>Length</td><td>ms (DRUM, 0 = bis zum Ende)</td></tr>
         <tr><td>coa</td><td>Coarse tune</td><td>mit Sample: 60 = Originaltonhöhe.</td></tr>
       </table>
-      <p><b>sta</b> und <b>len</b> laufen auf einer quadratischen Skala: feine Schritte am Anfang. Der Start wird beim Trigger übernommen, auch bei LFO- oder Velocity-Modulation. Kurze Fades verhindern Klicks, wenn Start oder Länge mitten ins Sample schneiden.</p>
-      <p>Die FM-Seite der Drum-Voices kann Samples und Waves auch als FM-Quelle nutzen.</p>
+      <p><font color="#231f20">*:</font> nur bei Samples </p>
+      <p>Für FM können Samples und Waves auch als Quelle benutzt werden.</p>
     </div>
   </div>
 </section>
@@ -278,28 +278,28 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>3.4. Samples und Loops</h2>
-      <p>Ein Sample aus <code>SAMPLES</code> spielt pro Trigger einmal; die Amp-Hüllkurve (AEG-Decay) kann es früher beenden. Ein Retrigger blendet den noch klingenden Sound klickfrei aus (etwa 1 ms).</p>
-      <p>Ein Sample aus <code>SAMPLES/LOOPS</code> spielt von <b>sta</b> bis zum mit <b>len</b> gesetzten Ende und springt zu <b>sta</b> zurück, bis die Amp-Hüllkurve den Sound beendet. Drum-Voices haben kein Gate: Ein langes Decay hält den Loop in Gang; mit Decay 127 endet er nie von selbst. Der Sequencer-Stopp blendet alle laufenden Loops aus. Der Loop-Punkt wird übergeblendet (bis zu 256 Frames, höchstens ein Viertel des Loops).</p>
+      <h2 data-toc>3.4. Loops</h2>
+      <p><br></p>
+      <p>WAV Dateien aus <code>SAMPLES/LOOPS</code> spielen von <b>sta</b> bis zum mit <b>len</b> gesetzten Ende im Loop. Entweder mit DEC = 127 endlos oder entsprechend der  Amp-Hüllkurvenlänge.</p>
       <h2 data-toc>3.5. Waves</h2>
-      <p>Bis zu 8 WAV-Dateien in <code>SAMPLES/WAVES</code>, jede ein Zyklus einer Wellenform. Beim Import wird jede Datei auf 1024 Punkte umgerechnet; das Ende führt zurück zum Anfang. Bei Stereodateien wird nur der linke Kanal genutzt.</p>
+      <p><code><font color="#2e2b2c" face="Barlow, DejaVu Sans, sans-serif">WAV Dateien aus </font>SAMPLES/WAVES spielen im Loop (ein Wellenform Zyklus)</code>. Darstellung: W1 ... W8. <br>Beim Import wird jede Datei auf 1024 Samples umgerechnet. <br>Bei Stereodateien wird nur der linke Kanal genutzt.</p>
       <ul>
-        <li>Waves werden eigenständig nummeriert: <b>W1</b> = der erste Name. Neue oder entfernte Samples verschieben sie nicht.</li>
-        <li>Beste Ergebnisse: ein Zyklus, der im Nulldurchgang beginnt und endet, gleichsinnig ansteigend, ohne DC-Offset.</li>
-        <li>2 KB pro Wave im Sample-Speicher.</li>
+        <li><br></li>
+        <li>Zur Vermeidung von Knacksern  sollte eine Wellenform am Nulldurchgang ansteigend beginnen und absteigend enden.</li>
+        <li><br></li>
       </ul>
     </div>
     <div class="col">
       <h2 data-toc>3.6. Modulierte Sample-Auswahl</h2>
-      <p>Mit einem Sample als Wellenform wählt die Modulation der Wellenform (LFO oder Velocity, Ziel <b>wav</b>) unter den folgenden Samples, statt auf die eingebauten Wellenformen umzuschalten:</p>
+      <p>Über LFO oder Velocity Modulation kann die Sample-  (und Waves-) Auswahl dynamisch erfolgen:</p>
       <ul>
-        <li>Der Bereich beginnt beim gewählten Sample und umfasst so viele weitere Samples wie die Modulationsstärke (LFO <b>mod</b>, Velocity <b>amt</b>): S5 mit Stärke 4 = S5 … S9.</li>
-        <li>Das Sample wird beim Trigger gewählt und bis zum nächsten beibehalten.</li>
-        <li><b>Velocity-Layer</b>: leise bis laute Versionen, fortlaufend benannt, die leiseste gewählt, Stärke = Anzahl der Layer − 1.</li>
-        <li><b>Round Robin</b>: LFO-Wellenform <b>cyc</b> geht den Bereich durch, ein Sample pro Trigger. Zufällig: <b>rnd</b> mit einer Rate schneller als die Schläge.</li>
+        <li>Startpunkt ist das gewählte Sample. Die Anzahl der Samples wird über LFO <b>mod oder</b> Velocity <b>amt gesteuert.</b><br></li>
+        <li><br></li>
+        <li><b>Velocity-Layer</b>: leise bis laute Versionen, fortlaufend benannt, die leiseste gewählt, AMT= Anzahl der Layer − 1.</li>
+        <li><b>Round Robin</b>: DST = WAV, WAV = CYC <br><font color="#231f20">CYC </font>durchläuft den Bereich, ein Sample pro Trigger. <br>Zufällig: WAV = <b>rnd</b> mit einer Rate schneller als die Trigger.<br>mod = Anzahl der Samples.</li>
       </ul>
-      <p>Dasselbe funktioniert mit einer Wave als Basis: Dann wird unter den Waves gewählt.</p>
-      <p>Die drei Wellenform-Ziele der LFO- und Velocity-Menüs heißen <b>wav</b> (Hauptoszillator), <b>fwv</b> (FM-/Mod-Oszillator) und <b>cwv</b> (Transient); nur <b>wav</b> wählt Samples.</p>
+      <p><br></p>
+      <p><br></p>
     </div>
   </div>
 </section>
