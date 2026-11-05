@@ -694,6 +694,10 @@ like the samples:
 | Memory | 1.25 KB per frame (256 points plus the band limited versions): a set of 64 frames about 80 KB = 0.9 s of samples |
 | Priority | after the samples: what doesn't fit any more is skipped (as samples) |
 
+A table file that can't be used is skipped with its reason on the display ("Table format?:",
+"Table too short:", "Table unreadable:"). The edit view of `SET` shows the file of the chosen set,
+or `none>bas` when it isn't stored (then the basic set plays).
+
 The set `usr` is made from the user waves in the same way (with 3 in-between frames per pair; 8
 waves: 29 frames, 36 KB). The start screen shows the number of sets (`S:12 W:3 T:2`); the memory
 used includes them. Importing tables takes a few seconds (the harmonics of every cycle are

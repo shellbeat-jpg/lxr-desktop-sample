@@ -1482,6 +1482,24 @@ static uint8_t* menu_sendLevel(const uint16_t p)
 }
 //MOD: FX3 values as text: 3 characters (four-parameter view) or the edit view's
 //value with its unit; returns 0 for other parameters
+//MOD: edit view of the wavetable engine's SET: the file of the set or "none > bas",
+//right aligned into the 13 characters at out
+static uint8_t menu_waveSetText(const uint16_t p, const uint8_t v, char* out)
+{
+	uint8_t engine = 0;
+	if(kitEngines_ownRole(p, &engine) != 0 || engine != ENGINE_WAVE)
+		return 0;
+	char t[14];
+	uint8_t n = 0;
+	if(v == 0)				snprintf(t, sizeof(t), "sin>saw");
+	else if(v <= 2)			snprintf(t, sizeof(t), sampleFlash_table(0, &n) ? (v == 1 ? "user waves" : "bas+user") : "none > bas");
+	else if(sampleFlash_table((uint8_t)(v - 2u), &n))	snprintf(t, sizeof(t), "%.12s", sampleFlash_tableName((uint8_t)(v - 2u)));
+	else					snprintf(t, sizeof(t), "t%u none>bas", (unsigned)(v - 2u));
+	const size_t len = strlen(t);
+	memset(out, ' ', 13);
+	memcpy(out + 13 - len, t, len);
+	return 1;
+}
 static uint8_t menu_fx3Text(const uint16_t p, const uint8_t v, char* out, const uint8_t isLong)
 {
 	if(menu_isFxPreset(p))	//MOD: FX preset
@@ -2780,6 +2798,10 @@ void menu_repaintGeneric()
 					snprintf(&editDisplayBuffer[1][5], 12, "Voice %u > %u", (unsigned)(s+1u), (unsigned)(d+1u));
 				else
 					memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
+			}
+			else if(menu_waveSetText(parNr, curParmVal, &editDisplayBuffer[1][3]))
+			{
+				//MOD: wavetable SET: its file, or that it is missing
 			}
 			else if((parNr >= PAR_T7_WAVE && parNr <= PAR_T7_PAN) || menu_isFxPreset(parNr) || parNr == PAR_REC_LEN || parNr == PAR_REC_START)
 			{

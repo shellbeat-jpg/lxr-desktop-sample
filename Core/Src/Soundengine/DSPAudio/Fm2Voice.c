@@ -41,7 +41,8 @@ void Fm2_setRole(Fm2Voice* v, const uint8_t role, const uint8_t itg, const float
 	{
 	case 0:
 	{
-		uint8_t r = isFloatModulator ? (uint8_t)(flt * FM2_NUM_RATIOS) : itg;
+		/* modulated: around the stored list index (the LFO works on 0..127) */
+		const uint8_t r = isFloatModulator ? (uint8_t)lrintf(flt * 127.f) : itg;
 		v->ratio = fm2_ratios[r >= FM2_NUM_RATIOS ? FM2_NUM_RATIOS-1 : r];
 		break;
 	}

@@ -60,7 +60,8 @@ void Wave_setRole(WaveVoice* v, const uint8_t role, const uint8_t itg, const flo
 	{
 	case 0:
 	{
-		const uint8_t s = isFloatModulator ? (uint8_t)(flt * WAVE_NUM_SETS) : itg;
+		/* modulated: around the stored list index (the LFO works on 0..127) */
+		const uint8_t s = isFloatModulator ? (uint8_t)lrintf(flt * 127.f) : itg;
 		v->set = s >= WAVE_NUM_SETS ? WAVE_NUM_SETS-1 : s;
 		v->lastFrame = -1.f;
 		break;
@@ -69,7 +70,7 @@ void Wave_setRole(WaveVoice* v, const uint8_t role, const uint8_t itg, const flo
 	case 5:	v->sweep = flt;		break;
 	case 6:
 	{
-		const uint8_t s = isFloatModulator ? (uint8_t)(flt * WAVE_NUM_SCANS) : itg;
+		const uint8_t s = isFloatModulator ? (uint8_t)lrintf(flt * 127.f) : itg;
 		v->scan = s >= WAVE_NUM_SCANS ? WAVE_NUM_SCANS-1 : s;
 		break;
 	}

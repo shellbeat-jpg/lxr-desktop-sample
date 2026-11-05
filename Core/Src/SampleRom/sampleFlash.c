@@ -895,8 +895,8 @@ static SampleFlashResult sf_import(uint8_t count, const uint32_t signature)
 		const uint32_t frames = r == SF_OK_IMPORTED ? sf_tableFrames(&sf_tableFiles[i]) : 0u;
 		if(r == SF_ERR_FORMAT || r == SF_ERR_READ || frames == 0u)	/* a damaged table file: skipped */
 		{
-			if(skipped == 0) strncpy(skipName, sf_tableFiles[i].name, 12);
-			skipped++;
+			sf_showSkipped(r == SF_ERR_READ ? "Table unreadable:" : r == SF_ERR_FORMAT ? "Table format?:" : "Table too short:",
+					1, sf_tableFiles[i].name);
 			continue;
 		}
 		if(r != SF_OK_IMPORTED) { sf_showResult(r, sf_tableFiles[i].name, 0, 0); return sf_finish(r); }

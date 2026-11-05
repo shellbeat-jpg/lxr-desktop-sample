@@ -9,6 +9,7 @@
 #include "Soundengine/DSPAudio/EnginePost.h"
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include <string.h>
+#include <math.h>
 
 #define MODAL_OUT_GAIN	(0.3f * 32767.f)	/* a hard strike peaks at about full scale */
 
@@ -26,7 +27,8 @@ void Modal_setRole(ModalVoice* v, const uint8_t role, const uint8_t itg, const f
 	{
 	case 0:
 	{
-		uint8_t m = isFloatModulator ? (uint8_t)(flt * MODAL_MODELS) : itg;
+		/* modulated: around the stored list index (the LFO works on 0..127) */
+		const uint8_t m = isFloatModulator ? (uint8_t)lrintf(flt * 127.f) : itg;
 		v->par.model = m >= MODAL_MODELS ? MODAL_MODELS-1 : m;
 		break;
 	}
@@ -35,7 +37,7 @@ void Modal_setRole(ModalVoice* v, const uint8_t role, const uint8_t itg, const f
 	case 3:	v->par.inh = itg;			break;
 	case 4:	v->par.hard = itg;			break;
 	case 5:	v->par.mat = itg;			break;
-	default: v->par.noise = itg != 0;	break;
+	default: v->par.noise = (isFloatModulator ? lrintf(flt * 127.f) : itg) != 0;	break;
 	}
 	v->dirty = 1;
 }
