@@ -115,13 +115,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="in">
     <div>
       <div class="brand"><span class="n">XT</span><span class="t">Firmware for LXR-02</span><span class="r"></span></div>
-      <div class="sub">Version 1.2.11 · supplement to the LXR owners manual · for the LXR-02</div>
+      <div class="sub">Version 1.2.11 · supplement to the LXR owners manual</div>
     </div>
     <div class="mid">
-      <div><b>Samples &amp; waves</b>31 WAV samples and 8 single-cycle waves from the SD card, as oscillator and LFO waveforms, with start, length and loops.</div>
+      <div><b>Samples &amp; waves</b>31 WAV samples, 8 single-cycle waves and 4 wavetables from the SD card, with start, length and loops.</div>
       <div><b>Sequencer</b>A step grid per track, ratchets and roll locks, trigger tracks, LFO start, lock trigger and instant pattern switching.</div>
       <div><b>Effects</b>A second FX slot, sends, pre-fader option and a master bus on St1: saturation, compressor and EQ.</div>
-      <div><b>Morph &amp; more</b>Kit morph per voice and from the mod wheel, voice morph, choke group, voice INIT templates.</div>
+      <div><b>Engines &amp; more</b>Modal, FM2 and wavetable (test), kit and voice morph, cue, WAV recorder, INIT templates.</div>
     </div>
     <div class="foot">
       <p>Not an official Erica Synths or Sonic Potions document; not affiliated with or approved by Erica Synths. The XT firmware is based on the LXR firmware and contains the modifications of OpenElixir-02 1.2 (Moritz Waser). Install it at your own risk. Licence: GPL-3.0.</p>
@@ -142,28 +142,28 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h1 data-toc><b>1</b> &gt; Intro</h1>
-      <p>This supplement describes what the <b>XT firmware 1.2.11</b> (formerly OE02-Samples+) adds to the LXR-02 and to its owners manual. Everything that is not mentioned here works as described in the manual.</p>
-      <p>It contains the modifications of <b>OpenElixir-02 1.2</b> by Moritz Waser, marked <span class="oe">OE</span>. The chapters follow the order of the manual: memory, voices, sequencer, performance mode, effects, global settings and MIDI.</p>
-      <h2 data-toc>1.1. Reading the tables</h2>
-      <p>As in the manual, the parameter tables list the <b>displayed name</b> (the three letters on the display), the full name and what the parameter does. The edit view (click the encoder) shows the full name and the value with its unit.</p>
-      <p>Button combinations are written with the label printed below the step button, for example <b>SHIFT + FX</b> (step button 15) or <b>SHIFT + LAST STEP</b> (step button 14).</p>
+      <h1 data-toc><b>1</b> &gt; NOTES</h1>
+      <p>This supplement describes what the <b>XT firmware 1.2.11</b> (formerly OE02-Samples+) adds to the LXR-02 and its manual.</p>
+      <p>It contains the modifications of <b>OpenElixir-02 1.2</b> (Moritz Waser), marked <span class="oe">OE</span>.</p>
+      <h2 data-toc>1.1. About the tables</h2>
+      <p>As in the manual: <b>display name</b> (three letters), full name, function. The edit view (press the encoder) shows the full name and the value.</p>
+      <p>Buttons by their label below the step button, e.g. <b>SHIFT + FX</b> (step 15).</p>
       <h2 data-toc>1.2. What is stored where</h2>
-      <p><b>Kit</b>: the sound of the 6 voices (SAVE → Kit). <b>Pattern</b>: sequencer data. <b>Global</b>: kept after a restart only when saved with SAVE → Global. The appendix lists every new setting with its place.</p>
+      <p><b>Global</b>: kept only after SAVE → Global. All new settings with their storage: appendix A.</p>
     </div>
     <div class="col">
-      <h2 data-toc>1.3. Installing</h2>
+      <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li>Copy <code>LXR_XT_V1.2.11.img</code> to the top folder of the SD card and delete any other <code>LXR*.img</code> files there.</li>
-        <li>Switch the LXR off, insert the card, hold the encoder button and switch it on; keep holding it until "LXR Updater" appears.</li>
-        <li>Wait for "Update OK!", then remove the image from the card.</li>
-        <li>Keep your WAV files in <code>SAMPLES</code> and switch on normally: the update erased the samples, they are imported again at the first start.</li>
+        <li><code>LXR_XT_V1.2.11.img</code> into the top folder of the card; delete all other <code>LXR*.img</code> there.</li>
+        <li>Switch on with the encoder button held until “LXR Updater” appears.</li>
+        <li>“Update OK!”, then delete the image.</li>
+        <li>The update erases the samples: leave <code>SAMPLES</code> on the card, the next start imports them again.</li>
       </ol>
-      <p>After switching off, wait about 10 seconds before switching on again; otherwise the display can stay dark (the unit still works).</p>
+      <p>After switching off, wait ≈ 10 s.</p>
       <h2 data-toc>1.4. Compatibility</h2>
-      <p>Kits and patterns of the stock firmware and of OpenElixir-02 load unchanged; the new settings start at their defaults (no samples, sends 0, FX3 off, all tracks in 1/16).</p>
-      <p>Kits saved with 1.2.10 or later load in older firmwares; those ignore what they don't know. Voices with a sample or wave as waveform stay silent there.</p>
-      <p>To go back, install the OpenElixir-02 or the Erica Synths image the same way.</p>
+      <p>Kits and patterns of the original firmware and of OpenElixir-02 load; new settings start with default values.</p>
+      <p>New kits also load in older firmwares (without the additions); voices with a sample or wave stay silent there, new engines play the default engine.</p>
+      <p>Going back: install the image of OpenElixir-02 or Erica Synths the same way.</p>
     </div>
   </div>
 </section>
@@ -174,31 +174,31 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>2</b> &gt; Memory management</h1>
       <h2 data-toc>2.1. SD card</h2>
-      <p>Besides the projects, the card holds the audio files and two template files:</p>
+      <p>Besides the projects (and <code>REC</code>, chapter 5.2):</p>
       <table class="p2">
-        <tr><th>Folder / file</th><th>Content</th></tr>
+        <tr><th>Folder / file</th><th>Contents</th></tr>
         <tr><td>SAMPLES</td><td>one-shot samples, WAV</td></tr>
         <tr><td>SAMPLES/LOOPS</td><td>loop samples, WAV</td></tr>
         <tr><td>SAMPLES/WAVES</td><td>up to 8 single-cycle waves, WAV</td></tr>
-        <tr><td>BIGFLASH</td><td>a file or folder with this name in <code>SAMPLES</code> switches on the experimental 1.5 MB sample memory (chapter 2.3)</td></tr>
-        <tr><td>INIT.SND</td><td>voice INIT template: in the top folder (global) and in a project folder (chapter 2.5)</td></tr>
+        <tr><td>SAMPLES/TABLES</td><td>up to 4 wavetables, WAV (3.14)</td></tr>
+        <tr><td>BIGFLASH</td><td>in <code>SAMPLES</code>: 1.5 MB memory (2.3)</td></tr>
+        <tr><td>INIT.SND</td><td>INIT template: top folder (global), project folder (2.5)</td></tr>
       </table>
       <h2 data-toc>2.2. Sample import</h2>
-      <p>At a normal start the LXR compares the folders with the stored samples (names and sizes). If something changed, it imports again: "Import x/y", then "Import+Verify OK". The samples are stored in the internal flash and also play without a card.</p>
+      <p>At start the LXR compares the folders with the internal flash (names and sizes) and imports again on changes. The samples also play without a card.</p>
     </div>
     <div class="col">
       <table class="p2">
         <tr><th>Rule</th><th></th></tr>
-        <tr><td>Format</td><td>WAV, 16 bit PCM, mono or stereo (mixed to mono), any sample rate</td></tr>
+        <tr><td>Format</td><td>WAV, 16-bit PCM, mono or stereo (mixed to mono), any sample rate</td></tr>
         <tr><td>Names</td><td>8.3 format (<code>01KICK.WAV</code>); the slots <b>S1</b> … <b>S31</b> follow the order of the names, numbers by value (<code>2KICK</code> before <code>10KICK</code>)</td></tr>
-        <tr><td>Number</td><td>up to 31 samples (both folders together) and 8 waves</td></tr>
-        <tr><td>Length</td><td>about 5.9 s mono at 44.1 kHz in total (11.9 s at 22.05 kHz); a stereo file counts half its size</td></tr>
+        <tr><td>Count</td><td>up to 31 samples (both folders together) and 8 waves</td></tr>
+        <tr><td>Length</td><td>about 5.9 s mono in total at 44.1 kHz (11.9 s at 22.05 kHz); a stereo file counts at half its size</td></tr>
         <tr><td>Ignored</td><td>names starting with <code>.</code> or <code>_</code></td></tr>
       </table>
-      <p>Files that are not 16 bit are skipped ("Not 16bit, skip:"). Files that don't fit are skipped in name order ("Full(5.9s) skip:"). A file replaced by another one with the same name and size is not imported again: rename it.</p>
+      <p>A file replaced by one with the same name and size is not imported again.</p>
       <h4>Start screen</h4>
-      <p><b>Samples:12 W:3</b> = stored samples and waves; below <b>Used 4.2/5.9s</b> = used and available sample time.</p>
-      <p><b>A firmware update erases the samples.</b> Keep <code>SAMPLES</code> on the card; the next start imports them again.</p>
+      <p><b>S:12 W:3 T:2</b> = stored samples, waves and wavetables.<br>Below: <b>Used 4.2/5.9s</b> = used and available sample time.</p>
     </div>
   </div>
 </section>
@@ -207,27 +207,25 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>2.3. Experimental: 1.5 MB sample memory</h2>
-      <p>The chip of the LXR-02 reports 1 MB of flash; it usually has more. With <code>BIGFLASH</code> in <code>SAMPLES</code> the import uses the area above 1 MB as well: about <b>17.8 s</b> instead of 5.9 s.</p>
+      <p>The chip reports 1 MB of flash but usually has more.<br>With <code>BIGFLASH</code> in the <code>SAMPLES</code> folder: <b>17.8 s</b> instead of 5.9 s.</p>
       <ul>
-        <li>ST doesn't guarantee that area. Every sample is verified after writing; on an error the LXR shows "Big flash failed / using 512K" and imports into the normal memory.</li>
-        <li>The start shows "Big flash: on / 1.5 MB, testing", then "Used x.x/17.8s".</li>
-        <li>If the unit ever hangs at the start screen, remove <code>BIGFLASH</code> (or start without card). Firmware and bootloader are not affected.</li>
+        <li>Not guaranteed (ST). Every sample is verified; on an error “Big flash failed / using 512K” and import into the normal memory.</li>
+        <li>If the start hangs permanently: remove <code>BIGFLASH</code> or start without a card. Firmware and bootloader are not affected.</li>
       </ul>
       <h2 data-toc>2.4. Kits</h2>
-      <p>A kit now also stores, per voice: the engine <span class="oe">OE</span>, the sample start and length, the choke group and the FX sends. Per kit: FX1, the FX slot order and the master bus FX3. The additions are a small block at the end of the kit file.</p>
+      <p>Additionally in the kit: per voice the engine <span class="oe">OE</span>, start and length of the sample, choke group, sends; per kit the order of the FX slots and FX3.</p>
     </div>
     <div class="col">
-      <h2 data-toc>2.5. Voice INIT templates</h2>
-      <p>Hold <b>LOAD</b> and press the step button of a voice (1–7). From kit 0 turn the encoder one step back: the row <b>INIT: Project</b>, <b>INIT: Global</b> or <b>INIT: Factory</b> shows where this voice's INIT comes from. Click it for the actions:</p>
+      <h2 data-toc>2.5. INIT templates for voices</h2>
+      <p>Hold <b>LOAD</b> + step button of the voice (1–7), one step back from kit 0: <b>INIT: Project</b> / <b>Global</b> / <b>Factory</b> shows the source. Click:</p>
       <table class="p2 wide">
         <tr><th>Action</th><th>Description</th></tr>
-        <tr><td>Load INIT</td><td>loads the voice from the project template, else from the global template, else the factory values of its engine</td></tr>
-        <tr><td>Save to Project</td><td>stores this voice of the active kit in the template of the project</td></tr>
-        <tr><td>Save to Global</td><td>stores this voice in the global template</td></tr>
-        <tr><td>Del Project INIT, Del Global INIT</td><td>removes this voice from the template (click again to confirm)</td></tr>
-        <tr><td>Back</td><td>back to the kit list</td></tr>
+        <tr><td>Load INIT</td><td>from the project template, else the global one, else the engine defaults</td></tr>
+        <tr><td>Save to Project</td><td>voice into the project template</td></tr>
+        <tr><td>Save to Global</td><td>voice into the global template</td></tr>
+        <tr><td>Del Project INIT, Del Global INIT</td><td>remove the voice from the template (click again)</td></tr>
       </table>
-      <p>A template keeps every voice separately, with everything of the voice: engine, sound, LFO and velocity settings, sample, start and length. A project template needs a saved project.</p>
+      <p>Each complete voice (engine, sound, LFO, velocity, sample). Project template: only in saved projects.</p>
     </div>
   </div>
 </section>
@@ -238,9 +236,9 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>3</b> &gt; Voices</h1>
       <h2 data-toc>3.1. Engines per voice <span class="oe">OE</span></h2>
-      <p>Unlike the stock firmware, the type of a voice can be changed: each of the 6 voice slots runs the drum, snare, cymbal or hi-hat engine. <b>SHIFT + KIT</b> opens the engine menu of the active voice. The engine is saved in the kit.</p>
+      <p>Each of the 6 slots selects its engine: drum, snare, cymbal, hi-hat.<br>New: <b>modal</b>, <b>fm2</b> and <b>wavetable</b> (3.12–3.14).<br><b>SHIFT + KIT</b>: engine menu of the active voice. In the kit.</p>
       <h2 data-toc>3.2. Oscillator sources</h2>
-      <p>The main oscillator of every engine plays the built-in waveforms, a <b>sample</b> or a <b>wave</b>. Samples play once (or loop) per trigger at their own pitch; waves are single cycles that follow the note like the built-in waveforms.</p>
+      <p>Main oscillator: built-in waveforms, <b>samples</b> (own pitch, once or as a loop) or <b>waves</b> (single cycles, follow the note).</p>
       <svg class="dg" viewBox="0 0 330 150" role="img" aria-label="Sources of the main oscillator: built-in waveforms, samples S1 to S31 with start, length and loop, user waves W1 to W8; then filter, amp, choke, distortion and sample reducer of the voice.">
         <defs><marker id="a" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path class="ah" d="M0 0 L6 3 L0 6 z"/></marker></defs>
         <rect x="4" y="8" width="84" height="26"/><text x="46" y="19">Built-in</text><text class="l" x="46" y="28">sin tri saw rec noi pwm</text>
@@ -257,49 +255,58 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <path d="M280 65 H292" marker-end="url(#a)"/>
         <rect x="294" y="44" width="32" height="42"/><text x="310" y="60">Dist.</text><text x="310" y="70">Sample</text><text x="310" y="79">red.</text>
       </svg>
-      <p class="note">Shown for the drum voice; the other engines have the same oscillator choice.</p>
     </div>
     <div class="col">
       <h2 data-toc>3.3. Oscillator page (OSC)</h2>
-      <p>New values and parameters on the OSC page:</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>wav</td><td>Waveform</td><td>after <b>sin tri saw rec noi pwm</b>: the samples <b>S1</b> … <b>S31</b>, then the waves <b>W1</b> … <b>W8</b>. Unused sample slots are skipped when turning. The edit view shows the file name, <b>L</b> for a loop and the slot.</td></tr>
-        <tr><td>sta</td><td>Start</td><td>in place of <b>pwm</b> while a sample is selected: where the sample starts, in ms (0 = beginning).</td></tr>
-        <tr><td>len</td><td>Length</td><td>drum 1–3, 5th parameter: how long the sample plays, in ms (0 = <b>all</b>, to the end).</td></tr>
-        <tr><td>coa</td><td>Coarse tune</td><td>with a sample: 60 = original pitch.</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>wav</td><td>Waveform</td><td><b>sin</b> … <b>pwm</b> (standard)<br><b>S1</b> … <b>S31</b> (samples)<br><b>W1</b> … <b>W8</b> (waves)<br>Edit view: file name, <b>L</b> = loop, slot</td></tr>
+        <tr><td>sta*</td><td>Start</td><td>ms, 0 = beginning (all voices, replaces <b>pwm</b>)</td></tr>
+        <tr><td>len*</td><td>Length</td><td>ms, 0 = to the end (drum 1–3)</td></tr>
+        <tr><td>coa</td><td>Coarse tune</td><td>with a sample: 60 = original pitch</td></tr>
       </table>
-      <p><b>sta</b> and <b>len</b> run on a quadratic scale: fine steps at the beginning. The start is taken at the trigger, also with LFO or velocity modulation. Short fades avoid clicks when the start or the length cut into the sample.</p>
-      <p>The FM page of the drum voices can use samples and waves as FM source as well.</p>
-    </div>
-  </div>
-</section>
-
-<section class="page">
-  <div class="cols">
-    <div class="col">
+      <p class="note">*: samples only; taken at the trigger, also with LFO/velocity.</p>
+      <p>FM page of the drum engine: samples and waves also as FM source.</p>
       <h2 data-toc>3.4. Samples and loops</h2>
-      <p>A sample from <code>SAMPLES</code> plays once per trigger; the amp envelope (AEG decay) can end it earlier. A retrigger fades the sound that still plays (about 1 ms) instead of clicking.</p>
-      <p>A sample from <code>SAMPLES/LOOPS</code> plays from <b>sta</b> to the end set by <b>len</b> and jumps back to <b>sta</b>, until the amp envelope ends the sound. Drum voices have no gate, so a long decay keeps the loop going; with decay 127 it never ends by itself. Stopping the sequencer fades out every playing loop. The loop point is crossfaded (up to 256 frames, at most a quarter of the loop).</p>
+      <ul>
+        <li><code>SAMPLES</code>: once per trigger; the AEG decay can end it earlier.</li>
+        <li><code>SAMPLES/LOOPS</code>: looped from <b>sta</b> to <b>len</b>. Each trigger restarts at <b>sta</b>; in between the loop runs until the decay fades it out (<b>dec</b> = 127: until the next trigger).</li>
+        <li>Sequencer stop fades out all loops.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="page">
+  <div class="cols">
+    <div class="col">
       <h2 data-toc>3.5. Waves</h2>
-      <p>Up to 8 WAV files in <code>SAMPLES/WAVES</code>, each one cycle of a waveform. At the import every file is resampled to 1024 points; the end leads back to the start. Stereo files use the left channel only.</p>
       <ul>
-        <li>Waves are numbered on their own: <b>W1</b> = the first name. Adding or removing samples doesn't move them.</li>
-        <li>Best results: one cycle that starts and ends at a zero crossing, rising in the same direction, without DC offset.</li>
-        <li>2 KB per wave in the sample memory.</li>
+        <li>Up to 8 WAV files in <code>SAMPLES/WAVES</code>, one cycle each: <b>W1</b> … <b>W8</b> (W1 = first name). Stereo: left channel.</li>
+        <li>Against clicks: start and end at a zero crossing, rising at both ends, no DC offset.</li>
       </ul>
-    </div>
-    <div class="col">
       <h2 data-toc>3.6. Modulated sample selection</h2>
-      <p>With a sample as waveform, modulating the waveform (LFO or velocity, target <b>wav</b>) selects among the following samples instead of switching to the built-in waveforms:</p>
+      <p>An LFO or velocity with target <b>wav</b> selects among the following samples (or waves):</p>
       <ul>
-        <li>The range starts at the selected sample and covers as many further samples as the modulation amount (LFO <b>mod</b>, velocity <b>amt</b>): S5 with amount 4 = S5 … S9.</li>
-        <li>The sample is chosen at the trigger and kept until the next one.</li>
-        <li><b>Velocity layers</b>: soft to loud versions named in a row, the softest selected, amount = number of layers − 1.</li>
-        <li><b>Round robin</b>: LFO waveform <b>cyc</b> steps through the range, one sample per trigger. Random: <b>rnd</b> with a rate faster than the hits.</li>
+        <li>Range: from the selected sample, as many more as LFO <b>mod</b> / velocity <b>amt</b> (S5, amount 4 = S5 … S9). Chosen at the trigger.</li>
+        <li><b>Velocity layers</b>: soft to loud versions, named in sequence, select the softest, <b>amt</b> = layers − 1.</li>
+        <li><b>Round robin</b>: LFO <b>dst</b> = <b>wav</b>, LFO waveform <b>cyc</b>: one sample per trigger.</li>
+        <li><b>Random</b>: LFO waveform <b>rnd</b>, rate faster than the triggers.</li>
+        <li>Only the target <b>wav</b> selects samples, not <b>fwv</b> / <b>cwv</b>.</li>
       </ul>
-      <p>The same works with a wave as base: it selects among the waves.</p>
-      <p>The three waveform targets of the LFO and velocity menus are shown as <b>wav</b> (main oscillator), <b>fwv</b> (FM / mod oscillator) and <b>cwv</b> (transient); only <b>wav</b> selects samples.</p>
+    </div>
+    <div class="col">
+      <h2 data-toc>3.7. Amplitude envelope (AEG)</h2>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>chk</td><td>Choke</td><td>track in the kit's choke group; edit view: the voice buttons switch the tracks, e.g. <b>1--4-6-</b></td></tr>
+        <tr><td>sna</td><td>FX1 send</td><td>send into slot A, 0 … 127</td></tr>
+        <tr><td>snb</td><td>FX2 send</td><td>send into slot B, 0 … 127</td></tr>
+      </table>
+      <ul>
+        <li><b>Choke</b>: a trigger cuts the other tracks of the group. Tracks 6 and 7 cut each other anyway.</li>
+        <li><b>Sends</b>: after pan, after the fader (unless <b>pre</b> is on, chapter 6.3). Send/return: slot at 100 % wet.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -307,38 +314,40 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>3.7. Amplitude envelope page (AEG)</h2>
-      <p>New on the AEG page of every voice:</p>
-      <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>chk</td><td>Choke</td><td>on/off: puts this track into the choke group of the kit. The edit view shows all tracks of the group, e.g. <b>1--4-6-</b>.</td></tr>
-        <tr><td>sna</td><td>FX1 send</td><td>send into FX slot A (FX1), 0 … 127, besides the voice's output.</td></tr>
-        <tr><td>snb</td><td>FX2 send</td><td>send into FX slot B (FX2), 0 … 127.</td></tr>
-      </table>
-      <h4>Choke group</h4>
-      <p>A track of the group cuts the other tracks of the group when it is triggered, with a fade of about 2 ms; a choked track stays silent until its next trigger. Use it for hi-hat samples on several voices, or an open hat cut by a closed one. Tracks 6 and 7 share one voice and cut each other anyway.</p>
-      <h4>Sends</h4>
-      <p>The sends are taken after the voice's pan, and after its volume fader unless <b>pre</b> is on (chapter 6.3). Set the mix of the slot fully wet for a classic send/return.</p>
-    </div>
-    <div class="col">
-      <h2 data-toc>3.8. Mixer page (MIX)</h2>
-      <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>out</td><td>Audio out</td><td><b>St1</b>, <b>St2</b>, <b>L1</b>, <b>R1</b>, <b>L2</b>, <b>R2</b> as before; <b>FX</b> = 100 % into FX slot A; new <b>FXB</b> = 100 % into FX slot B.</td></tr>
-      </table>
-      <p>With <b>out</b> = <b>FX</b> / <b>FXB</b>, a send into the other slot feeds both slots.</p>
-      <h2 data-toc>3.9. LFO page (LFO)</h2>
-      <p>New waveforms of <b>wav</b>:</p>
+      <h2 data-toc>3.8. LFO page (LFO)</h2>
       <table class="p2">
-        <tr><th>Value</th><th>Waveform</th></tr>
-        <tr><td>cyc</td><td>step counter: one step per trigger; <b>mod</b> = number of steps (on <b>wav</b>: round robin)</td></tr>
+        <tr><th>wav</th><th>New waveforms</th></tr>
+        <tr><td>cyc</td><td>step counter: one step per trigger,<br><b>mod</b> = count (round robin)</td></tr>
         <tr><td>xtr</td><td>exponential triangle</td></tr>
-        <tr><td>si1 tr1 su1 sd1 sq1</td><td>one-shot sine, triangle, saw up, saw down, square (a gate)</td></tr>
-        <tr><td>xu1 xd1 xt1</td><td>one-shot exponential up, down, triangle</td></tr>
-        <tr><td>rn1</td><td>a new random value at every trigger</td></tr>
-        <tr><td>w1 … w8</td><td>the waves, running</td></tr>
-        <tr><td>w1. … w8.</td><td>the waves, one-shot</td></tr>
+        <tr><td>si1 tr1 su1 sd1 sq1</td><td>one-shot: sine, triangle, saw up/down, square</td></tr>
+        <tr><td>xu1 xd1 xt1</td><td>one-shot exponential: up, down, triangle</td></tr>
+        <tr><td>rn1</td><td>new random value per trigger</td></tr>
+        <tr><td>w1 … w8 / w1. … w8.</td><td>waves (running / one-shot)</td></tr>
       </table>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>ofs</td><td>Offset</td><td>one-shot: delay until the start<br>(64 ≈ half a cycle)</td></tr>
+        <tr><td>mod</td><td>Amount</td><td>edit view: range of the target, e.g. <b>21..127</b></td></tr>
+        <tr><td>dst</td><td>Destination</td><td>also rate, amount … of <b>any</b> other LFO</td></tr>
+      </table>
+      <p class="note">One-shots: one cycle per trigger (voice of <b>rtg</b>, else its own), then hold. Length: <b>frq</b> / <b>snc</b>.</p>
+    </div>
+    <div class="col">
+      <h2 data-toc>3.9. Track 7</h2>
+      <p>Tracks 6 and 7 play one voice. Track 7 has its own values for decay, <b>wav</b>, <b>coa</b> (±24 semitones to track 6), <b>sna</b>, <b>snb</b>, <b>pan</b> and its own LFO. Edit view: “Trk7 …”, <b>=t6</b> = as track 6. Sends and pan: those of the track that triggered last.</p>
+      <h2 data-toc>3.10. LFO 2 (test)</h2>
+      <ul>
+        <li>Second LFO screen, press LFO again: <b>LFO 2</b> of the voice, same parameters.</li>
+        <li>Track 7: the LFO page is its own LFO; acts while track 7 plays.</li>
+        <li>Stored in the kit, not morphed.</li>
+      </ul>
+      <h2 data-toc>3.11. Random voice</h2>
+      <ul>
+        <li><b>SHIFT + encoder click</b> on a voice page (OSC, AEG, MOD, FM, transient, filter; not in the edit view): new random variant of the active voice.</li>
+        <li>Amount: <b>rnd</b> (PERF, default 32). Switching values change with this probability.</li>
+        <li>Kept: volume, pan, <b>out</b>, sends, LFO, choke, engine.</li>
+        <li>Undo: reload the voice.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -346,31 +355,101 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h4>One-shots</h4>
-      <p>One-shot waveforms run one cycle per trigger and then hold their end value. They start with a trigger of the voice set with <b>rtg</b>; with <b>rtg</b> off with a trigger of the LFO's own voice. <b>frq</b> and <b>snc</b> set the length of the cycle.</p>
+      <h2 data-toc>3.12. Engine modal (test)</h2>
+      <p>Physical modelling: 6 resonators ring in the modes of a struck body. Drum pages:</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>ofs</td><td>Offset</td><td>with a one-shot: the delay before the cycle starts, as a part of one cycle (64 ≈ half a cycle).</td></tr>
-        <tr><td>mod</td><td>Amount</td><td>the edit view shows the range the target moves in, e.g. <b>21..127</b> (target value ± amount).</td></tr>
-        <tr><td>dst</td><td>Destination</td><td>an LFO can now modulate rate, amount … of <b>every</b> other LFO (the stock firmware: only of LFOs with a higher number).</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>dmp</td><td>Damping</td><td>MOD: decay time, 30 ms … 6 s</td></tr>
+        <tr><td>inh</td><td>Inharmonic</td><td>MOD: stiffness, spreads the upper modes</td></tr>
+        <tr><td>pos</td><td>Strike pos.</td><td>MOD: edge (0) … centre (127)</td></tr>
+        <tr><td>hrd</td><td>Hardness</td><td>FM: soft … hard mallet</td></tr>
+        <tr><td>mat</td><td>Material</td><td>FM: 0 = metal … 127 = wood (highs decay faster)</td></tr>
+        <tr><td>mdl</td><td>Model</td><td>FM: <b>mem</b> membrane, <b>bar</b> bar, <b>str</b> string, <b>bel</b> bell, <b>plt</b> plate, <b>gls</b> glass</td></tr>
+        <tr><td>exc</td><td>Exciter</td><td>FM: <b>mal</b> mallet, <b>nse</b> noise</td></tr>
       </table>
-      <h2 data-toc>3.10. Track 7</h2>
-      <p>Tracks 6 and 7 play one voice; track 7 has its own decay and its own <b>wav</b> (waveform, sample or wave, e.g. the open hat), <b>coa</b> (−24 … +24 semitones on top of track 6), <b>sna</b>/<b>snb</b> and <b>pan</b>. Its pages show them under these names in place of the shared ones (edit view: "Trk7 …"; <b>=t6</b> = as track 6). The voice uses the sends and pan of the track that triggered last.</p>
+      <p class="note">The transient sample excites in addition. A new strike adds to the ringing. New voice: decay 110.</p>
     </div>
     <div class="col">
-      <h2 data-toc>3.11. LFO 2 (test)</h2>
-      <p>Press the LFO button again on the second LFO screen: <b>LFO 2</b> of the voice, same parameters; once more back to the LFO. On track 7 the LFO page is the LFO of track 7: with a target it acts while track 7 plays, instead of the LFO of voice 6. Kit data, not morphed.</p>
+      <h2 data-toc>3.13. Engine fm2 (test)</h2>
+      <p>2-operator FM: sine carrier, sine modulator with its own index decay. FM page:</p>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>rat</td><td>Ratio</td><td>modulator : carrier, <b>.50</b> … <b>11</b> (odd values = metallic)</td></tr>
+        <tr><td>idx</td><td>FM index</td><td>modulation depth at the strike</td></tr>
+        <tr><td>idc</td><td>Index decay</td><td>5 ms … 4 s</td></tr>
+        <tr><td>fbk</td><td>Feedback</td><td>modulator onto itself, towards noise</td></tr>
+      </table>
+      <p class="note">MOD page: pitch EG as on the drum.</p>
+    </div>
+  </div>
+</section>
+
+<section class="page">
+  <div class="cols">
+    <div class="col">
+      <h2 data-toc>3.14. Engine wavetable (test)</h2>
+      <p>Scans a set of waves (frames). FM page:</p>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>set</td><td>Table set</td><td><b>bas</b> sine › triangle › square › saw, <b>usr</b> from the waves, <b>all</b> = both, <b>t1</b> … <b>t4</b> from <code>SAMPLES/TABLES</code>. Edit view: file name or <b>none&gt;bas</b></td></tr>
+        <tr><td>pos</td><td>Wave pos.</td><td>0 = first frame … 127 = last</td></tr>
+        <tr><td>swp</td><td>Pos. sweep</td><td>the pitch EG pushes the position up at the strike, back to <b>pos</b></td></tr>
+        <tr><td>scn</td><td>Scan mode</td><td><b>smo</b> smooth, <b>stp</b> stepped, <b>pp</b> back and forth, <b>pps</b> back and forth stepped</td></tr>
+      </table>
+      <ul>
+        <li><b>Position</b> = <b>pos</b> + <b>swp</b> × pitch EG (MOD page: decay, slope; amount 0 = no pitch change) + LFO/automation on <b>pos</b>. Not the amp envelope.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>Own sets: <code>SAMPLES/TABLES</code></h4>
+      <ul>
+        <li>Up to 4 WAV files (<b>t1</b> = first name): 16/24 bit or float, mono/stereo (left).</li>
+        <li>Cycle length: from the <code>clm</code> chunk (Serum, Vital), else 2048 or 256 (WaveEdit).</li>
+        <li>Max. 64 frames; fewer: in-between waves are added. 64 frames ≈ 0.9 s of sample memory, after the samples.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 4 SEQUENCER ============================== -->
+<section class="page">
+  <div class="cols">
+    <div class="col">
       <h1 data-toc><b>4</b> &gt; Sequencer</h1>
       <h2 data-toc>4.1. Lock trigger: velocity 0</h2>
-      <p>A step with velocity 0 doesn't trigger the voice and sends no MIDI note; its automation (<b>P1</b>/<b>P2</b>) is still applied, like a "trigless lock". SHIFT + encoder click on the automation page clears both locks of the step.</p>
+      <p>Velocity 0: no trigger, no MIDI note; <b>P1</b>/<b>P2</b> still act (“trigless lock”). SHIFT + encoder click on the automation page clears both locks.</p>
       <h2 data-toc>4.2. Step flam: ratchets and roll locks</h2>
-      <p>New values of the step parameter <b>flm</b> (step mode), after <b>x2</b> … <b>x8</b>:</p>
       <table class="p2">
-        <tr><th>Value</th><th>Effect</th></tr>
-        <tr><td>x12, x24</td><td>12 or 24 repeats within the step</td></tr>
-        <tr><td>x4+, x4-</td><td>4 repeats with rising / falling velocity (25 … 100 % of the step's velocity)</td></tr>
-        <tr><td>1/8 1/4 1/2 1/1</td><td>roll lock: the step repeats every 2, 4, 8, 16 steps of its track until the next active step</td></tr>
+        <tr><th>flm</th><th>Effect (after x2 … x8)</th></tr>
+        <tr><td>x12, x24</td><td>12 / 24 repeats in the step</td></tr>
+        <tr><td>x4+, x4-</td><td>4 repeats, velocity rising / falling (25 … 100 %)</td></tr>
+        <tr><td>1/8 1/4 1/2 1/1</td><td>roll lock: a repeat every 2, 4, 8, 16 steps up to the next active step</td></tr>
       </table>
+      <h2 data-toc>4.3. Step accent</h2>
+      <ul>
+        <li><b>acc</b> (first step page, after <b>prb</b>): accent on/off for the step, stored in the pattern.</li>
+        <li><b>aca</b> (CONFIG, second page, global): amount +0.1 … +6 dB, default 64 ≈ +3.5 dB.</li>
+        <li>Acts like the voice's fader, only for this trigger.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h2 data-toc>4.4. Instant pattern switch</h2>
+      <p><b>ips</b> on (CONFIG, second page): a pattern chosen by hand starts at the next step at the same position. Chains and songs still switch at the end.</p>
+      <h2 data-toc>4.5. Step grid per track</h2>
+      <p><b>SHIFT + LAST STEP</b>: <b>[16] 1/16 1</b> = length, grid, step length (1/16 = 1). Press the encoder: edit the grid. ALL mode (LAST STEP again): all tracks.</p>
+      <table class="p2">
+        <tr><th>Grid</th><th>Step length · steps per bar</th></tr>
+        <tr><td>1/4 · 1/4T · 1/8</td><td>4 · 8/3 · 2 — 4 · 6 · 8</td></tr>
+        <tr><td>1/16. · 1/8T · 5/64</td><td>6/4 · 4/3 · 5/4 — 10⅔ · 12 · 12⅘</td></tr>
+        <tr><td>1/16</td><td>1 — 16 (default)</td></tr>
+        <tr><td>1/32. · 1/16T</td><td>3/4 · 2/3 — 21⅓ · 24</td></tr>
+        <tr><td>1/32 · 1/32T</td><td>1/2 · 1/3 — 32 · 48</td></tr>
+      </table>
+      <ul>
+        <li>Each track loops in its length (polymeter); the pattern ends after the longest.</li>
+        <li><b>rol</b> and flams count in the track's steps; live recording in 1/16.</li>
+        <li>Stored in the pattern.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -378,48 +457,15 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>4.3. Step grid per track</h2>
-      <p>Each track can run in its own grid, e.g. hi-hats in triplets against straight drums. <b>SHIFT + LAST STEP</b> shows <b>[16] 1/16 1</b> = length, grid and step length compared with 1/16. <b>Click the encoder</b> to edit the grid. In the ALL mode (press LAST STEP again) it sets all tracks.</p>
+      <h2 data-toc>4.6. Trigger tracks</h2>
+      <p>LAST STEP page, each encoder click moves on: length › grid › <b>Trg [OFF]</b> › target <b>&gt;[T3]</b> › <b>LFO&gt;[T3]</b> › <b>NXT</b>/<b>NOW</b>. Taken targets are skipped.</p>
       <table class="p2">
-        <tr><th>Grid</th><th>Step length (1/16 = 1) · steps per bar</th></tr>
-        <tr><td>1/4 · 1/4T · 1/8</td><td>4 · 8/3 · 2 — 4 · 6 · 8 steps</td></tr>
-        <tr><td>1/16. · 1/8T · 5/64</td><td>6/4 · 4/3 · 5/4 — 10⅔ · 12 · 12⅘ steps</td></tr>
-        <tr><td>1/16</td><td>1 — 16 steps (default)</td></tr>
-        <tr><td>1/32. · 1/16T</td><td>3/4 · 2/3 — 21⅓ · 24 steps</td></tr>
-        <tr><td>1/32 · 1/32T</td><td>1/2 · 1/3 — 32 · 48 steps</td></tr>
+        <tr><th>Trg</th><th>Each active step …</th></tr>
+        <tr><td>RST</td><td>sets the target to step 1 (plays at once)</td></tr>
+        <tr><td>MUT</td><td>mutes the target for the step's duration</td></tr>
+        <tr><td>CLK</td><td>advances the target one step (only with these pulses)</td></tr>
       </table>
-      <p>Each track loops at its own length (polymeter); the pattern ends after its longest track. The 1/16 tracks keep their timing. Roll (<b>rol</b>) and flam repeats count in the track's own steps; live recording is quantized to 1/16. The grid is stored in the pattern.</p>
-    </div>
-    <div class="col">
-      <h2 data-toc>4.4. Instant pattern switching</h2>
-      <p>Global settings, second page, <b>ips</b> on: a pattern selected by hand starts on the <b>next step at the same position</b> instead of at the end of the playing pattern. Chains and songs still change at the end.</p>
-      <h2 data-toc>4.5. Trigger tracks</h2>
-      <p>Any track can also act on another track. On the LAST STEP page, every click of the encoder moves on:</p>
-      <table class="p2">
-        <tr><th>Click</th><th>The encoder edits</th></tr>
-        <tr><td>1</td><td>length of the track</td></tr>
-        <tr><td>2</td><td>grid</td></tr>
-        <tr><td>3</td><td>trigger mode <b>Trg [OFF]</b></td></tr>
-        <tr><td>4</td><td>its target track <b>&gt;[T3]</b></td></tr>
-        <tr><td>5</td><td>LFO start target <b>LFO&gt;[T3]</b></td></tr>
-        <tr><td>6</td><td>LFO start timing <b>NXT</b> / <b>NOW</b></td></tr>
-      </table>
-      <p>Another click returns to the length. Targets that already have a source are skipped.</p>
-    </div>
-  </div>
-</section>
-
-<section class="page">
-  <div class="cols">
-    <div class="col">
-      <table class="p2">
-        <tr><th>Trg</th><th>Each active step of the trigger track …</th></tr>
-        <tr><td>OFF</td><td>nothing (default)</td></tr>
-        <tr><td>RST</td><td>sets the target back to its step 1, which plays at once; otherwise the target runs as usual</td></tr>
-        <tr><td>MUT</td><td>mutes the target for as long as the step lasts</td></tr>
-        <tr><td>CLK</td><td>moves the target on by one step; the target only steps on these impulses</td></tr>
-      </table>
-      <p>Steps of any velocity count; with velocity 0 the trigger step makes no sound itself. The grids of both tracks are kept. A track can be the target of one source only.</p>
+      <p>All velocities count; velocity 0 does not sound itself. A track is the target of one source at most.</p>
       <svg class="dg" viewBox="0 0 330 92" role="img" aria-label="A trigger track acts on its target track with RST, MUT or CLK; the LFO of a track's voice starts another track at step 1 with NXT or NOW.">
         <defs><marker id="b" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path class="ah" d="M0 0 L6 3 L0 6 z"/></marker></defs>
         <rect x="4" y="8" width="92" height="28"/><text x="50" y="20">Trigger track</text><text class="l" x="50" y="30">its active steps</text>
@@ -431,15 +477,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       </svg>
     </div>
     <div class="col">
-      <h2 data-toc>4.6. LFO start</h2>
-      <p><b>LFO&gt;[T3]</b>: the LFO of this track's voice (track 7: voice 6) starts track 3. Each start of its waveform — a new cycle, a restart by <b>rtg</b>, a one-shot after its delay — starts the target at step 1:</p>
+      <h2 data-toc>4.7. LFO start</h2>
+      <p><b>LFO&gt;[T3]</b>: each start of the LFO waveform of this track's voice (new cycle, <b>rtg</b>, one-shot) starts track 3 at step 1: <b>NXT</b> at the next step in the target's grid, <b>NOW</b> at once.</p>
       <ul>
-        <li><b>NXT</b> on the next step of the target's grid (stays in time),</li>
-        <li><b>NOW</b> at once.</li>
+        <li>The target plays to its last step and waits; silent until the first start.</li>
+        <li>With <b>snc</b> in time; free running it drifts (generative).</li>
+        <li>Trigger and LFO target possible at the same time.</li>
       </ul>
-      <p>The target plays to its last step and then waits for the next start. If the LFO cycle is shorter, the next start comes first and loops the part up to there. Until the first start the target is silent.</p>
-      <p>With <b>snc</b> the starts fall on the beat; free-running LFOs drift against the pattern, which can be used for generative restarts. Chaining LFOs (one varies the rate of the next) makes the restarts irregular.</p>
-      <p>A track can have a trigger target and an LFO target at the same time.</p>
     </div>
   </div>
 </section>
@@ -450,35 +494,62 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>5</b> &gt; Performance mode</h1>
       <h2 data-toc>5.1. Performance menu</h2>
-      <p>Turn the encoder on to reach the second page.</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>bpm rol mrp srt</td><td>Tempo, roll, morph, sample rate</td><td>as before; <b>rol</b> in the track's own steps</td></tr>
-        <tr><td>dj</td><td>DJ filter cutoff <span class="oe">OE</span></td><td>LP/HP filter on the final mix of all outputs</td></tr>
-        <tr><td>res</td><td>DJ filter resonance <span class="oe">OE</span></td><td></td></tr>
-        <tr><td>sat</td><td>Saturation</td><td>of the master bus FX3 (chapter 6.5)</td></tr>
-        <tr><td>frq</td><td>Saturation split</td><td>of FX3</td></tr>
-        <tr><td>shu</td><td>Shuffle</td><td>as before (second page)</td></tr>
-        <tr><td>vmv vmo vsw</td><td>Voice morph</td><td>chapter 5.3</td></tr>
-        <tr><td>cmx cvl</td><td>Cue mix, level</td><td>cue on St2: SHIFT + step 1–7 (pre-fader, muted too)</td></tr>
-        <tr><td>osx</td><td>OSR exclude</td><td><b>on</b>: the active voice ignores the global <b>srt</b> (and <b>0sr</b>), keeps its own</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>rol</td><td>Roll</td><td>new <b>24</b>, <b>32</b>, <b>48</b> (1/16T, 1/32, 1/32T); in the track's steps</td></tr>
+        <tr><td>dj res</td><td>DJ filter <span class="oe">OE</span></td><td>LP/HP and resonance on the final mix</td></tr>
+        <tr><td>sat frq</td><td>Saturation, split</td><td>from FX3 (chapter 6.5)</td></tr>
+        <tr><td>vmv vmo vsw</td><td>Voice morph</td><td>chapter 5.4</td></tr>
+        <tr><td>osx</td><td>OSR exclude</td><td><b>on</b>: voice ignores the global <b>srt</b>/<b>0sr</b>; edit view: voice buttons</td></tr>
+        <tr><td>cmx cvl</td><td>Cue mix, level</td><td>chapter 5.5</td></tr>
+        <tr><td>rnd</td><td>Random</td><td>amount of the random voice (3.11)</td></tr>
+        <tr><td>rec rst</td><td>Record WAV</td><td>page 3, chapter 5.2</td></tr>
       </table>
     </div>
     <div class="col">
-      <h2 data-toc>5.2. Kit morph</h2>
-      <ul>
-        <li><b>Mod wheel</b>: MIDI CC 1 on the global channel sets <b>mrp</b>.</li>
-        <li><b>Morph target</b>: <b>mrp</b> 0 → 127 morphs from the value in the active kit to the value in the morph kit. In the edit view of a sound parameter hold <b>SHIFT</b>: the display shows <b>Morph&gt;</b> and the target value, which the encoder changes. <b>SHIFT + encoder click</b> sets it to the active value: the parameter no longer morphs.</li>
-        <li><b>mrv</b> (global settings, second page): kit morph on/off per voice; in its edit view the voice buttons switch the voices (also for <b>chk</b> and <b>osx</b>).</li>
-      </ul>
-      <h2 data-toc>5.3. Voice morph</h2>
+      <h2 data-toc>5.2. WAV recorder</h2>
+      <p>Records St1 (after FX3, DJ filter, limiter) as WAV to the card: <code>REC/REC001.WAV</code> …, 16-bit stereo, 44.1 kHz.</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>vmv</td><td>Voices</td><td>the pair: OFF, 1&gt;2 … 6&gt;5 (source &gt; target)</td></tr>
-        <tr><td>vmo</td><td>Amount</td><td>0 = the source as set, 127 = the target's values</td></tr>
-        <tr><td>vsw</td><td>Switch</td><td>per source voice: from this <b>vmo</b> on, switch-like values (waveform, filter type) are the target's</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>rec</td><td>Record WAV</td><td>length: <b>x1</b>, <b>x2</b>, <b>x4</b> passes of the longest track, <b>end</b> until stop. Display <b>arm</b> / <b>rec</b></td></tr>
+        <tr><td>rst</td><td>Rec start</td><td><b>ply</b> with PLAY, <b>pat</b> at the next pattern start (also with the sequencer running)</td></tr>
       </table>
-      <p>Only <b>vsw</b> is kept (global); <b>vmv</b> and <b>vmo</b> are not saved.</p>
+      <ul>
+        <li><b>Encoder click</b> in the edit view: arm (creates the file) / cancel / end the recording.</li>
+        <li>Ends after the passes, at STOP or on a click: “Saved REC003 1:32”.</li>
+        <li><b>rec</b> and <b>rst</b> are global and stay set after the recording.</li>
+        <li>Slow card: dropouts are counted (“2 gaps”). Avoid loading/saving while recording.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="page">
+  <div class="cols">
+    <div class="col">
+      <h2 data-toc>5.3. Kit morph</h2>
+      <ul>
+        <li>MIDI CC 1 (global channel) sets <b>mrp</b>.</li>
+        <li><b>mrp</b> 0 → 127: from the active kit to the morph kit. Edit view + <b>SHIFT</b>: <b>Morph&gt;</b> and target value; <b>SHIFT + encoder click</b>: parameter does not morph.</li>
+        <li><b>mrv</b> (CONFIG, page 2): morph per voice; edit view: voice buttons.</li>
+      </ul>
+      <h2 data-toc>5.4. Voice morph</h2>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>vmv</td><td>Voices</td><td>pair source &gt; target: OFF, 1&gt;2 … 6&gt;5</td></tr>
+        <tr><td>vmo</td><td>Amount</td><td>0 = source, 127 = values of the target</td></tr>
+        <tr><td>vsw</td><td>Switch</td><td>from this <b>vmo</b> on: switching values (waveform, filter type) of the target</td></tr>
+      </table>
+      <p class="note">Only <b>vsw</b> is stored (global).</p>
+    </div>
+    <div class="col">
+      <h2 data-toc>5.5. Cue on St2</h2>
+      <ul>
+        <li><b>SHIFT + step 1–7</b> (on any page): pre-listen to a track, LED blinks.</li>
+        <li>Pre-fader, also muted tracks. St2 becomes the cue bus automatically.</li>
+        <li><b>cmx</b>: cue ↔ main on St2, <b>cvl</b>: level.</li>
+        <li>Needs cables in St1 (L and R); otherwise St1 plays on the St2 jacks.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -489,9 +560,9 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <h1 data-toc><b>6</b> &gt; Effects</h1>
     <h2 data-toc>6.1. Signal flow</h2>
     <div class="mono" style="width:94%">{{svg:fx-signal-flow.svg}}</div>
-    <p class="cap">From the voice to the jacks, slot order A&gt;B (dashed: slot B; ⇧ = SHIFT, K1 … K4 = parameter knobs). The fader acts on the sends only with <b>pre</b> off. FX3 sits on St1 (without a cable in St1 it follows St1 to the St2 jacks).</p>
+    <p class="cap">From the voice to the jacks, slot order A&gt;B (dashed: slot B; ⇧ = SHIFT, K1 … K4 = parameter knobs). The fader acts on the sends only with <b>pre</b> off. FX3 sits on St1 (without a cable in St1 on the St2 jacks).</p>
     <div class="mono" style="margin:2mm auto 0; width:82%">{{svg:fx-slot-order.svg}}</div>
-    <p class="cap">The order of the FX slots, <b>ord</b> on the FX1 page (chapter 6.2).</p>
+    <p class="cap">Order of the FX slots, <b>ord</b> on the FX1 page (chapter 6.2).</p>
   </div>
 </section>
 
@@ -499,56 +570,39 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>6.2. FX1 and FX2</h2>
-      <p><b>SHIFT + FX</b> shows the FX of the kit (<b>FX1</b>, slot A). Press <b>SHIFT + FX</b> again for the project FX (<b>FX2</b>, slot B), once more for the master bus (<b>FX3</b>), then back to FX1. Both slots have the same effects <b>off drv rng cmp del</b> and parameters.</p>
+      <p><b>SHIFT + FX</b>: FX1 (kit, slot A) › FX2 (project, slot B) › FX3 (master) › FX1. Both slots: <b>off drv rng cmp del</b>.</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>typ / fx2</td><td>Type</td><td>the effect of slot A / slot B</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>typ / fx2</td><td>Type</td><td>effect of slot A / B</td></tr>
         <tr><td>out</td><td>Audio out</td><td>output of the slot</td></tr>
         <tr><td>d/w</td><td>Dry/Wet</td><td>mix; also SHIFT + knob 3 / 4</td></tr>
       </table>
-      <p>Turn the encoder past the last effect parameter for the setup page:</p>
+      <p>Setup page (turn past the last parameter):</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>sya / syb</td><td>Sync A / B</td><td>delay time in note values: OFF, 1/4, 1/8., 1/4T, 1/8, 1/16., 1/8T, 5/64, 1/16, 1/32., 1/16T, 1/32, 1/32T (at most about 0.74 s)</td></tr>
-        <tr><td>ord</td><td>Order</td><td>FX1 page: how the slots are connected</td></tr>
-        <tr><td>prs</td><td>Preset</td><td>click, choose, click: loads a factory preset, a user preset <b>U1</b>–<b>U8</b> of the project, or saves the slot (<b>Save to U</b>n)</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>sya / syb</td><td>Sync A / B</td><td>delay time as a note value, 1/4 … 1/32T</td></tr>
+        <tr><td>ord</td><td>Order</td><td>FX1 page: routing of the slots</td></tr>
+        <tr><td>prs</td><td>Preset</td><td>click, choose, click: 17 factory presets (delay, drive, compressor, ring), <b>U1</b>–<b>U8</b> per project, <b>Save to U</b>n</td></tr>
       </table>
     </div>
     <div class="col">
       <table class="p2 wide">
-        <tr><th>ord</th><th>Connection</th></tr>
-        <tr><td>A&gt;B</td><td>slot A into slot B, the chain to the output of slot A (default). Slot B is an insert: at 100 % wet the direct sound of A is gone.</td></tr>
-        <tr><td>B&gt;A</td><td>slot B into slot A, to the output of slot A</td></tr>
-        <tr><td>A+B</td><td>side by side, each slot to its own output</td></tr>
-        <tr><td>A&gt;+</td><td>send/return: slot A to its output and into slot B, slot B to its own output</td></tr>
+        <tr><th>ord</th><th>Routing</th></tr>
+        <tr><td>A&gt;B</td><td>A into B, to the output of A (default). B is an insert: at 100 % wet the dry sound of A is missing.</td></tr>
+        <tr><td>B&gt;A</td><td>B into A, to the output of A</td></tr>
+        <tr><td>A+B</td><td>parallel, each to its own output</td></tr>
+        <tr><td>A&gt;+</td><td>send/return: A to its output and into B, B to its output</td></tr>
       </table>
-      <p class="note">The four connections are drawn on the previous page. FX1 and <b>ord</b> are stored in the kit, FX2 and the sync with the global settings.</p>
-    </div>
-  </div>
-</section>
-
-<section class="page">
-  <div class="cols">
-    <div class="col">
+      <p class="note">FX1 and <b>ord</b>: kit. FX2 and sync: global.</p>
       <h2 data-toc>6.3. Sends and pre-fader</h2>
-      <p>Each voice sends into slot A with <b>sna</b> and into slot B with <b>snb</b> (AEG page), besides its own output. Global settings, second page:</p>
+      <p><b>sna</b> / <b>snb</b> (AEG page): sends into slot A / B. MIX <b>out</b> = <b>FXB</b>: 100 % into slot B.</p>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>pre</td><td>Pre-fader sends</td><td><b>off</b> (default): the sends come after the voice's volume fader. <b>on</b>: before it — the fader only sets the dry signal, the voice stays in the effects (fader down = only the echo is left).</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>pre</td><td>Pre-fader sends</td><td>CONFIG, page 2. <b>off</b>: sends after the fader. <b>on</b>: before it, the fader sets only the dry signal (fader down = only the echo).</td></tr>
       </table>
-      <p><b>vol</b> on the mix page acts on both in either mode. Voices with <b>out</b> = <b>FX</b> / <b>FXB</b> keep their fader.</p>
-    </div>
-    <div class="col">
+      <p class="note"><b>vol</b> (MIX) always acts on both.</p>
       <h2 data-toc>6.4. FX knobs</h2>
-      <p>On every page except LOAD/SAVE: hold <b>SHIFT</b> and turn a parameter knob.</p>
-      <table class="p2">
-        <tr><th>Knob</th><th>Function</th></tr>
-        <tr><td>1</td><td>input gain of FX1 (slot A)</td></tr>
-        <tr><td>2</td><td>input gain of FX2 (slot B)</td></tr>
-        <tr><td>3</td><td>mix (<b>d/w</b>) of FX1</td></tr>
-        <tr><td>4</td><td>mix (<b>d/w</b>) of FX2</td></tr>
-      </table>
-      <p>The display shows the values for 1.5 s: <b>In dB A +0 B -6</b> / <b>Mix % A 50 B100</b>. The input gain scales everything that goes into the slot (outputs FX/FXB and all sends), −∞ … +12 dB, centre 0 dB; it is a global setting. With <b>pre</b> on, input gain and mix set the effect levels.</p>
+      <p><b>SHIFT</b> + knob 1 / 2: input level FX1 / FX2 (−∞ … +12 dB, global); 3 / 4: mix. Not on LOAD/SAVE.</p>
     </div>
   </div>
 </section>
@@ -557,7 +611,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>6.5. Master bus FX3</h2>
-      <p>A third FX slot, fixed at the end of the chain on <b>St1</b>: after FX1/FX2, before the DJ filter and the limiter. It has three stages — saturation (S), compressor (C) and EQ (E) — in the order set with <b>ord</b>. FX3 is stored in the kit; older kits load with FX3 off.</p>
+      <p>Third slot at the end of <b>St1</b>: after FX1/FX2, before DJ filter and limiter. Saturation (S), compressor (C), EQ (E) in the order <b>ord</b>. In the kit.</p>
       <svg class="dg" viewBox="0 0 330 118" role="img" aria-label="FX3: St1 goes through saturation, compressor and EQ in the order ord, then to the DJ filter and limiter. Saturation and compressor can split the signal at a crossover and work on the band above only.">
         <defs><marker id="c" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path class="ah" d="M0 0 L6 3 L0 6 z"/></marker></defs>
         <text class="l" x="14" y="31">Σ St1</text>
@@ -578,92 +632,75 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <circle cx="224" cy="80" r="5" fill="#fff" stroke="#231f20" stroke-width=".8"/><text x="224" y="82.6" style="font-size:8px">+</text>
         <path d="M229 80 H244" marker-end="url(#c)"/>
       </svg>
-      <p class="note">The split: only the band above the crossover is saturated or compressed. <b>csm</b> = sc uses the band above only to drive the compressor and compresses the whole signal.</p>
+      <p class="note">Split: only the band above the crossover is saturated / compressed. <b>csm</b> = <b>sc</b>: the upper band only controls, everything is compressed.</p>
     </div>
     <div class="col">
       <h4>FX3, page 1</h4>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>sat</td><td>Saturation</td><td>0 = off; soft clipping, up to +24 dB into the curve, level compensated</td></tr>
-        <tr><td>frq</td><td>Sat split</td><td>off = full band, else 40 Hz … 10 kHz: only above it is saturated</td></tr>
-        <tr><td>cfq</td><td>Comp split</td><td>off = full band, else 40 Hz … 10 kHz</td></tr>
-        <tr><td>csm</td><td>CFQ mode</td><td><b>spl</b> = band split (only the band above is compressed), <b>sc</b> = sidechain filter (the band above drives it)</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>sat</td><td>Saturation</td><td>0 = off; soft clipping up to +24 dB, level compensated</td></tr>
+        <tr><td>frq</td><td>Sat split</td><td>off or 40 Hz … 10 kHz</td></tr>
+        <tr><td>cfq</td><td>Comp split</td><td>off or 40 Hz … 10 kHz</td></tr>
+        <tr><td>csm</td><td>CFQ mode</td><td><b>spl</b> band split, <b>sc</b> sidechain filter</td></tr>
         <tr><td>tre</td><td>Threshold</td><td>−48 … 0 dB</td></tr>
         <tr><td>rat</td><td>Ratio</td><td>0 = off, 1:1 … 20:1</td></tr>
         <tr><td>atk</td><td>Attack</td><td>0.1 … 100 ms</td></tr>
-        <tr><td>dec</td><td>Release</td><td><b>aut</b> = a 1/16 note of the tempo, else 20 … 1000 ms</td></tr>
+        <tr><td>dec</td><td>Release</td><td><b>aut</b> = 1/16 of the tempo, else 20 … 1000 ms</td></tr>
       </table>
-    </div>
-  </div>
-</section>
-
-<section class="page">
-  <div class="cols">
-    <div class="col">
       <h4>FX3, page 2: EQ</h4>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>lo</td><td>Low shelf</td><td>100 Hz, −15 … +15 dB (64 = 0 dB; a band at 0 dB is off)</td></tr>
-        <tr><td>f1 g1 q1</td><td>Mid 1</td><td>frequency 20 Hz … 16 kHz, gain −15 … +15 dB, Q 0.3 … 8 (default 300 Hz, Q 1)</td></tr>
-        <tr><td>f2 g2 q2</td><td>Mid 2</td><td>as mid 1 (default 3 kHz)</td></tr>
-        <tr><td>hi</td><td>High shelf</td><td>8 kHz, −15 … +15 dB</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>lo</td><td>Low shelf</td><td>100 Hz, ±15 dB (64 = 0 dB = off)</td></tr>
+        <tr><td>f1 g1 q1</td><td>Mid 1</td><td>20 Hz … 16 kHz, ±15 dB, Q 0.3 … 8 (300 Hz, Q 1)</td></tr>
+        <tr><td>f2 g2 q2</td><td>Mid 2</td><td>as mid 1 (3 kHz)</td></tr>
+        <tr><td>hi</td><td>High shelf</td><td>8 kHz, ±15 dB</td></tr>
       </table>
-      <h4>FX3, page 3</h4>
-      <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>ord</td><td>Order</td><td>SCE (default), CSE, ESC, ECS, SEC, CES</td></tr>
-        <tr><td>amu</td><td>Auto gain</td><td><b>off</b> · <b>fix</b>: half the reduction of a 0 dBFS peak · <b>ada</b>: the average reduction (≈ 1.5 s)</td></tr>
-        <tr><td>gai</td><td>Gain</td><td>make-up gain 0 … +24 dB, on top of <b>amu</b></td></tr>
-        <tr><td>d/w</td><td>Dry/Wet</td><td>compressor mix (parallel compression)</td></tr>
-        <tr><td>bia</td><td>Sat bias</td><td>0 = symmetric; higher: even harmonics on loud signals</td></tr>
-      </table>
-    </div>
-    <div class="col">
-      <h4>Notes</h4>
-      <ul>
-        <li>With <b>sat</b>, <b>rat</b> and <b>gai</b> at 0 and all EQ gains at 0 dB, FX3 is off and the sum stays unchanged.</li>
-        <li>With the band split, <b>amu</b>, <b>gai</b> and <b>d/w</b> act on the compressed band only.</li>
-        <li><b>amu</b> = <b>ada</b> keeps compressed and dry signal about as loud: <b>d/w</b> then only changes the character.</li>
-        <li><b>bia</b> only acts with <b>sat</b> above 0. Use it moderately (20 … 50) and with <b>frq</b> at 150 … 300 Hz for a full mix: even harmonics of the bass make it muddy.</li>
-        <li><b>sat</b> and <b>frq</b> are also on the performance page.</li>
-      </ul>
-      <h4>Edit view</h4>
-      <p>Top left: the peak levels of St1 / St2 before FX3 in dBFS (<b>-99</b> = silent). Bottom left: <b>byp</b> = FX3 off, <b>on-4A</b> = on, highest gain reduction 4 dB, on St1 (<b>B</b> = following St1 to the St2 jacks).</p>
-      <p class="note">Saturation and compressor together use about 5 % of the audio processing time.</p>
     </div>
   </div>
 </section>
 
-<!-- ============================== 7 GLOBAL / 8 MIDI ============================== -->
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h1 data-toc><b>7</b> &gt; Global settings</h1>
-      <p><b>SHIFT + CONFIG</b>, second page (turn the encoder on). Like all global settings they are kept after a restart only when saved: SAVE → Global (or with a project save).</p>
+      <h4>FX3, page 3</h4>
       <table class="p3">
-        <tr><th>Displayed name</th><th>Name</th><th>Description</th></tr>
-        <tr><td>lim</td><td>Limiter <span class="oe">OE</span></td><td>a limiter on each output after a 32 bit sum</td></tr>
-        <tr><td>ips</td><td>Instant pattern</td><td>chapter 4.4</td></tr>
-        <tr><td>mrv</td><td>Morph voices</td><td>kit morph on/off for the active voice (select it with its voice button); the edit view shows the morphed voices, e.g. <b>----56</b></td></tr>
-        <tr><td>pre</td><td>Pre-fader sends</td><td>chapter 6.3</td></tr>
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>ord</td><td>Order</td><td>SCE (default), CSE, ESC, ECS, SEC, CES</td></tr>
+        <tr><td>amu</td><td>Auto gain</td><td><b>off</b> · <b>fix</b> half the reduction of a 0 dBFS peak · <b>ada</b> average reduction (≈ 1.5 s)</td></tr>
+        <tr><td>gai</td><td>Gain</td><td>make-up 0 … +24 dB, in addition to <b>amu</b></td></tr>
+        <tr><td>d/w</td><td>Dry/Wet</td><td>compressor mix (parallel)</td></tr>
+        <tr><td>bia</td><td>Sat bias</td><td>0 = symmetric; higher: even harmonics</td></tr>
       </table>
+      <h4>Notes</h4>
+      <ul>
+        <li><b>sat</b>, <b>rat</b>, <b>gai</b> at 0 and EQ at 0 dB: FX3 off.</li>
+        <li>Band split: <b>amu</b>, <b>gai</b>, <b>d/w</b> only on the compressed band.</li>
+        <li><b>amu</b> = <b>ada</b>: <b>d/w</b> changes only the character, not the loudness.</li>
+        <li><b>bia</b> only with <b>sat</b> &gt; 0; for a mix 20 … 50 with <b>frq</b> 150 … 300 Hz.</li>
+      </ul>
+      <h4>Edit view</h4>
+      <p>Top: peaks St1 / St2 before FX3 (dBFS). Bottom: <b>byp</b> = off, <b>on-4A</b> = 4 dB reduction, St1 (<b>B</b>: St2 jacks).</p>
     </div>
     <div class="col">
+      <!-- ============================== 7 GLOBAL / 8 MIDI ============================== -->
+      <h1 data-toc><b>7</b> &gt; Global settings</h1>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>SHIFT + CONFIG, page 2</th></tr>
+        <tr><td>lim</td><td>Limiter <span class="oe">OE</span></td><td>on every output</td></tr>
+        <tr><td>ips</td><td>Instant pattern</td><td>chapter 4.4</td></tr>
+        <tr><td>mrv</td><td>Morph voices</td><td>kit morph per voice</td></tr>
+        <tr><td>pre</td><td>Pre-fader sends</td><td>chapter 6.3</td></tr>
+        <tr><td>aca</td><td>Accent amount</td><td>chapter 4.3</td></tr>
+      </table>
       <h1 data-toc><b>8</b> &gt; MIDI</h1>
-      <p>Numbers computed from the parameter list (NRPN n = parameter 128 + n), not measured on the device.</p>
       <table class="p2">
-        <tr><th>Message</th><th>Parameter</th></tr>
-        <tr><td>CC 1</td><td>kit morph <b>mrp</b> (global channel)</td></tr>
-        <tr><td>CC 2–5, 7, 8</td><td>OSC <b>wav</b>, voice 1–6</td></tr>
-        <tr><td>CC 122–127</td><td>LFO <b>mod</b>, voice 1–6</td></tr>
-        <tr><td>NRPN 27–32</td><td>LFO <b>wav</b>, voice 1–6</td></tr>
-        <tr><td>NRPN 57–62</td><td>LFO <b>ofs</b>, voice 1–6</td></tr>
-        <tr><td>NRPN 87–92</td><td>MIX <b>out</b>, voice 1–6</td></tr>
-        <tr><td>NRPN 93, 94, 97</td><td>OSC <b>len</b>, voice 1–3</td></tr>
-        <tr><td>NRPN 98</td><td>engines <span class="oe">OE</span></td></tr>
-        <tr><td>NRPN 99</td><td>choke group <b>chk</b></td></tr>
-        <tr><td>NRPN 100–105</td><td>OSC <b>sta</b>, voice 1–6</td></tr>
-        <tr><td>NRPN 106–117</td><td>FX1 <span class="oe">OE</span></td></tr>
+        <tr><th>Message</th><th>Parameter (voice 1–6)</th></tr>
+        <tr><td>CC 1 · 2–5, 7, 8</td><td><b>mrp</b> (global channel) · OSC <b>wav</b></td></tr>
+        <tr><td>CC 122–127</td><td>LFO <b>mod</b></td></tr>
+        <tr><td>NRPN 27–32 · 57–62</td><td>LFO <b>wav</b> · LFO <b>ofs</b></td></tr>
+        <tr><td>NRPN 87–92 · 100–105</td><td>MIX <b>out</b> · OSC <b>sta</b>; <b>len</b>: 93, 94, 97</td></tr>
+        <tr><td>NRPN 98</td><td>engine <span class="oe">OE</span>: slot × 4 + engine, 24/30/36 + slot: modal/fm2/wt</td></tr>
+        <tr><td>NRPN 99 · 106–117</td><td><b>chk</b> · FX1 <span class="oe">OE</span></td></tr>
       </table>
     </div>
   </div>
@@ -676,35 +713,29 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h1 data-toc><b>A</b> &gt; Where settings are stored</h1>
       <table class="p2 wide">
         <tr><th>Stored in</th><th>Settings</th></tr>
-        <tr><td>Kit</td><td>engine <span class="oe">OE</span>, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b></td></tr>
-        <tr><td>Pattern</td><td>step grid, flam values, trigger tracks, LFO start, velocity 0 steps</td></tr>
-        <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input gains (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
-        <tr><td>Project</td><td>the voice INIT template, the morph kit's values</td></tr>
-        <tr><td>Flash</td><td>samples and waves (imported from the card)</td></tr>
-        <tr><td>Not saved</td><td><b>vmv</b>, <b>vmo</b>, <b>dj</b>, <b>res</b> <span class="oe">OE</span></td></tr>
+        <tr><td>Kit</td><td>engine <span class="oe">OE</span> and its settings, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b></td></tr>
+        <tr><td>Pattern</td><td>step grid, flam values, accents <b>acc</b>, trigger tracks, LFO start, steps with velocity 0</td></tr>
+        <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input levels (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>aca</b>, <b>rnd</b>, <b>rec</b>, <b>rst</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
+        <tr><td>Project</td><td>the INIT template for voices, the values of the morph kit, FX presets <b>U1</b>–<b>U8</b></td></tr>
+        <tr><td>Flash</td><td>samples, waves and wavetables (imported from the card)</td></tr>
+        <tr><td>Not stored</td><td><b>vmv</b>, <b>vmo</b>, <b>dj</b>, <b>res</b> <span class="oe">OE</span></td></tr>
       </table>
     </div>
     <div class="col">
       <h2>More information</h2>
-      <p>The complete description, with more examples and the history of each version, is in the repository:</p>
+      <p>The full description, with more examples and the history of each version, is in the repository:</p>
       <ul>
         <li><b>README</b>: overview of all features and the installation.</li>
-        <li><b>docs/SAMPLES.md</b>: user guide of all additions.</li>
+        <li><b>docs/SAMPLES.md</b>: guide to all additions.</li>
         <li><b>docs/OVERVIEW.md</b> / <b>OVERVIEW.de.md</b>: one-page overview in English and German.</li>
         <li><b>docs/ENGINES.md</b>: the voice engines <span class="oe">OE</span>.</li>
-        <li><b>docs/MOD_TARGETS.md</b>: the modulation targets of every voice.</li>
+        <li><b>docs/MOD_TARGETS.md</b>: the modulation targets of each voice.</li>
       </ul>
       <p>github.com/shellbeat-jpg/lxr-desktop-sample</p>
-      <p class="note">The XT firmware is free software under the GNU General Public License 3.0. It is based on the LXR firmware by Julian Schmidt (Sonic Potions) and Erica Synths and contains the modifications of OpenElixir-02 1.2 (Moritz Waser). Fonts: Barlow, SIL Open Font License.</p>
+      <p class="note">The XT firmware is free software under the GNU General Public License 3.0. It is based on the LXR firmware by Julian Schmidt (Sonic Potions) and Erica Synths and contains the modifications of OpenElixir-02 1.2 (Moritz Waser). Font: Barlow, SIL Open Font License.</p>
     </div>
   </div>
 </section>
-
-
-
-
-
-
 
 
 <!-- MODTARGETS -->
