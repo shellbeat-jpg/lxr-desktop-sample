@@ -38,8 +38,17 @@ void autoNode_setDestination(AutomationNode* node, uint16_t dest)
 		midiParser_ccHandler(msg,0, 0, 0.f);
 	}
 
-	//set new destination (MOD: engine settings of voice 4 and 6, VoiceSlot.h)
-	node->destination = dest == NO_AUTOMATION ? dest : slot_modDestination(dest);
+	//set new destination (MOD: engine settings of voice 4 and 6, VoiceSlot.h). The
+	//destination counts as the MIDI messages: parameter + 1 below 128 (MIDI_CC), else
+	//the parameter (MIDI_CC2); slot_modDestination takes and gives parameters
+	if(dest == NO_AUTOMATION || dest == 0)
+	{
+		node->destination = dest;
+		return;
+	}
+	const uint16_t par = dest < 128 ? (uint16_t)(dest - 1u) : dest;
+	const uint16_t to = slot_modDestination(par);
+	node->destination = to == par ? dest : (to < 127 ? (uint16_t)(to + 1u) : to);
 }
 //-------------------------------------------------------------
 void autoNode_updateValue(AutomationNode* node, uint8_t val)
