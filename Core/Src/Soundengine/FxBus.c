@@ -11,7 +11,7 @@
  * Public License version 3, with the additional permission and terms in
  * NOTICE.md. See LICENSE and NOTICE.md in the root of the repository.
  *
- * MOD (OE02-Samples+): two FX slots. Slot A (fxBus) has the kit's FX settings as
+ * MOD (XT): two FX slots. Slot A (fxBus) has the kit's FX settings as
  * before, slot B (fxBusB) has the same effects with its settings in the global
  * settings. Voices are routed to slot A ("FX") or slot B ("FXB"). The order
  * (fxBus_mode): A>B and B>A chain the slots (the output of the first is added

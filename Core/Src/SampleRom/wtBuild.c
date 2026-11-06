@@ -1,7 +1,7 @@
 /*
  * wtBuild.c
  *
- * MOD (OE02-Samples+): wavetable frames from source cycles (wtBuild.h).
+ * MOD (XT): wavetable frames from source cycles (wtBuild.h).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */

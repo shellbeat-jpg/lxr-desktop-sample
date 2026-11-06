@@ -1,7 +1,7 @@
 /*
  * Fm2Voice.h
  *
- * MOD (OE02-Samples+): test engine "fm2", 2-operator FM percussion: a sine
+ * MOD (XT): test engine "fm2", 2-operator FM percussion: a sine
  * carrier, phase modulated by a sine modulator with its own decaying index
  * envelope and feedback (bells, metallic hits, FM toms and kicks, snaps).
  * Drum pages; engine settings (roles of VoiceSlot.h): 0 ratio, 1-3 pitch EG

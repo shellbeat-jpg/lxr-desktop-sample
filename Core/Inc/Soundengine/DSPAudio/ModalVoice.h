@@ -1,7 +1,7 @@
 /*
  * ModalVoice.h
  *
- * MOD (OE02-Samples+): test engine "modal", a physical model (ModalCore.h).
+ * MOD (XT): test engine "modal", a physical model (ModalCore.h).
  * Uses the drum voice's pages; its 7 engine specific settings (roles of
  * VoiceSlot.h): 0 model, 1 damping, 2 strike position, 3 inharmonicity,
  * 4 hardness, 5 material, 6 exciter. Pitch, amp EG, filter, transient

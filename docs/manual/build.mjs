@@ -1,4 +1,4 @@
-// Builds docs/OE02-Samples_Manual_Supplement.pdf from docs/manual/supplement.html.
+// Builds docs/XT_Manual_Supplement.pdf from docs/manual/supplement.html.
 // Usage: node docs/manual/build.mjs [--check] [--src supplement.de.html] [--out NAME.pdf]
 // Needs Node and Playwright with Chromium (npm i playwright; npx playwright install chromium).
 // --check only lists columns whose content doesn't fit their page.
@@ -15,8 +15,8 @@ const docs = join(here, '..');
 // include the SVGs of docs/images (without their own style, the page draws them in black)
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : d; };
 const srcName = arg('--src', 'supplement.html');
-const outName = arg('--out', srcName === 'supplement.html' ? 'OE02-Samples_Manual_Supplement.pdf'
-	: 'OE02-Samples_Manual_Supplement.' + srcName.replace(/^supplement\.|\.html$/g, '') + '.pdf');
+const outName = arg('--out', srcName === 'supplement.html' ? 'XT_Manual_Supplement.pdf'
+	: 'XT_Manual_Supplement.' + srcName.replace(/^supplement\.|\.html$/g, '') + '.pdf');
 let html = readFileSync(join(here, srcName), 'utf8');
 html = html.replace(/\{\{svg:([\w.-]+)\}\}/g, (_, f) =>
 	readFileSync(join(docs, 'images', f), 'utf8')

@@ -1,7 +1,7 @@
 /*
  * wtBuild.h
  *
- * MOD (OE02-Samples+): builds the frames of the wavetable engine at the sample
+ * MOD (XT): builds the frames of the wavetable engine at the sample
  * import. A source cycle (any length) is analysed into its harmonics (1..127),
  * turned so that its fundamental starts at phase 0 (all frames of a set line up),
  * and rendered as one frame: 256 points with 127 harmonics plus band limited

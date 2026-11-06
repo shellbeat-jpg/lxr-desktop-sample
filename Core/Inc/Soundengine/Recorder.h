@@ -1,7 +1,7 @@
 /*
  * Recorder.h
  *
- * MOD (OE02-Samples+): records St1 as a WAV file (16 bit stereo) to the SD card,
+ * MOD (XT): records St1 as a WAV file (16 bit stereo) to the SD card,
  * in real time. Armed from the PERF page ("rec", encoder click), it starts with the
  * sequencer or at the next pattern start ("rst") and stops after 1, 2 or 4 passes of
  * the longest track (or at the sequencer stop, or with another click).

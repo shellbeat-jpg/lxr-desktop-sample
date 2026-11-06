@@ -16,8 +16,8 @@ on:
         default: false
 
 env:
-  FW_NAME: OE02-Samples          # file names (no "+")
-  DISPLAY_NAME: OE02-Samples+    # release titles
+  FW_NAME: XT                    # file names
+  DISPLAY_NAME: XT for LXR-02    # release titles
 
 jobs:
   attach:
@@ -40,7 +40,7 @@ jobs:
           cp docs/OVERVIEW.md "out/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "out/${FW_NAME}_Overview_DE.md"
           for f in docs/images/*.svg; do cp "$f" "out/${FW_NAME}_$(basename "$f")"; done
-          cp docs/OE02-Samples_Manual_Supplement.pdf out/
+          cp docs/XT_Manual_Supplement.pdf docs/XT_Manual_Supplement.de.pdf out/
           gh release upload "$TAG" out/*.md out/*.svg out/*.pdf --clobber -R "$GITHUB_REPOSITORY"
           if [ -f ".github/releases/$TAG.md" ]; then
             gh release edit "$TAG" --title "$DISPLAY_NAME $TAG" --notes-file ".github/releases/$TAG.md" -R "$GITHUB_REPOSITORY"

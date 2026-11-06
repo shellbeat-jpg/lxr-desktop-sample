@@ -10,8 +10,8 @@ on:
 
 env:
   # name of the firmware (project() in CMakeLists.txt): names the build outputs
-  FW_NAME: OE02-Samples          # file names (no "+")
-  DISPLAY_NAME: OE02-Samples+    # release titles
+  FW_NAME: XT                    # file names
+  DISPLAY_NAME: XT for LXR-02    # release titles
   # Arm GNU Toolchain used for the build. The ITCM is nearly full, so the
   # compiler version matters: change all three values together.
   # Releases: https://gitlab.arm.com/tooling/gnu-toolchains-for-arm (branch releases/<version>)
@@ -101,7 +101,7 @@ jobs:
           cp docs/OVERVIEW.md "build/release/${FW_NAME}_Overview_EN.md"
           cp docs/OVERVIEW.de.md "build/release/${FW_NAME}_Overview_DE.md"
           for f in docs/images/*.svg; do cp "$f" "build/release/${FW_NAME}_$(basename "$f")"; done
-          cp docs/OE02-Samples_Manual_Supplement.pdf build/release/
+          cp docs/XT_Manual_Supplement.pdf docs/XT_Manual_Supplement.de.pdf build/release/
 
       - name: Publish release
         if: matrix.variant == 'release' && startsWith(github.ref, 'refs/tags/v')

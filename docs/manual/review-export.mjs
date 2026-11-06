@@ -18,13 +18,13 @@ style = style.replace(/url\((fonts\/[\w.-]+\.woff2)\)/g, (_, f) =>
 	'url(data:font/woff2;base64,' + readFileSync(join(here, f)).toString('base64') + ')');
 const de = /<html lang="de"/.test(src);
 const T = de ? {
-	title: 'Ergänzung Review', h1: 'OE02-Samples+ Ergänzung',
+	title: 'Ergänzung Review', h1: 'XT-Firmware für LXR-02 · Ergänzung',
 	hint: 'In einen Text klicken, ändern, dann speichern. Rot markierte Seiten sind zu voll für das PDF.',
 	none: 'Keine Änderungen', save: 'Speichern', dirty: 'Ungespeicherte Änderungen', saving: 'Speichert …', saved: 'Gespeichert',
 	conflict: 'Jemand anderes hat zuerst gespeichert: die Seite lädt dessen Fassung', readonly: 'Nur lesen: Speichern nicht möglich',
 	failed: 'Nicht gespeichert – bitte erneut versuchen', readonlyHere: 'Hier nur lesen', over: 'Zu voll: Seite ', badge: 'Text zu lang für diese Seite'
 } : {
-	title: 'Supplement Review', h1: 'OE02-Samples+ Supplement',
+	title: 'Supplement Review', h1: 'XT firmware for LXR-02 · Supplement',
 	hint: 'Click into any text to change it, then save. Pages marked red are too full for the PDF.',
 	none: 'No changes', save: 'Save', dirty: 'Unsaved changes', saving: 'Saving…', saved: 'Saved',
 	conflict: 'Someone else saved first: the page reloads with their version', readonly: 'Read only: you can’t save this page',

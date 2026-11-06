@@ -1,6 +1,6 @@
 # Samples and voice INIT
 
-User guide for the additions of this fork (OpenElixir-02 + Samples). The base features of
+User guide for the additions of the XT firmware for LXR-02. The base features of
 OpenElixir-02 are described in [ENGINES.md](ENGINES.md) and [README_OPENELIXIR.md](../README_OPENELIXIR.md),
 both taken unchanged from [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/tree/v1.2).
 
@@ -635,7 +635,7 @@ The amp EG still applies (new voice: decay 110, so the damping sets the length),
 the transient sample (it strikes the resonators too, e.g. a click or noise as exciter), the
 distortion, the LFO, velocity and the mix page. A new strike adds to the ringing modes instead
 of restarting them. LFO, velocity and step automation targets on the engine settings are named
-as in the table. Stored in the kit as engine 4: firmwares without it (OpenElixir-02, OE02-Samples+
+as in the table. Stored in the kit as engine 4: firmwares without it (OpenElixir-02, XT / OE02-Samples+
 before 1.2.11) play such a voice with its stock engine. MIDI: NRPN 98 value 24 + slot (0 … 5).
 A test: the sound and its parameters may still change.
 

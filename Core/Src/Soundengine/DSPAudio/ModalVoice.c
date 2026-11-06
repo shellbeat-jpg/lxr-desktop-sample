@@ -1,7 +1,7 @@
 /*
  * ModalVoice.c
  *
- * MOD (OE02-Samples+): test engine "modal" (ModalVoice.h, ModalCore.h).
+ * MOD (XT): test engine "modal" (ModalVoice.h, ModalCore.h).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */

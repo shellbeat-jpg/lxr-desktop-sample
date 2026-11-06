@@ -1,7 +1,7 @@
 /*
  * voiceMorph.c
  *
- * MOD (OE02-Samples+): voice morph, see voiceMorph.h.
+ * MOD (XT): voice morph, see voiceMorph.h.
  *
  * Every slot has the same list of sound parameters (kitEngines_slotParams,
  * entry i has the same function in every slot), so the source voice's entry i

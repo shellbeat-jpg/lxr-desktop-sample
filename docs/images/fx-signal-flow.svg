@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 410" width="1520" height="410" role="img" aria-label="OE02-Samples+ 1.2.10 FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks">
-<title>OE02-Samples+ 1.2.10 FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 410" width="1520" height="410" role="img" aria-label="XT firmware FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks">
+<title>XT firmware FX signal flow: voice with VOL, fader and pan; OUT to the sums or into FX slots A and B; sends SNA and SNB before or after the fader; input gain; slot A into slot B (ORD A>B); St1 through FX3; DJ filter and limiter to the jacks</title>
 <style>
 .bg{fill:#f8fafb}.box{fill:#fff;stroke:#8e9aa8;stroke-width:1.2}.boxA{fill:#fff;stroke:#0c7a74;stroke-width:1.8}
 .boxB{fill:#fff;stroke:#a85f06;stroke-width:1.8}.boxM{fill:#fff;stroke:#7b3db3;stroke-width:2}

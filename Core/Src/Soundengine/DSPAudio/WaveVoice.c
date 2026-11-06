@@ -1,7 +1,7 @@
 /*
  * WaveVoice.c
  *
- * MOD (OE02-Samples+): test engine "wavetable" (WaveVoice.h).
+ * MOD (XT): test engine "wavetable" (WaveVoice.h).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */

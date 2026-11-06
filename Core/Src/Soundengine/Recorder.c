@@ -1,7 +1,7 @@
 /*
  * Recorder.c
  *
- * MOD (OE02-Samples+): real-time WAV recording of St1 to the SD card (Recorder.h).
+ * MOD (XT): real-time WAV recording of St1 to the SD card (Recorder.h).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */

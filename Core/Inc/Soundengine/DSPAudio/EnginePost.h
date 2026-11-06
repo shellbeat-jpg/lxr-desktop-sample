@@ -1,7 +1,7 @@
 /*
  * EnginePost.h
  *
- * MOD (OE02-Samples+): the parts the added engines (modal, FM2, wavetable) share
+ * MOD (XT): the parts the added engines (modal, FM2, wavetable) share
  * with the drum engine: amp EG, filter, velocity, distortion, volume and fader,
  * the common init, and a sine lookup.
  *

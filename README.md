@@ -1,7 +1,7 @@
-# OE02-Samples+
+# XT firmware for LXR-02
 
-A fork of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) for the Erica Synths
-LXR-02 that adds user samples and single-cycle waves from the SD card (as oscillator and LFO
+Custom firmware for the Erica Synths LXR-02 (formerly OE02-Samples+). It contains the modifications
+of [OpenElixir-02](https://github.com/tunefish777/openelixir-02) 1.2 and adds user samples and single-cycle waves from the SD card (as oscillator and LFO
 waveforms, with start, length and loops), a second FX slot and a master bus (saturation,
 compressor, EQ), per-track step grids, ratchets and trigger tracks, new LFO shapes and kit/voice
 morphing.
@@ -15,21 +15,21 @@ morphing.
 |---|---|
 | LXR V2 firmware, bootloader, build system | [Erica Synths](https://github.com/erica-synths/lxr-desktop-app) (open-sourced 2026), originally based on the Sonic Potions LXR |
 | OpenElixir-02: voice engines, kit management, uninterrupted audio, limiter, DJ filter, bug fixes | Moritz Waser ([tunefish777/openelixir-02](https://github.com/tunefish777/openelixir-02)) |
-| Sample extension (this fork, `MOD` commits after OpenElixir-02 v1.2) | shellbeat-jpg, written with Claude (Anthropic) |
+| XT (`MOD` commits after OpenElixir-02 v1.2) | shellbeat-jpg, written with Claude (Anthropic) |
 
-Everything that isn't listed under "What this fork adds" below is OpenElixir-02 v1.2 as released by its
+Everything that isn't listed under "What XT adds" below is OpenElixir-02 v1.2 as released by its
 author: its features are listed in the next section, its full README is
-[README_OPENELIXIR.md](README_OPENELIXIR.md), more details are in [docs/](docs/). The changes of this
-fork can be listed with `git log v1.2..HEAD`.
+[README_OPENELIXIR.md](README_OPENELIXIR.md), more details are in [docs/](docs/). The changes of XT
+can be listed with `git log v1.2..HEAD`.
 
 ## Overview
 
 All features compared with the Erica Synths firmware, OpenElixir-02 included. **[OE]** = from
-OpenElixir-02 v1.2, everything else from this fork. 
+OpenElixir-02 v1.2, everything else from XT. 
 "Global" = saved with SAVE → Global and in the project file. NRPN n = parameter 128 + n.
 Also as a file: [docs/OVERVIEW.md](docs/OVERVIEW.md), in German: [docs/OVERVIEW.de.md](docs/OVERVIEW.de.md).
 As a supplement to the LXR owners manual (PDF, its layout and parameter tables):
-[docs/OE02-Samples_Manual_Supplement.pdf](docs/OE02-Samples_Manual_Supplement.pdf).
+[docs/XT_Manual_Supplement.pdf](docs/XT_Manual_Supplement.pdf).
 All modulation and step automation targets with their display names: [docs/MOD_TARGETS.md](docs/MOD_TARGETS.md).
 
 > The latest release is **1.2.10**. Features marked *(1.2.11, not released yet)* are already in
@@ -124,7 +124,7 @@ All modulation and step automation targets with their display names: [docs/MOD_T
 
 The following is taken unchanged from the
 [OpenElixir-02 README](https://github.com/tunefish777/openelixir-02#features) by Moritz Waser. These
-features are his work, not part of this fork.
+features are his work, not part of XT.
 
 **Kit management.** Load full kits and single voices from any project:
 - Hold LOAD and press step button 1-7 (Drum 1 ... OP HH) to load just that voice from any kit of
@@ -157,10 +157,10 @@ project save that can't lose the saved project. Stock issues that are kept on pu
 [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). The changes of each version are in the
 [release notes](https://github.com/tunefish777/openelixir-02/releases).
 
-## What this fork adds
+## What XT adds
 
 Full user guide: [docs/SAMPLES.md](docs/SAMPLES.md). Menu names below are the short names shown on
-the display (as in the LXR manual). The start screen shows "OE02-Samples+" and the version.
+the display (as in the LXR manual). The start screen shows "XT for LXR-02" and the version.
 
 ### 1. Getting samples onto the device
 
@@ -344,15 +344,15 @@ chip (see [docs/SAMPLES.md](docs/SAMPLES.md)).
 ## Installing
 
 Ready-made firmware: the [Releases](https://github.com/shellbeat-jpg/lxr-desktop-sample/releases)
-page (`LXR_OE02-Samples_V<version>.img`); every push also builds it in the
+page (`LXR_XT_V<version>.img`); every push also builds it in the
 [Actions](https://github.com/shellbeat-jpg/lxr-desktop-sample/actions) tab (artifacts, sign-in needed).
 
-1. Copy `LXR_OE02-Samples_V<version>.img` to the top folder of the SD card and delete any other
+1. Copy `LXR_XT_V<version>.img` to the top folder of the SD card and delete any other
    `LXR*.img` files there.
 2. Switch the LXR-02 off, insert the card, hold the encoder button and switch it on; keep holding it
    until "LXR Updater" appears.
 3. Wait for "Update OK!", then remove the image from the card. The start screen shows
-   "OE02-Samples+" and the version.
+   "XT for LXR-02" and the version.
 4. Put your WAV files into `SAMPLES` (loops into `SAMPLES/LOOPS`) and switch on normally: they are
    imported at the first start. A firmware update erases the samples; keep `SAMPLES` on the card and
    they are imported again.
@@ -377,7 +377,7 @@ cmake --preset release      # add -DARM_TOOLCHAIN_DIR=<toolchain>/bin if arm-non
 cmake --build --preset release
 ```
 
-This creates `build/release/LXR_OE02-Samples_V<version>.img` (name and version from `project()` in
+This creates `build/release/LXR_XT_V<version>.img` (name and version from `project()` in
 `CMakeLists.txt`). The GitHub Actions build uses the Arm GNU Toolchain 15.3; GCC 13.2 also works.
 
 Host tests of the sample code (Linux, gcc): `sh tests/host/run.sh`.

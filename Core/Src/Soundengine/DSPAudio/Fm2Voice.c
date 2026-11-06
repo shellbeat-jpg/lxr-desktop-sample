@@ -1,7 +1,7 @@
 /*
  * Fm2Voice.c
  *
- * MOD (OE02-Samples+): test engine "fm2" (Fm2Voice.h).
+ * MOD (XT): test engine "fm2" (Fm2Voice.h).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */

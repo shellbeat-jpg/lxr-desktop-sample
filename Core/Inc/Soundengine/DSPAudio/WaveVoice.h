@@ -1,7 +1,7 @@
 /*
  * WaveVoice.h
  *
- * MOD (OE02-Samples+): test engine "wavetable": scans through a set of frames
+ * MOD (XT): test engine "wavetable": scans through a set of frames
  * (wtBuild.h: phase aligned, with in-between frames and band limited versions):
  * the basic set sine > triangle > square > saw, the set from the user waves,
  * both, or one of 4 sets from /SAMPLES/TABLES. The position is swept by the

@@ -1,7 +1,7 @@
 /*
  * ModalCore.h
  *
- * MOD (OE02-Samples+): the sound of the modal engine (ModalVoice.h), a physical
+ * MOD (XT): the sound of the modal engine (ModalVoice.h), a physical
  * model: a struck body is a bank of 6 resonators (its modes), tuned to the mode
  * ratios of a model (membrane, bar, string, bell, plate, glass). An exciter
  * (a mallet pulse or a noise burst, plus the voice's transient sample) strikes

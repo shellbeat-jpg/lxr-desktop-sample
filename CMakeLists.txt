@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-# OE02-Samples+ (fork of OpenElixir-02): custom firmware for the Erica Synths LXR-02 desktop drum
+# XT firmware for LXR-02 (includes the OpenElixir-02 modifications): custom firmware for the Erica Synths LXR-02 desktop drum
 # machine (STM32F765VG, Cortex-M7), based on the open-source LXR V2 firmware.
 #
 #   cmake --preset release
@@ -22,9 +22,9 @@ endif()
 
 # The project name names the build outputs (files can't carry the "+"); the
 # start-up screen and the USB-MIDI device name show LXR_DISPLAY_NAME (FIRMWARE_NAME).
-project(OE02-Samples
+project(XT
     VERSION 1.2.11
-    DESCRIPTION "OE02-Samples+: OpenElixir-02 1.2 with user samples, custom firmware for the Erica Synths LXR-02 drum machine"
+    DESCRIPTION "XT firmware for LXR-02: custom firmware for the Erica Synths LXR-02 drum machine, with the OpenElixir-02 1.2 modifications"
     LANGUAGES C ASM
 )
 
@@ -79,7 +79,7 @@ include(${LXR_CMAKE_DIR}/firmware_outputs.cmake)
 # as well as by the application.
 add_library(lxr_board_config INTERFACE)
 target_include_directories(lxr_board_config INTERFACE Core/Inc)
-set(LXR_DISPLAY_NAME "OE02-Samples+")
+set(LXR_DISPLAY_NAME "XT for LXR-02")
 target_compile_definitions(lxr_board_config INTERFACE "FIRMWARE_NAME=\"${LXR_DISPLAY_NAME}\"")
 if(LXR_CPU_METER)
     target_compile_definitions(lxr_board_config INTERFACE CPU_METER=1)
