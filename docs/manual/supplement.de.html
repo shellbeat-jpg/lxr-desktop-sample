@@ -222,7 +222,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <p><b>LOAD</b> halten und die Step-Taste einer Voice (1–7) drücken. Von Kit 0 den Encoder einen Schritt zurückdrehen: Die Zeile <b>INIT: Project</b>, <b>INIT: Global</b> oder <b>INIT: Factory</b> zeigt, woher das INIT dieser Voice kommt. Anklicken für die Aktionen:</p>
       <table class="p2 wide">
         <tr><th>Aktion</th><th>Beschreibung</th></tr>
-        <tr><td>Load INIT</td><td>lädt die Voice aus der Projektvorlage, sonst aus der globalen Vorlage, sonst die Werkswerte ihrer Engine</td></tr>
+        <tr><td>Load INIT</td><td>lädt die Voice aus der Projektvorlage, sonst aus der globalen Vorlage, sonst die Voreinstellungen ihrer Engine</td></tr>
         <tr><td>Save to Project</td><td>speichert diese Voice des aktiven Kits in der Vorlage des Projekts</td></tr>
         <tr><td>Save to Global</td><td>speichert diese Voice in der globalen Vorlage</td></tr>
         <tr><td>Del Project INIT, Del Global INIT</td><td>entfernt diese Voice aus der Vorlage (zum Bestätigen erneut klicken)</td></tr>
@@ -239,7 +239,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>3</b> &gt; Voices</h1>
       <h2 data-toc>3.1. Engines pro Voice <span class="oe">OE</span></h2>
-      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat, neu <b>modal</b>, <b>fm2</b> und <b>wavetable</b> (Test, Kapitel 3.13–3.15). <b>SHIFT + KIT</b> öffnet das Engine-Menü der aktiven Voice. Gespeichert im Kit.</p>
+      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat.<br>Neu: m<b>odal</b>, <b>fm2</b> und <b>wavetable</b> (Kapitel 3.13–3.15). <br><b>SHIFT + KIT</b> öffnet das Engine-Menü der aktiven Voice. Gespeichert im Kit.</p>
       <h2 data-toc>3.2. Oszillatorquellen</h2>
       <p>Hauptoszillator: eingebaute Wellenformen, <b>Samples</b> (eigene Tonhöhe, einmal oder als Loop) oder <b>Waves</b> (Single Cycles, folgen der Note).</p>
       <svg class="dg" viewBox="0 0 330 150" role="img" aria-label="Quellen des Hauptoszillators: eingebaute Wellenformen, Samples S1 bis S31 mit Start, Länge und Loop, eigene Waves W1 bis W8; danach Filter, Amp, Choke, Verzerrung und Sample-Reducer der Voice.">
@@ -264,12 +264,12 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h2 data-toc>3.3. Oszillatorseite (OSC)</h2>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>wav</td><td>Waveform</td><td>eingebaut <b>sin</b> … <b>pwm</b>, dann Samples <b>S1</b> … <b>S31</b>, dann Waves <b>W1</b> … <b>W8</b>. Leere Sample-Slots werden übersprungen. Edit-Ansicht: Dateiname, <b>L</b> = Loop, Slot.</td></tr>
-        <tr><td>sta*</td><td>Start</td><td>ms, 0 = Anfang (alle Voices, anstelle von <b>pwm</b>)</td></tr>
+        <tr><td>wav</td><td>Waveform</td><td><b>sin</b> … <b>pwm (Standard)<br></b><b>S1</b> … <b>S31 (Samples)<br></b><b>W1</b> … <b>W8 (Waves)<br></b>Edit-Ansicht: Dateiname<br><b>L</b> = Loop, Slot.<br>Leere Sample-Slots werden übersprungen.</td></tr>
+        <tr><td>sta*</td><td>Start</td><td>ms, 0 = Anfang (alle Voices, ersetzt <b>pwm</b>)</td></tr>
         <tr><td>len*</td><td>Length</td><td>ms, 0 = bis zum Ende (Drum 1–3)</td></tr>
         <tr><td>coa</td><td>Coarse tune</td><td>mit Sample: 60 = Originaltonhöhe</td></tr>
       </table>
-      <p class="note">*: nur bei Samples. Quadratische Skala (feine Schritte am Anfang); übernommen beim Trigger, auch mit LFO/Velocity. Kurze Fades gegen Klicks.</p>
+      <p class="note">*: nur bei Samples. exponentielle Skala; übernommen beim Trigger, auch mit LFO/Velocity. Kurze Fades gegen Klicks.</p>
       <p>FM-Seite der Drum-Engine: Samples und Waves auch als FM-Quelle.</p>
       <h2 data-toc>3.4. Samples und Loops</h2>
       <ul>
