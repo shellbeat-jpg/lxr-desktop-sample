@@ -1555,12 +1555,16 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 			//MOD: gates: removing a step removes its gate, a set step is no longer held
 			const uint8_t t = menu_getActiveVoice();
 			const uint8_t s = (uint8_t)(seqButtonPressed + menu_activeBar*16);
+			const uint8_t hadGate = seq_isMainStepActive(t, s, menu_shownPattern)
+					&& seq_isStepHeld(t, (uint8_t)(s + 1u), menu_shownPattern);
 			if(seq_isMainStepActive(t, s, menu_shownPattern))
 				seq_clearGateAfter(t, s);
 			else
 				seq_clearHeld(t, s);
+			buttonHandler_setRemoveStep(ledNr, seqButtonPressed);
+			if(hadGate)
+				led_updateSeqLeds();	//the LEDs of the held steps go out at once
 		}
-		buttonHandler_setRemoveStep(ledNr, seqButtonPressed);
 
 		break;
 	case SELECT_MODE_PERF:
