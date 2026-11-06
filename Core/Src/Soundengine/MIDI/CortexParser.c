@@ -536,15 +536,15 @@ static void frontParser_handleMidiMessage()
 #if USE_PATTERN_EDIT_BUFFER
 			if( (currentPattern == seq_activePattern) )
 			{
-				patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param1Val = value;
+				patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param1Val = STEP_KEEP_OCT(patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param1Val, value);
 			}
 			else
 			{
-				seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val = value;
+				seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val = STEP_KEEP_OCT(seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val, value);
 			}
 
 #else
-			seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val = value;
+			seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param1Val, value);
 #endif
 		}
 		break;
@@ -556,15 +556,15 @@ static void frontParser_handleMidiMessage()
 #if USE_PATTERN_EDIT_BUFFER
 			if( (currentPattern == seq_activePattern) )
 			{
-				patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param2Val = value;
+				patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param2Val = STEP_KEEP_OCT(patternBackupBuffer.seq_subStepPattern[frontParser_activeTrack][stepNr].param2Val, value);
 			}
 			else
 			{
-				seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val = value;
+				seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val = STEP_KEEP_OCT(seq_patterns.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val, value);
 			}
 
 #else
-			seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val = value;
+			seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][stepNr].param2Val, value);
 #endif
 
 		}
@@ -751,7 +751,7 @@ static void frontParser_handleSeqCC()
 
 	case FRONT_SEQ_PROB:
 
-		seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep].prob = (cortex_midiMsg.data2);
+		seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep].prob = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep].prob, (cortex_midiMsg.data2));
 		break;
 
 	case FRONT_SEQ_EUKLID_LENGTH:
@@ -936,10 +936,12 @@ static void frontParser_handleSeqCC()
 		uart_sendFrontpanelByte(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].note & 0x7fu);
 		//MOD: the accent goes straight to the menu (same chip)
 		activeParameters[PAR_STEP_ACCENT] = seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].note >> 7;
+		//MOD: and the random octave of the step
+		activeParameters[PAR_STEP_OCT] = STEP_OCT(&seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2]) % STEP_OCT_NUM;
 
 		uart_sendFrontpanelByte(FRONT_SEQ_CC);
 		uart_sendFrontpanelByte(FRONT_SEQ_PROB);
-		uart_sendFrontpanelByte(seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2].prob);
+		uart_sendFrontpanelByte(STEP_PROB(&seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][cortex_midiMsg.data2]));
 
 
 		uart_sendFrontpanelByte(FRONT_SEQ_CC);
@@ -966,9 +968,9 @@ static void frontParser_handleSeqCC()
 		uart_sendFrontpanelByte(hi);
 		uart_sendFrontpanelByte(lo);
 
-		uint8_t val = seq_patternSet.seq_subStepPattern[frontParser_shownPattern]
+		uint8_t val = STEP_VAL(seq_patternSet.seq_subStepPattern[frontParser_shownPattern]
 													   [frontParser_activeTrack]
-													   [data2].param1Val;
+													   [data2].param1Val);	//MOD: bit 7: step octave
 		hi = val>>7;
 		lo = val&0x7f;
 		uart_sendFrontpanelByte(FRONT_SET_P1_VAL);
@@ -986,9 +988,9 @@ static void frontParser_handleSeqCC()
 		uart_sendFrontpanelByte(hi);
 		uart_sendFrontpanelByte(lo);
 
-		val = seq_patternSet.seq_subStepPattern[frontParser_shownPattern]
+		val = STEP_VAL(seq_patternSet.seq_subStepPattern[frontParser_shownPattern]
 											   [frontParser_activeTrack]
-											   [data2].param2Val;
+											   [data2].param2Val);
 		hi = val>>7;
 		lo = val&0x7f;
 		uart_sendFrontpanelByte(FRONT_SET_P2_VAL);

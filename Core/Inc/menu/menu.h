@@ -354,6 +354,8 @@ enum NamesEnum
 	TEXT_WT_POS,
 	TEXT_WT_SWEEP,
 	TEXT_WT_SCAN,
+	TEXT_OCT_RND,		//MOD: random octave of the track
+	TEXT_STEP_OCT,		//MOD: of the step
 
 
 	NUM_NAMES
@@ -525,7 +527,8 @@ enum shortNamesEnum
 	SHORT_WT_SET,
 	SHORT_WT_POS,
 	SHORT_WT_SWEEP,
-	SHORT_WT_SCAN
+	SHORT_WT_SCAN,
+	SHORT_OCT_RND
 
 	
 };
@@ -719,7 +722,9 @@ enum longNamesEnum
 	LONG_WT_SET,
 	LONG_WT_POS,
 	LONG_WT_SWEEP,
-	LONG_WT_SCAN
+	LONG_WT_SCAN,
+	LONG_OCT_RND,
+	LONG_STEP_OCT
 	
 };
 

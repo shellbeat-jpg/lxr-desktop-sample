@@ -428,7 +428,7 @@ enum ParamEnums
 	PAR_FXA_PRS,	//MOD: FX preset list of slot A / B (menu only)
 	PAR_FXB_PRS,
 	PAR_STEP_ACCENT,	//MOD: accent of the selected step (menu only, stored in the step)
-	PAR_REC,			//MOD: unused (was the WAV recorder mode, now PAR_REC_LEN)
+	PAR_REC,			//MOD: PAR_OCT_RND (was the WAV recorder mode, now PAR_REC_LEN)
 
 	
 	//#########################################
@@ -537,6 +537,10 @@ extern uint8_t parameterOrder[END_OF_SOUND_PARAMETERS];
 //MOD: choke group of the kit, bit n = track n+1 (7 tracks). A track in the
 //group cuts the other tracks of the group when it is triggered.
 #define PAR_CHOKE_GROUP	PAR_UNUSED_7
+//MOD: random octave (menu only): of the active track (kit data, KIT_OCT_OFFSET) and of
+//the selected step (stored in the step, STEP_OCT_x)
+#define PAR_OCT_RND		PAR_REC
+#define PAR_STEP_OCT	PAR_PATTERN_NEXT
 //MOD: voice morph on the performance page (non-sound parameters, not saved)
 #define PAR_VMORPH_PAIR		PAR_UNUSED		//0 = off, 1..30: source and target slot
 #define PAR_VMORPH_AMT		PAR_SOM_FREQ	//0..127

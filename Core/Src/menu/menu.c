@@ -350,6 +350,8 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_WT_POS, CAT_VOICE, LONG_WT_POS},/*TEXT_WT_POS*/
 		{SHORT_WT_SWEEP, CAT_VOICE, LONG_WT_SWEEP},/*TEXT_WT_SWEEP*/
 		{SHORT_WT_SCAN, CAT_VOICE, LONG_WT_SCAN},/*TEXT_WT_SCAN*/
+		{SHORT_OCT_RND, CAT_OSC, LONG_OCT_RND},/*TEXT_OCT_RND*/
+		{SHORT_OCT_RND, CAT_STEP, LONG_STEP_OCT},/*TEXT_STEP_OCT*/
 
 
 };
@@ -626,7 +628,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 	    /*PAR_P2_VAL*/ 			DTYPE_0B127,
 	    /*PAR_SHUFFLE*/ 		DTYPE_0B127,
 	    /*PAR_UNUSED*/ 			DTYPE_0B127,
-	    /*PAR_PATTERN_NEXT*/ 	DTYPE_MENU | (MENU_NEXT_PATTERN<<8),
+	    /*PAR_STEP_OCT*/ 		DTYPE_MENU | (MENU_STEP_OCT<<8),	//MOD (was PAR_PATTERN_NEXT, unused)
 	    /*PAR_TRACK_LENGTH*/ 	DTYPE_1B64,
 	    /*PAR_GLO_SAT*/			DTYPE_0B127,
 	    /*PAR_DJ_FILTER*/ 		DTYPE_PM63,
@@ -648,7 +650,7 @@ const enum Datatypes PROGMEM parameter_dtypes[NUM_PARAMS] = {
 		/*PAR_OSX*/				DTYPE_0B127,
 		/*PAR_FXA_PRS, PAR_FXB_PRS*/	DTYPE_0B127, DTYPE_0B127,
 		/*PAR_STEP_ACCENT*/		DTYPE_ON_OFF,
-		/*PAR_REC*/				DTYPE_0B127,
+		/*PAR_OCT_RND*/			DTYPE_MENU | (MENU_OCT_RND<<8),	//MOD (was PAR_REC)
 	    /*PAR_BPM*/ 			DTYPE_0B255,							//251 
 	    /*PAR_MIDI_CHAN_1*/ 	DTYPE_1B16,
 	    /*PAR_MIDI_CHAN_2*/ 	DTYPE_1B16,
@@ -2744,6 +2746,8 @@ void menu_repaintGeneric()
 
 		const uint8_t morphEdit = menu_morphEditFor(parNr);
 		curParmVal = morphEdit ? morphParameters[parNr] : activeParameters[parNr];
+		if(parNr == PAR_OCT_RND)	//MOD: of the active track (kit data)
+			curParmVal = kitEngines[KIT_OCT_OFFSET + menu_activeVoice % 7u];
 
 		// just clear the whole thing
 		memset(&editDisplayBuffer[0][0],' ',16);
@@ -3037,6 +3041,8 @@ void menu_repaintGeneric()
 			const uint16_t parNr = pgm_read_word(&ap->bot1 + i +is2ndPage);
 
 			curParmVal = activeParameters[parNr];
+			if(parNr == PAR_OCT_RND)	//MOD: of the active track (kit data)
+				curParmVal = kitEngines[KIT_OCT_OFFSET + menu_activeVoice % 7u];
 
 			//convert the parameter uint8_t value to a 3 place char
 			if(parNr==PAR_NONE) {
@@ -4058,6 +4064,10 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 		return waveSetNames[0][0];
 	case MENU_WAVE_SCAN:
 		return waveScanNames[0][0];
+	case MENU_OCT_RND:
+		return octRndNames[0][0];
+	case MENU_STEP_OCT:
+		return stepOctNames[0][0];
 
 	case MENU_FX:
 		return fxNames[0][0];
@@ -4181,6 +4191,12 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		break;
 	case MENU_WAVE_SCAN:
 		p = MENU_ITEM(waveScanNames);
+		break;
+	case MENU_OCT_RND:
+		p = MENU_ITEM(octRndNames);
+		break;
+	case MENU_STEP_OCT:
+		p = MENU_ITEM(stepOctNames);
 		break;
 
 	case MENU_FX:
@@ -4495,7 +4511,7 @@ static void menu_skipHiddenTargets(uint8_t* value, int8_t inc, const uint8_t sta
 static uint8_t menu_isSpecialEncoderParam(const uint16_t p)
 {
 	return p == PAR_VMORPH_PAIR || p == PAR_VMORPH_SWITCH || p == PAR_MORPH_VOICES
-		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p) || (p >= PAR_LFOX_FRQ && p <= PAR_LFOX_DST) || p == PAR_OSX
+		|| p == PAR_CHOKE_GROUP || menu_sendLevel(p) || (p >= PAR_LFOX_FRQ && p <= PAR_LFOX_DST) || p == PAR_OSX || p == PAR_OCT_RND
 		|| menu_fxChoiceCount(p);
 }
 static void menu_encoderChangeParameter(int8_t inc)
@@ -4615,6 +4631,15 @@ static void menu_encoderChangeParameter(int8_t inc)
 		if(inc > 0)			kitEngines[KIT_OSX_OFFSET] |= menu_activeSlotBit();
 		else if(inc < 0)	kitEngines[KIT_OSX_OFFSET] &= (uint8_t)~menu_activeSlotBit();
 		activeParameters[paramNr] = kitEngines[KIT_OSX_OFFSET];
+		return;
+	}
+	//MOD: random octave of the active track (kit data)
+	if(paramNr == PAR_OCT_RND)
+	{
+		uint8_t* v = &kitEngines[KIT_OCT_OFFSET + menu_activeVoice % 7u];
+		const int16_t n = (int16_t)(*v + inc);
+		*v = (uint8_t)(n < 0 ? 0 : n >= OCT_RND_NUM ? OCT_RND_NUM-1 : n);
+		activeParameters[paramNr] = *v;
 		return;
 	}
 	//MOD: the choke group shows/sets the bit of the active voice (on/off)
@@ -5447,6 +5472,10 @@ void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 	case PAR_STEP_ACCENT:	//MOD: accent of the selected step
 		if(value > 1) value = activeParameters[paramNr] = 1;
 		seq_setStepAccent(value);
+		break;
+	case PAR_STEP_OCT:	//MOD: random octave of the selected step
+		if(value >= STEP_OCT_NUM) value = activeParameters[paramNr] = STEP_OCT_VOICE;
+		seq_setStepOct(value);
 		break;
 	case PAR_ACCENT:	//MOD: +0.2 .. +6 dB (0: older settings)
 		if(value == 0 || value > 127) value = activeParameters[paramNr] = 64;

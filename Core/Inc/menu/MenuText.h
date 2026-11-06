@@ -48,6 +48,8 @@
 #define MENU_FM2_RATIO		29	//MOD: FM2 engine
 #define MENU_WAVE_SET		30	//MOD: wavetable engine
 #define MENU_WAVE_SCAN		31
+#define MENU_OCT_RND		32	//MOD: random octave of a track
+#define MENU_STEP_OCT		33	//MOD: of a step
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -431,6 +433,18 @@ const char waveScanNames[][4] =
 		{"pp"},		// back and forth (ping-pong)
 		{"pps"},	// back and forth, stepped
 };
+//MOD: random octave of a track (OCT_RND_x, VoiceSlot.h): range of the random octave per trigger
+const char octRndNames[][4] =
+{
+		{10},
+		{"off"}, {"+-1"}, {"+1"}, {"-1"}, {"+-2"}, {"+2"}, {"-2"}, {"+-3"}, {"+3"}, {"-3"},
+};
+//MOD: of a step (STEP_OCT_x, SeqStep.h): vce = the track's
+const char stepOctNames[][4] =
+{
+		{7},
+		{"vce"}, {"off"}, {"+-1"}, {"+-2"}, {"+-3"}, {"+1"}, {"-1"},
+};
 //-----------------------------------------------------------------
 const char mixFmNames[][6] =
 {
@@ -616,6 +630,7 @@ const char shortNames[][4]  =
 	{"pos"},
 	{"swp"},
 	{"scn"},
+	{"oct"},	//MOD: random octave
 
 };
 //-----------------------------------------------------------------
@@ -811,6 +826,8 @@ const char longNames[][16] =
 	{"Wave pos."},	//MOD
 	{"Pos. sweep"},	//MOD
 	{"Scan mode"},	//MOD
+	{"Octave rnd"},	//MOD: random octave of the track
+	{"Octave rnd"},	//MOD: of the step
 };
 
 

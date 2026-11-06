@@ -116,7 +116,7 @@ static void buttonHandler_armTimerActionStep(int8_t stepNr) {
   if (parNr != PAR_NONE)
   {
     buttonHandler_originalValue[0] = activeParameters[parNr];
-    activeParameters[parNr] = step->param1Val;
+    activeParameters[parNr] = STEP_VAL(step->param1Val);	//MOD: bit 7: step octave
 
     buttonHandler_originalParameter[0] = parNr;
     buttonHandler_resetLock1 = 1;
@@ -127,7 +127,7 @@ static void buttonHandler_armTimerActionStep(int8_t stepNr) {
   if (parNr != PAR_NONE)
   {
     buttonHandler_originalValue[1] = activeParameters[parNr];
-    activeParameters[parNr] = step->param2Val;
+    activeParameters[parNr] = STEP_VAL(step->param2Val);
   
     buttonHandler_originalParameter[1] = parNr;
     buttonHandler_resetLock2 = 1;

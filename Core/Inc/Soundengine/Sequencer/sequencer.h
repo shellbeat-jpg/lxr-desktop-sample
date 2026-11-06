@@ -362,4 +362,6 @@ uint8_t seq_getActiveAutomationTrack(void);
 
 //MOD: accent of the selected step (stored in bit 7 of its note)
 void seq_setStepAccent(const uint8_t on);
+//MOD: random octave of the selected step (STEP_OCT_x, stored in 3 free bits of the step)
+void seq_setStepOct(const uint8_t oct);
 #endif /* SEQUENCER_H_ */

@@ -500,8 +500,8 @@ static void seq_parseAutomationNodes(uint8_t track, Step* stepData)
 	autoNode_setDestination(&seq_automationNodes[track][0], stepData->param1Nr);
 	autoNode_setDestination(&seq_automationNodes[track][1], stepData->param2Nr);
 	//set new mod value
-	autoNode_updateValue(&seq_automationNodes[track][0], stepData->param1Val);
-	autoNode_updateValue(&seq_automationNodes[track][1], stepData->param2Val);
+	autoNode_updateValue(&seq_automationNodes[track][0], STEP_VAL(stepData->param1Val));	//MOD: bit 7: step octave
+	autoNode_updateValue(&seq_automationNodes[track][1], STEP_VAL(stepData->param2Val));
 }
 //------------------------------------------------------------------------------
 void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
@@ -549,10 +549,13 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 	const uint8_t cueOnly = (seq_mutedTracks >> voiceNr) & 1u;
 	slot_triggerCueOnly = cueOnly;
 	slot_triggerAccent = accent;	//MOD
+	//MOD: random octave of the step (rolls while stopped: the track's)
+	slot_triggerOct = step >= 0 ? STEP_OCT(&seq_patternSet.seq_subStepPattern[seq_activePattern][voiceNr][step]) : STEP_OCT_VOICE;
 	//Trigger internal synth voice
 	voiceControl_noteOn(voiceNr, note, vol);
 	slot_triggerCueOnly = 0;
 	slot_triggerAccent = 0;
+	slot_triggerOct = STEP_OCT_VOICE;
 	if(cueOnly)
 		return;
 
@@ -1016,9 +1019,9 @@ uint32_t seq_getShiftFlamPattern(const uint8_t track, uint8_t step, StepPosition
 	StepPattern prev, current, next;
 
 	//check probability
-	if( (seq_rndValue[track].prev) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][prevStep].prob ) prevStepActive = 0;
-	if( (seq_rndValue[track].current) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob ) currentStepActive = 0;
-	if( (seq_rndValue[track].next) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][nextStep].prob ) nextStepActive = 0;
+	if( (seq_rndValue[track].prev) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][prevStep].prob & 0x7fu) ) prevStepActive = 0;
+	if( (seq_rndValue[track].current) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob & 0x7fu) ) currentStepActive = 0;
+	if( (seq_rndValue[track].next) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][nextStep].prob & 0x7fu) ) nextStepActive = 0;
 
 	//add step pattern for active steps
 	prev.StepData.prevStep = prevStepActive ? flamIdxToPattern(flamPrevStep) : 0;
@@ -1048,16 +1051,16 @@ uint32_t seq_getShiftFlamPattern(const uint8_t track, uint8_t step, StepPosition
 		switch(stepPos)
 		{
 		case STEP_PREV:
-			if( (seq_rndValue[track].prev) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob ) currentStepActive = 0;
+			if( (seq_rndValue[track].prev) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob & 0x7fu) ) currentStepActive = 0;
 			break;
 
 		default:
 		case STEP_CURRENT:
-			if( (seq_rndValue[track].current) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob ) currentStepActive = 0;
+			if( (seq_rndValue[track].current) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob & 0x7fu) ) currentStepActive = 0;
 			break;
 
 		case STEP_NEXT:
-			if( (seq_rndValue[track].next) > seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob ) currentStepActive = 0;
+			if( (seq_rndValue[track].next) > (seq_patternSet.seq_subStepPattern[seq_activePattern][track][step].prob & 0x7fu) ) currentStepActive = 0;
 			break;
 		}
 		if(!currentStepActive) return 0;
@@ -1685,7 +1688,7 @@ void seq_processFlam(uint8_t idx)
 			{
 
 
-				if( (seq_rndValue[track]) <= seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_stepIndex[track]].prob )
+				if( (seq_rndValue[track]) <= STEP_PROB(&seq_patternSet.seq_subStepPattern[seq_activePattern][track][seq_stepIndex[track]]) )
 				{
 					/* to be able to process flam and shift simultaneously
 					   we have to look at the current and the next step
@@ -1980,7 +1983,7 @@ IN_ITCM_RAM void seq_nextStep()
 
 #if 0 //moved to flam/shift processing routine
 
-					if( (seq_rndValue[i]) <= seq_patternSet.seq_subStepPattern[seq_activePattern][i][seq_stepIndex[i]].prob )
+					if( (seq_rndValue[i]) <= STEP_PROB(&seq_patternSet.seq_subStepPattern[seq_activePattern][i][seq_stepIndex[i]]) )
 					{
 						//only play if timeshift is not active
 						if(seq_patternSet.seq_stepTiming[seq_activePattern][i][seq_stepIndex[i]] < 6)
@@ -2911,10 +2914,10 @@ void seq_recordAutomation(uint8_t voice, uint8_t dest, uint8_t value)
 		{
       if(seq_activeAutomTrack == 0) {
         seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param1Nr = dest;
-        seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param1Val = value;
+        seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param1Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param1Val, value);
       } else {
         seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param2Nr = dest;
-        seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param2Val = value;
+        seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param2Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].param2Val, value);
       }
       
       // seq_patternSet.seq_subStepPattern[seq_activePattern][voice][step].paramNr[seq_activeAutomTrack] = dest;
@@ -2933,14 +2936,18 @@ void seq_recordAutomation(uint8_t voice, uint8_t dest, uint8_t value)
 			                                   [seq_armedArmedAutomationStep].param1Nr = dest;
 			seq_patternSet.seq_subStepPattern[seq_activePattern]
 			                                  [seq_armedArmedAutomationTrack]
-			                                   [seq_armedArmedAutomationStep].param1Val = value;
+			                                   [seq_armedArmedAutomationStep].param1Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[seq_activePattern]
+			                                  [seq_armedArmedAutomationTrack]
+			                                   [seq_armedArmedAutomationStep].param1Val, value);
 		} else {
 			seq_patternSet.seq_subStepPattern[seq_activePattern]
 			                                  [seq_armedArmedAutomationTrack]
 			                                   [seq_armedArmedAutomationStep].param2Nr = dest;
 			seq_patternSet.seq_subStepPattern[seq_activePattern]
 			                                  [seq_armedArmedAutomationTrack]
-			                                   [seq_armedArmedAutomationStep].param2Val = value;
+			                                   [seq_armedArmedAutomationStep].param2Val = STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[seq_activePattern]
+			                                  [seq_armedArmedAutomationTrack]
+			                                   [seq_armedArmedAutomationStep].param2Val, value);
 		}
 	}
 }
@@ -3167,13 +3174,13 @@ void seq_clearAutomation(uint8_t trackNr, uint8_t pattern, uint8_t automTrack)
 		for(k=0;k<NUM_STEPS;k++)
 		{
 			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param1Nr 	= NO_AUTOMATION;
-			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param1Val 	= 0;
+			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param1Val 	= STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param1Val, 0);
 		}
 	} else {
 		for(k=0;k<NUM_STEPS;k++)
 		{
 			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param2Nr		= NO_AUTOMATION;
-			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param2Val	= 0;
+			seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param2Val	= STEP_KEEP_OCT(seq_patternSet.seq_subStepPattern[pattern][trackNr][k].param2Val, 0);
 		}
 	}
 }
@@ -3406,4 +3413,9 @@ void seq_setStepAccent(const uint8_t on)
 {
 	Step* st = &seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep];
 	st->note = (uint8_t)((st->note & 0x7fu) | (on ? 0x80u : 0u));
+}
+//MOD: random octave of the selected step (STEP_OCT_x)
+void seq_setStepOct(const uint8_t oct)
+{
+	step_setOct(&seq_patternSet.seq_subStepPattern[frontParser_shownPattern][frontParser_activeTrack][frontParser_activeStep], oct);
 }

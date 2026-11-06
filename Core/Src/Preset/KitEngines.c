@@ -19,6 +19,7 @@
 #include "Soundengine/Sequencer/sequencer.h"
 #include <string.h>
 #include "Soundengine/DSPAudio/FX/MasterBus.h"	//MOD: FX3 setting order
+#include "menu/CcNr2Text.h"	//MOD: getNumModTargets
 #include "Soundengine/FxBus.h"	//MOD: FXBUS_NUM_MODES
 
 uint8_t kitEngines[KIT_DATA_SIZE] = { ENGINE_DRUM, ENGINE_DRUM, ENGINE_DRUM, ENGINE_SNARE, ENGINE_CYMBAL, ENGINE_HIHAT,
@@ -58,6 +59,7 @@ void kitEngines_setStock(uint8_t* engines)
 	for(uint8_t x=0;x<KIT_LFOX_NUM;x++)	//MOD: extra LFOs off
 		kitEngines_lfoXStock(&engines[KIT_LFOX_OFFSET + x*KIT_LFOX_STRIDE], x);
 	engines[KIT_OSX_OFFSET] = 0;	//MOD: all voices follow the global sample rate
+	memset(&engines[KIT_OCT_OFFSET], OCT_RND_OFF, KIT_OCT_SIZE);	//MOD: no random octave
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -94,6 +96,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	memcpy(&o[4], &engines[KIT_LFOX_OFFSET], KIT_LFOX_SIZE);
 	o += 4 + KIT_LFOX_SIZE;
 	o[0] = 'O'; o[1] = 'S'; o[2] = 'X'; o[3] = 1; o[4] = engines[KIT_OSX_OFFSET];	//MOD: global sample rate exclusions
+	o += 5;
+	o[0] = 'O'; o[1] = 'C'; o[2] = 'T'; o[3] = KIT_OCT_SIZE;	//MOD: random octave of the tracks
+	memcpy(&o[4], &engines[KIT_OCT_OFFSET], KIT_OCT_SIZE);
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -138,6 +143,11 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		}
 		else if(t[0] == 'O' && t[1] == 'S' && t[2] == 'X' && n >= 1)	//MOD
 			engines[KIT_OSX_OFFSET] = t[4] & ((1u << NUM_VOICE_SLOTS) - 1u);
+		else if(t[0] == 'O' && t[1] == 'C' && t[2] == 'T')	//MOD: random octave
+		{
+			for(uint8_t k=0;k<KIT_OCT_SIZE && k<n;k++)
+				engines[KIT_OCT_OFFSET + k] = t[4+k] < OCT_RND_NUM ? t[4+k] : OCT_RND_OFF;
+		}
 		else if(t[0] == 'O' && t[1] == 'R' && t[2] == 'D' && n >= 1)
 			engines[KIT_FXMODE_OFFSET] = t[4] < FXBUS_NUM_MODES ? t[4] : 0;
 		else if(t[0] == 'F' && t[1] == 'X' && t[2] == '3' && n >= 9)
@@ -331,6 +341,13 @@ static void kitEngines_turnOffRoleModulation(const uint8_t slot)
 			kitEngines_setTarget(PAR_VEL_DEST_1+i, CC_VELO_TARGET, i, 0);
 		}
 	}
+	//MOD: and of the extra LFOs (2nd LFOs, LFO of track 7; they take the kit data)
+	for(uint8_t x=0;x<KIT_LFOX_NUM;x++)
+	{
+		uint8_t* dst = &kitEngines[KIT_LFOX_OFFSET + x*KIT_LFOX_STRIDE + LFOX_DST];
+		if(*dst < getNumModTargets() && kitEngines_isRolePar(slot, modTargets[*dst].param))
+			*dst = 0;
+	}
 
 	for(uint8_t pattern=0;pattern<NUM_PATTERN;pattern++)
 	{
@@ -342,12 +359,12 @@ static void kitEngines_turnOffRoleModulation(const uint8_t slot)
 				if(kitEngines_isRolePar(slot, seq_automationTarget(st->param1Nr)))
 				{
 					st->param1Nr = NO_AUTOMATION;
-					st->param1Val = 0;
+					st->param1Val = STEP_KEEP_OCT(st->param1Val, 0);
 				}
 				if(kitEngines_isRolePar(slot, seq_automationTarget(st->param2Nr)))
 				{
 					st->param2Nr = NO_AUTOMATION;
-					st->param2Val = 0;
+					st->param2Val = STEP_KEEP_OCT(st->param2Val, 0);
 				}
 			}
 		}
@@ -400,8 +417,10 @@ void kitEngines_initVoice(const uint8_t slot)
 	kitEngines[KIT_SENDB_OFFSET + slot] = KIT_SEND_DEFAULT;
 	kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], slot);	//MOD: 2nd LFO
 	kitEngines[KIT_OSX_OFFSET] &= (uint8_t)~(1u << slot);	//MOD: follows the global sample rate
+	kitEngines[KIT_OCT_OFFSET + slot] = OCT_RND_OFF;	//MOD: no random octave
 	if(slot == NUM_VOICE_SLOTS-1)	//MOD: track 7
 	{
+		kitEngines[KIT_OCT_OFFSET + NUM_VOICE_SLOTS] = OCT_RND_OFF;
 		kitEngines[KIT_T7_OFFSET] = 0;
 		kitEngines[KIT_T7_OFFSET + 1] = KIT_T7_COARSE_ZERO;
 		memset(&kitEngines[KIT_T7_OFFSET + KIT_T7_SENDA], 0, KIT_T7_SIZE - KIT_T7_SENDA);
@@ -418,8 +437,10 @@ void kitEngines_copySlotData(const uint8_t slot, uint8_t* dst, const uint8_t* sr
 	dst[KIT_SENDB_OFFSET + slot] = src[KIT_SENDB_OFFSET + slot];
 	memcpy(&dst[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], &src[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], KIT_LFOX_STRIDE);
 	dst[KIT_OSX_OFFSET] = (uint8_t)((dst[KIT_OSX_OFFSET] & ~(1u << slot)) | (src[KIT_OSX_OFFSET] & (1u << slot)));
+	dst[KIT_OCT_OFFSET + slot] = src[KIT_OCT_OFFSET + slot];	//MOD: random octave
 	if(slot == NUM_VOICE_SLOTS-1)
 	{
+		dst[KIT_OCT_OFFSET + NUM_VOICE_SLOTS] = src[KIT_OCT_OFFSET + NUM_VOICE_SLOTS];
 		memcpy(&dst[KIT_T7_OFFSET], &src[KIT_T7_OFFSET], KIT_T7_SIZE);
 		memcpy(&dst[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], &src[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], KIT_LFOX_STRIDE);
 	}
@@ -502,7 +523,13 @@ static void kitEngines_reset(const uint8_t slot, const uint8_t engine)
 	kitEngines_setTarget(PAR_VEL_DEST_1+slot, CC_VELO_TARGET, slot, 0);
 
 	if(engineChanged)	//MOD: a voice INIT keeps the step automation
+	{
+		//MOD: the slot's 2nd LFO (and the LFO of track 7) start off as its LFO
+		kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + slot*KIT_LFOX_STRIDE], slot);
+		if(slot == NUM_VOICE_SLOTS-1)
+			kitEngines_lfoXStock(&kitEngines[KIT_LFOX_OFFSET + NUM_VOICE_SLOTS*KIT_LFOX_STRIDE], NUM_VOICE_SLOTS);
 		kitEngines_turnOffRoleModulation(slot);
+	}
 
 	//the voice was re-initialized: send all its parameters
 	kitEngines_sendSlot(slot, list);

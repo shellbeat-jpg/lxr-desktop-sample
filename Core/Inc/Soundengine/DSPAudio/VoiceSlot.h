@@ -112,6 +112,11 @@ void slot_clearCueOnly(const uint8_t track);	//the track was unmuted (7: all)
 extern float slot_accentGain[NUM_VOICE_SLOTS];
 extern float slot_accentAmount;
 extern uint8_t slot_triggerAccent;
+//MOD: random octave per trigger: the track's setting (kit, KIT_OCT_OFFSET, OCT_RND_x) or,
+//when the sequencer sets slot_triggerOct (STEP_OCT_x, SeqStep.h) around the trigger, the step's
+enum { OCT_RND_OFF, OCT_RND_PM1, OCT_RND_UP1, OCT_RND_DOWN1, OCT_RND_PM2, OCT_RND_UP2, OCT_RND_DOWN2,
+	OCT_RND_PM3, OCT_RND_UP3, OCT_RND_DOWN3, OCT_RND_NUM };
+extern uint8_t slot_triggerOct;
 
 //trigger track 0-6 (track 6 = 2nd trigger of slot 5)
 void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note);

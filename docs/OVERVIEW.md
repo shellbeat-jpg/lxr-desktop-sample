@@ -23,6 +23,7 @@ Waser), everything else from XT.
 | Fast rolls | Roll rates `24`, `32`, `48` (1/16 triplets, 1/32, 1/32 triplets). | PERF (`ROL`) | – | – |
 | Step accent | Accent per step, `ACA` = level (+0.1 … +6 dB). | Step page (`ACC`), CONFIG 2 (`ACA`) | Pattern (`ACC`), global (`ACA`) | – |
 | Random voice | SHIFT + encoder click on a voice page varies the active voice by `RND`; volume, pan, output, sends, LFO and engine stay. | Voice pages, PERF (`RND`) | Global (`RND`) | – |
+| Random octave | Each trigger plays a random octave in a range (`+-1` … `-3`); per step `OCT` replaces it (`vce` = as the voice). Test, not released yet. | VOICE (OSC `OCT`), step page (`OCT`) | Kit, pattern (step) | – |
 | WAV recorder | Records St1 to the SD card (`REC/RECnnn.WAV`, 16 bit stereo): 1, 2 or 4 passes of the pattern or until stop; starts with PLAY or at the next pattern start. | PERF, last screen (`REC`, `RST`, encoder click) | Global | – |
 | Modal engine | New engine: physical model of a struck membrane, bar, string, bell, plate or glass (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2 engine | 2-operator FM percussion: ratio `RAT`, index `IDX` with its own decay `IDC`, feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |

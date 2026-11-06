@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>XT firmware for LXR-02 1.2.11 – Supplement to the LXR Owners Manual</title>
+<title>XT firmware for LXR-02 1.2.12 – Supplement to the LXR Owners Manual</title>
 <!--
   Source of docs/XT_Manual_Supplement.pdf. Build: node docs/manual/build.mjs
   (needs Node and Playwright with Chromium). Layout after the LXR owners manual:
@@ -115,7 +115,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="in">
     <div>
       <div class="brand"><span class="n">XT</span><span class="t">Firmware for LXR-02</span><span class="r"></span></div>
-      <div class="sub">Version 1.2.11 · supplement to the LXR owners manual</div>
+      <div class="sub">Version 1.2.12 · supplement to the LXR owners manual</div>
     </div>
     <div class="mid">
       <div><b>Samples &amp; waves</b>31 WAV samples, 8 single-cycle waves and 4 wavetables from the SD card, with start, length and loops.</div>
@@ -143,7 +143,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; NOTES</h1>
-      <p>This supplement describes what the <b>XT firmware 1.2.11</b> (formerly OE02-Samples+) adds to the LXR-02 and its manual.</p>
+      <p>This supplement describes what the <b>XT firmware 1.2.12</b> (formerly OE02-Samples+) adds to the LXR-02 and its manual.</p>
       <p>It contains the modifications of <b>OpenElixir-02 1.2</b> (Moritz Waser), marked <span class="oe">OE</span>.</p>
       <h2 data-toc>1.1. About the tables</h2>
       <p>As in the manual: <b>display name</b> (three letters), full name, function. The edit view (press the encoder) shows the full name and the value.</p>
@@ -154,7 +154,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li><code>LXR_XT_V1.2.11.img</code> into the top folder of the card; delete all other <code>LXR*.img</code> there.</li>
+        <li><code>LXR_XT_V1.2.12.img</code> into the top folder of the card; delete all other <code>LXR*.img</code> there.</li>
         <li>Switch on with the encoder button held until “LXR Updater” appears.</li>
         <li>“Update OK!”, then delete the image.</li>
         <li>The update erases the samples: leave <code>SAMPLES</code> on the card, the next start imports them again.</li>
@@ -264,6 +264,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>sta*</td><td>Start</td><td>ms, 0 = beginning (all voices, replaces <b>pwm</b>)</td></tr>
         <tr><td>len*</td><td>Length</td><td>ms, 0 = to the end (drum 1–3)</td></tr>
         <tr><td>coa</td><td>Coarse tune</td><td>with a sample: 60 = original pitch</td></tr>
+        <tr><td>oct</td><td>Octave rnd</td><td>random octave per trigger: <b>±1</b>, <b>+1</b>, <b>−1</b> … <b>±3</b>, <b>+3</b>, <b>−3</b> (0 included), <b>off</b>; step value: 4.3</td></tr>
       </table>
       <p class="note">*: samples only; taken at the trigger, also with LFO/velocity.</p>
       <p>FM page of the drum engine: samples and waves also as FM source.</p>
@@ -425,11 +426,12 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>x4+, x4-</td><td>4 repeats, velocity rising / falling (25 … 100 %)</td></tr>
         <tr><td>1/8 1/4 1/2 1/1</td><td>roll lock: a repeat every 2, 4, 8, 16 steps up to the next active step</td></tr>
       </table>
-      <h2 data-toc>4.3. Step accent</h2>
+      <h2 data-toc>4.3. Step accent and octave</h2>
       <ul>
         <li><b>acc</b> (first step page, after <b>prb</b>): accent on/off for the step, stored in the pattern.</li>
         <li><b>aca</b> (CONFIG, second page, global): amount +0.1 … +6 dB, default 64 ≈ +3.5 dB.</li>
         <li>Acts like the voice's fader, only for this trigger.</li>
+        <li><b>oct</b> (after <b>sft</b>): random octave instead of the voice's (3.3): <b>vce</b> (as the voice), off, ±1, ±2, ±3, +1, −1.</li>
       </ul>
     </div>
     <div class="col">
@@ -713,8 +715,8 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h1 data-toc><b>A</b> &gt; Where settings are stored</h1>
       <table class="p2 wide">
         <tr><th>Stored in</th><th>Settings</th></tr>
-        <tr><td>Kit</td><td>engine <span class="oe">OE</span> and its settings, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b></td></tr>
-        <tr><td>Pattern</td><td>step grid, flam values, accents <b>acc</b>, trigger tracks, LFO start, steps with velocity 0</td></tr>
+        <tr><td>Kit</td><td>engine <span class="oe">OE</span> and its settings, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b>, <b>oct</b></td></tr>
+        <tr><td>Pattern</td><td>step grid, flam values, accents <b>acc</b>, <b>oct</b> of the steps, trigger tracks, LFO start, steps with velocity 0</td></tr>
         <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input levels (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>aca</b>, <b>rnd</b>, <b>rec</b>, <b>rst</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
         <tr><td>Project</td><td>the INIT template for voices, the values of the morph kit, FX presets <b>U1</b>–<b>U8</b></td></tr>
         <tr><td>Flash</td><td>samples, waves and wavetables (imported from the card)</td></tr>
@@ -815,7 +817,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     if (p.hasAttribute('data-nofoot')) return;
     if (n % 2 === 0) p.classList.add('even');
     const f = document.createElement('footer');
-    f.innerHTML = '<span>XT firmware for LXR-02 1.2.11 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
+    f.innerHTML = '<span>XT firmware for LXR-02 1.2.12 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
     p.appendChild(f);
   });
   const toc = document.getElementById('toc');

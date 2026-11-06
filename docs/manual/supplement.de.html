@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>XT-Firmware für LXR-02 1.2.11 – Ergänzung zum LXR-Handbuch</title>
+<title>XT-Firmware für LXR-02 1.2.12 – Ergänzung zum LXR-Handbuch</title>
 <!--
   Source of docs/XT_Manual_Supplement.de.pdf. Build: node docs/manual/build.mjs
   (needs Node and Playwright with Chromium). Layout after the LXR owners manual:
@@ -115,7 +115,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="in">
     <div>
       <div class="brand"><span class="n">XT</span><span class="t">Firmware für LXR-02</span><span class="r"></span></div>
-      <div class="sub">Version 1.2.11 · Ergänzung zum LXR-Handbuch</div>
+      <div class="sub">Version 1.2.12 · Ergänzung zum LXR-Handbuch</div>
     </div>
     <div class="mid">
       <div><b>Samples &amp; Waves</b>31 WAV-Samples, 8 Single-Cycle-Waves und 4 Wavetables von der SD-Karte, mit Start, Länge und Loops.</div>
@@ -143,7 +143,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; HINWEISE</h1>
-      <p>Diese Ergänzung beschreibt, was die <b>XT-Firmware 1.2.11</b> (vormals OE02-Samples+) dem LXR-02 und seinem Handbuch hinzufügt.</p>
+      <p>Diese Ergänzung beschreibt, was die <b>XT-Firmware 1.2.12</b> (vormals OE02-Samples+) dem LXR-02 und seinem Handbuch hinzufügt.</p>
       <p>Sie enthält die Modifikationen von <b>OpenElixir-02 1.2</b> (Moritz Waser), markiert mit <span class="oe">OE</span>.</p>
       <h2 data-toc>1.1. Zu den Tabellen</h2>
       <p>Wie im Handbuch: <b>Anzeigename</b> (drei Buchstaben), voller Name, Funktion. Die Edit-Ansicht (Encoder drücken) zeigt den vollen Namen und den Wert.</p>
@@ -154,7 +154,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li><code>LXR_XT_V1.2.11.img</code> in den obersten Ordner der Karte, alle anderen <code>LXR*.img</code> dort löschen.</li>
+        <li><code>LXR_XT_V1.2.12.img</code> in den obersten Ordner der Karte, alle anderen <code>LXR*.img</code> dort löschen.</li>
         <li>Mit gehaltener Encoder-Taste einschalten, bis „LXR Updater“ erscheint.</li>
         <li>„Update OK!“, dann das Image löschen.</li>
         <li>Das Update löscht die Samples: <code>SAMPLES</code> auf der Karte lassen, der nächste Start importiert sie neu.</li>
@@ -264,6 +264,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>sta*</td><td>Start</td><td>ms, 0 = Anfang (alle Voices, ersetzt <b>pwm</b>)</td></tr>
         <tr><td>len*</td><td>Length</td><td>ms, 0 = bis zum Ende (Drum 1–3)</td></tr>
         <tr><td>coa</td><td>Coarse tune</td><td>mit Sample: 60 = Originaltonhöhe</td></tr>
+        <tr><td>oct</td><td>Octave rnd</td><td>Zufallsoktave pro Trigger: <b>±1</b>, <b>+1</b>, <b>−1</b> … <b>±3</b>, <b>+3</b>, <b>−3</b> (0 eingeschlossen), <b>off</b>; Step-Wert: 4.3</td></tr>
       </table>
       <p class="note">*: nur bei Samples; übernommen beim Trigger, auch mit LFO/Velocity.</p>
       <p>FM-Seite der Drum-Engine: Samples und Waves auch als FM-Quelle.</p>
@@ -425,11 +426,12 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>x4+, x4-</td><td>4 Wiederholungen, Velocity steigend / fallend (25 … 100 %)</td></tr>
         <tr><td>1/8 1/4 1/2 1/1</td><td>Roll-Lock: Wiederholung alle 2, 4, 8, 16 Steps bis zum nächsten aktiven Step</td></tr>
       </table>
-      <h2 data-toc>4.3. Step-Akzent</h2>
+      <h2 data-toc>4.3. Step-Akzent und -Oktave</h2>
       <ul>
-        <li><b>acc</b> (erste Step-Seite, nach <b>prb</b>): Akzent an/aus für den Step, im Pattern gespeichert.</li>
-        <li><b>aca</b> (CONFIG, zweite Seite, global): Stärke +0,1 … +6 dB, Standard 64 ≈ +3,5 dB.</li>
+        <li><b>acc</b> (erste Step-Seite, nach <b>prb</b>): Akzent an/aus, im Pattern gespeichert.</li>
+        <li><b>aca</b> (CONFIG, zweite Seite, global): +0,1 … +6 dB, Standard ≈ +3,5 dB.</li>
         <li>Wirkt wie der Fader der Voice, nur für diesen Trigger.</li>
+        <li><b>oct</b> (nach <b>sft</b>): Zufallsoktave statt der Voice (3.3): <b>vce</b> (wie Voice), off, ±1, ±2, ±3, +1, −1.</li>
       </ul>
     </div>
     <div class="col">
@@ -713,8 +715,8 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h1 data-toc><b>A</b> &gt; Wo Einstellungen gespeichert werden</h1>
       <table class="p2 wide">
         <tr><th>Gespeichert in</th><th>Einstellungen</th></tr>
-        <tr><td>Kit</td><td>Engine <span class="oe">OE</span> und ihre Einstellungen, <b>wav</b> (Sample- / Wave-Nummer), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO-Wellenformen und <b>ofs</b>; FX1, <b>ord</b> der FX-Slots; FX3 komplett; Track 7, LFO 2, <b>osx</b></td></tr>
-        <tr><td>Pattern</td><td>Step-Raster, Flam-Werte, Akzente <b>acc</b>, Trigger-Tracks, LFO-Start, Steps mit Velocity 0</td></tr>
+        <tr><td>Kit</td><td>Engine <span class="oe">OE</span> und ihre Einstellungen, <b>wav</b> (Sample- / Wave-Nummer), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO-Wellenformen und <b>ofs</b>; FX1, <b>ord</b> der FX-Slots; FX3 komplett; Track 7, LFO 2, <b>osx</b>, <b>oct</b></td></tr>
+        <tr><td>Pattern</td><td>Step-Raster, Flam-Werte, Akzente <b>acc</b>, <b>oct</b> der Steps, Trigger-Tracks, LFO-Start, Steps mit Velocity 0</td></tr>
         <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, die Eingangspegel (SHIFT + Regler 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>aca</b>, <b>rnd</b>, <b>rec</b>, <b>rst</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
         <tr><td>Projekt</td><td>die INIT-Vorlage für Voices, die Werte des Morph-Kits, FX-Presets <b>U1</b>–<b>U8</b></td></tr>
         <tr><td>Flash</td><td>Samples, Waves und Wavetables (von der Karte importiert)</td></tr>
@@ -821,7 +823,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     if (p.hasAttribute('data-nofoot')) return;
     if (n % 2 === 0) p.classList.add('even');
     const f = document.createElement('footer');
-    f.innerHTML = '<span>XT-Firmware für LXR-02 1.2.11 · Ergänzung</span><span class="line"></span><span class="num">' + n + '</span>';
+    f.innerHTML = '<span>XT-Firmware für LXR-02 1.2.12 · Ergänzung</span><span class="line"></span><span class="num">' + n + '</span>';
     p.appendChild(f);
   });
   const toc = document.getElementById('toc');

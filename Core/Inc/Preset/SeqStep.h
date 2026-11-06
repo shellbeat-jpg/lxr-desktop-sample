@@ -34,6 +34,21 @@ typedef struct StepStruct
 	uint8_t 	param2Val; //probably 7
 }Step;
 
+//MOD: random octave of a step (STEP_OCT_x) in the free upper bits of prob (bit 0),
+//param1Val (bit 1) and param2Val (bit 2); these fields are 7 bit values, read them
+//with STEP_PROB / STEP_VAL and set them with STEP_KEEP_OCT
+enum { STEP_OCT_VOICE, STEP_OCT_OFF, STEP_OCT_PM1, STEP_OCT_PM2, STEP_OCT_PM3, STEP_OCT_UP1, STEP_OCT_DOWN1, STEP_OCT_NUM };
+#define STEP_PROB(s)			((uint8_t)((s)->prob & 0x7fu))
+#define STEP_VAL(v)				((uint8_t)((v) & 0x7fu))
+#define STEP_KEEP_OCT(old, v)	((uint8_t)(((old) & 0x80u) | ((v) & 0x7fu)))
+#define STEP_OCT(s)				((uint8_t)(((s)->prob >> 7) | (((s)->param1Val >> 7) << 1) | (((s)->param2Val >> 7) << 2)))
+static inline void step_setOct(Step* s, const uint8_t oct)
+{
+	s->prob			= (uint8_t)((s->prob & 0x7fu) | ((oct & 1u) << 7));
+	s->param1Val	= (uint8_t)((s->param1Val & 0x7fu) | (((oct >> 1) & 1u) << 7));
+	s->param2Val	= (uint8_t)((s->param2Val & 0x7fu) | (((oct >> 2) & 1u) << 7));
+}
+
 typedef struct StepTiming
 {
 	uint8_t flam:4; // [0:5] => off, x2, x3, x4, x6, x8

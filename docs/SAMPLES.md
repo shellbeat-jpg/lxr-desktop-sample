@@ -592,6 +592,20 @@ setting, switch-like values (waveform, filter type, …) change with that probab
 pan, output, sends, LFO, choke group and engine stay. The display shows how many values changed;
 press again for the next variation, voice LOAD (or not saving) brings the old sound back.
 
+## Random octave (1.2.12, test)
+
+`OCT` on the OSC page of each voice (VOICE 7: its own value) shifts every trigger by a random
+number of octaves: `+-1`, `+-2`, `+-3` up or down, `+1`, `+2`, `+3` only up, `-1`, `-2`, `-3` only
+down, each with 0 included (`+-1` = −1, 0 or +1, equally likely); `off` = none (default). It moves
+the note of the trigger, so it works with samples and every engine (all oscillators of the cymbal
+and hi-hat); the note is limited to 0 … 127. Pads, MIDI notes and the sequencer all use it; the
+MIDI note sent stays. Stored in the kit (part `OCT`, also in voice load and INIT templates).
+
+`OCT` on the step page (after `SFT`) replaces it for the selected step: `vce` (as the voice,
+default), `off`, `+-1`, `+-2`, `+-3`, `+1`, `-1`. Stored in the pattern, in the free top bits of the
+step's probability and lock values; copying a step copies it. Other firmwares play a step with an
+`OCT` value whatever its probability, and its locks with wrong values.
+
 ## WAV recorder (1.2.11)
 
 The last PERF screen records the mix as a WAV file to the SD card, in real time: 16 bit stereo,
@@ -751,5 +765,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The random octave (1.2.12) is not tried on the device yet. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.

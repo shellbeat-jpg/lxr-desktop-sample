@@ -15,6 +15,8 @@
 #include "SampleRom/sampleFlash.h"	//MOD: loop flag (slot_stopLoops)
 #include "Preset/KitEngines.h"			//MOD: track 7 settings
 #include <math.h>
+#include "Soundengine/DSPAudio/random.h"	//MOD: random octave
+#include "Preset/SeqStep.h"
 
 INDTCMZ VoiceSlot voiceSlots[NUM_VOICE_SLOTS];
 
@@ -109,6 +111,23 @@ uint8_t slot_triggerCueOnly = 0;
 float slot_accentGain[NUM_VOICE_SLOTS] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };	//MOD: accent
 float slot_accentAmount = 1.5f;
 uint8_t slot_triggerAccent = 0;
+uint8_t slot_triggerOct = 0;	//MOD: random octave of the step (STEP_OCT_VOICE: the track's)
+//the note of a trigger shifted by a random number of octaves in the range of the
+//step's or track's setting
+static uint8_t slot_randomOctave(const uint8_t track, const uint8_t note)
+{
+	static const int8_t lo[OCT_RND_NUM] = { 0, -1, 0, -1, -2, 0, -2, -3, 0, -3 };
+	static const int8_t hi[OCT_RND_NUM] = { 0,  1, 1,  0,  2, 2,  0,  3, 3,  0 };
+	static const uint8_t fromStep[STEP_OCT_NUM] = { 0xff, OCT_RND_OFF, OCT_RND_PM1, OCT_RND_PM2, OCT_RND_PM3, OCT_RND_UP1, OCT_RND_DOWN1 };
+	uint8_t r = slot_triggerOct < STEP_OCT_NUM ? fromStep[slot_triggerOct] : 0xff;
+	if(r == 0xff)
+		r = kitEngines[KIT_OCT_OFFSET + (track < KIT_OCT_SIZE ? track : KIT_OCT_SIZE-1)];
+	if(r == OCT_RND_OFF || r >= OCT_RND_NUM)
+		return note;
+	const int8_t oct = (int8_t)(lo[r] + (int8_t)(GetRngValue() % (uint32_t)(hi[r] - lo[r] + 1)));
+	const int16_t n = (int16_t)(note + 12 * oct);
+	return (uint8_t)(n < 0 ? 0 : n > 127 ? 127 : n);
+}
 void slot_clearCueOnly(const uint8_t track)
 {
 	if(track >= 7)	memset(slot_cueOnly, 0, sizeof(slot_cueOnly));
@@ -157,7 +176,7 @@ void slot_stopLoops(void)
 	}
 }
 //---------------------------------------------------
-void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
+void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t noteIn)
 {
 	const uint8_t slot = track < NUM_VOICE_SLOTS ? track : NUM_VOICE_SLOTS-1;
 	const uint8_t second = track >= NUM_VOICE_SLOTS;	//track 7
@@ -166,6 +185,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t note)
 	slot_chokeOthers(track, slot);	//MOD
 	slot_cueOnly[slot] = slot_triggerCueOnly;	//MOD: cue
 	slot_accentGain[slot] = slot_triggerAccent ? slot_accentAmount : 1.f;	//MOD: accent
+	const uint8_t note = slot_randomOctave(track, noteIn);	//MOD
 
 	//MOD: track 7 can play its own waveform and pitch on the shared voice of slot 6
 	{
