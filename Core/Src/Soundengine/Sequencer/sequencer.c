@@ -244,6 +244,7 @@ void seq_copyPatternToBackupBuffer(uint8_t patternNr)
 	memcpy(&patternBackupBuffer.trig, &seq_patternSet.trig[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&patternBackupBuffer.lfo, &seq_patternSet.lfo[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&patternBackupBuffer.start, &seq_patternSet.start[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
+	memcpy(&patternBackupBuffer.gate, &seq_patternSet.gate[patternNr],  sizeof(uint64_t)*NUM_TRACKS);	//MOD
 
 
 
@@ -265,6 +266,7 @@ void seq_copyBackupBufferToPattern(uint8_t patternNr)
 	memcpy(&seq_patternSet.trig[patternNr], &patternBackupBuffer.trig,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&seq_patternSet.lfo[patternNr], &patternBackupBuffer.lfo,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&seq_patternSet.start[patternNr], &patternBackupBuffer.start,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
+	memcpy(&seq_patternSet.gate[patternNr], &patternBackupBuffer.gate,  sizeof(uint64_t)*NUM_TRACKS);	//MOD
 
 	seq_patternSet.shuffle[patternNr] = patternBackupBuffer.shuffle;
 	seq_patternSet.kitNr[patternNr] = patternBackupBuffer.kitNr;
@@ -506,6 +508,11 @@ static void seq_parseAutomationNodes(uint8_t track, Step* stepData)
 	autoNode_updateValue(&seq_automationNodes[track][1], STEP_VAL(stepData->param2Val));
 }
 //------------------------------------------------------------------------------
+//MOD: gates (below)
+static uint8_t seq_isHeld(const uint8_t track, const uint8_t step);
+static void seq_gateOpen(const uint8_t track, const uint8_t step);
+static void seq_gateArrive(const uint8_t track, const uint8_t step);
+static void seq_gateCloseAll(void);
 void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 {
 	uint8_t midiChan; // which midi channel to send a note on
@@ -531,6 +538,11 @@ void seq_triggerVoice(uint8_t voiceNr, uint8_t vol, uint8_t note)
 	//doesn't trigger the voice (like a trigless lock); no MIDI note either
 	if(step >= 0 && vol == 0)
 		return;
+	//MOD: a held step (gate) doesn't trigger either; its locks act
+	if(step >= 0 && seq_isHeld(voiceNr, (uint8_t)step))
+		return;
+	if(step >= 0)
+		seq_gateOpen(voiceNr, (uint8_t)step);
 
 	//turn the trigger off before sending the next one
 	/*
@@ -1292,7 +1304,8 @@ static int16_t seq_posOf(const uint8_t track, const int8_t step)
 __attribute__((noinline)) static uint8_t seq_ownClock(const uint8_t track)
 {
 	return seq_trackTicks(track) != 24u || seq_ctlMode[track] == SEQ_TRIG_RST || seq_ctlMode[track] == SEQ_TRIG_CLK
-			|| seq_ctlMode[track] == SEQ_TRIG_LFO || SEQ_LOOPED(track) || seq_patternSet.start[seq_activePattern][track] != 0;
+			|| seq_ctlMode[track] == SEQ_TRIG_LFO || SEQ_LOOPED(track) || seq_patternSet.start[seq_activePattern][track] != 0
+			|| seq_patternSet.gate[seq_activePattern][track] != 0;	//MOD: gates
 }
 //length of the pattern in 1/16 steps when it has grid tracks (the longest track in time)
 __attribute__((noinline)) static uint16_t seq_gridPatternSteps(uint8_t* hasGrid)
@@ -1330,6 +1343,7 @@ static void seq_gridTrackTick(const uint8_t track, const int32_t T)
 	{
 		//a new step of this track
 		seq_stepIndex[track] = (int8_t)seq_mapStep(track, pos);
+		seq_gateArrive(track, (uint8_t)seq_stepIndex[track]);	//MOD
 		if(track == frontParser_activeTrack)
 		{
 			//running light of the shown track (as in seq_nextStep)
@@ -1449,6 +1463,90 @@ static void seq_ctlSetMode(const uint8_t d, const uint8_t m, const int32_t T)
 			seq_stepIndex[d] = (int8_t)((uint32_t)seq_gridSteps % seq_trackLen(d));
 	}
 }
+//MOD: gates ---------------------------------------------------------------
+//a triggered step holds the amp EG at full level while the following steps (in playing
+//order) are held; the gate closes when the track arrives at a step that isn't held
+static uint8_t seq_gateOpenBits = 0;	//bit per track
+static uint8_t seq_isHeld(const uint8_t track, const uint8_t step)
+{
+	return step < NUM_STEPS && ((seq_patternSet.gate[seq_activePattern][track] >> step) & 1ULL);
+}
+static void seq_gateHold(const uint8_t track, const uint8_t on)
+{
+	const uint8_t slot = track < NUM_VOICE_SLOTS ? track : NUM_VOICE_SLOTS-1;
+	voiceSlots[slot].u.c.oscVolEg.hold = on;
+	//tracks 6 and 7 share a voice: a trigger of one ends the gate of the other
+	if(slot == NUM_VOICE_SLOTS-1)
+		seq_gateOpenBits &= (uint8_t)~((1u << (NUM_VOICE_SLOTS-1)) | (1u << NUM_VOICE_SLOTS));
+	else
+		seq_gateOpenBits &= (uint8_t)~(1u << track);
+	if(on)
+		seq_gateOpenBits |= (uint8_t)(1u << track);
+}
+//a trigger of a step: the gate opens when the next step in playing order is held
+static void seq_gateOpen(const uint8_t track, const uint8_t step)
+{
+	uint8_t next;
+	const int16_t p = seq_posOf(track, (int8_t)step);
+	if(p >= 0)
+		next = seq_mapStep(track, (uint8_t)((p + 1) % seq_playLen(track)));
+	else
+		next = (uint8_t)(step + 1u);
+	seq_gateHold(track, next != step && seq_isHeld(track, next));
+}
+static void seq_gateClose(const uint8_t track)
+{
+	seq_gateHold(track, 0);
+	voiceControl_noteOff(track);	//MIDI: the note ends with the gate
+}
+//the track arrives at a step: one that isn't held closes its gate
+static void seq_gateArrive(const uint8_t track, const uint8_t step)
+{
+	if((seq_gateOpenBits & (1u << track)) && !seq_isHeld(track, step))
+		seq_gateClose(track);
+}
+static void seq_gateCloseAll(void)
+{
+	for(uint8_t t=0;t<NUM_TRACKS;t++)
+		if(seq_gateOpenBits & (1u << t))
+			seq_gateHold(t, 0);
+	seq_gateOpenBits = 0;
+}
+void seq_setGate(uint8_t track, uint8_t a, uint8_t b)
+{
+	if(track >= NUM_TRACKS || a >= NUM_STEPS || b >= NUM_STEPS || b <= a)
+		return;
+	const uint8_t p = frontParser_shownPattern;
+	uint64_t* g = &seq_patternSet.gate[p][track];
+	seq_clearGateAfter(track, a);	//a new length
+	*g &= ~(1ULL << a);
+	for(uint8_t s=(uint8_t)(a + 1u);s<=b;s++)
+	{
+		*g |= 1ULL << s;
+		seq_setMainStep(p, track, s, 0);	//held steps don't trigger
+	}
+	seq_setMainStep(p, track, a, 1);
+	//the gate ends at b: the step after b is no longer held (it starts its own)
+	if(b + 1u < NUM_STEPS)
+		*g &= ~(1ULL << (b + 1u));
+}
+void seq_clearGateAfter(uint8_t track, uint8_t step)
+{
+	if(track >= NUM_TRACKS) return;
+	uint64_t* g = &seq_patternSet.gate[frontParser_shownPattern][track];
+	for(uint8_t s=(uint8_t)(step + 1u);s<NUM_STEPS && ((*g >> s) & 1ULL);s++)
+		*g &= ~(1ULL << s);
+}
+void seq_clearHeld(uint8_t track, uint8_t step)
+{
+	if(track < NUM_TRACKS && step < NUM_STEPS)
+		seq_patternSet.gate[frontParser_shownPattern][track] &= ~(1ULL << step);
+}
+uint8_t seq_isStepHeld(uint8_t track, uint8_t step, uint8_t pattern)
+{
+	return track < NUM_TRACKS && step < NUM_STEPS && pattern < NUM_PATTERN
+			&& ((seq_patternSet.gate[pattern][track] >> step) & 1ULL);
+}
 //MOD: loop ----------------------------------------------------------------
 //the loop of a track ends: on the pattern's clock again (trigger targets keep theirs)
 static void seq_loopEnd(const uint8_t tr)
@@ -1539,6 +1637,7 @@ static Step seq_clipSteps[NUM_STEPS];
 static StepTiming seq_clipTiming[NUM_STEPS];
 static uint64_t seq_clipSel = 0;	//bit r: a step r steps after the first one
 static uint64_t seq_clipOn = 0;		//bit r: that step is on
+static uint64_t seq_clipHeld = 0;	//bit r: that step is held (gate)
 static uint8_t seq_shownLen(const uint8_t track)
 {
 	const uint8_t l = seq_patternSet.length[frontParser_shownPattern][track];
@@ -1550,10 +1649,12 @@ static void seq_copyStep(const uint8_t track, const uint8_t from, const uint8_t 
 	seq_patternSet.seq_subStepPattern[p][track][to] = seq_patternSet.seq_subStepPattern[p][track][from];
 	seq_patternSet.seq_stepTiming[p][track][to] = seq_patternSet.seq_stepTiming[p][track][from];
 	seq_setMainStep(p, track, to, seq_intIsMainStepActive(track, from, p));
+	uint64_t* g = &seq_patternSet.gate[p][track];	//MOD: held (gate)
+	*g = (*g & ~(1ULL << to)) | (((*g >> from) & 1ULL) << to);
 }
 uint8_t seq_copySteps(uint8_t track, uint64_t sel)
 {
-	seq_clipSel = seq_clipOn = 0;
+	seq_clipSel = seq_clipOn = seq_clipHeld = 0;
 	if(track >= NUM_TRACKS || !sel)
 		return 0;
 	const uint8_t p = frontParser_shownPattern;
@@ -1569,6 +1670,8 @@ uint8_t seq_copySteps(uint8_t track, uint64_t sel)
 		seq_clipSel |= 1ULL << r;
 		if(seq_intIsMainStepActive(track, i, p))
 			seq_clipOn |= 1ULL << r;
+		if((seq_patternSet.gate[p][track] >> i) & 1ULL)
+			seq_clipHeld |= 1ULL << r;
 		n++;
 	}
 	return n;
@@ -1589,6 +1692,8 @@ void seq_pasteSteps(uint8_t track, uint8_t dst)
 		seq_patternSet.seq_subStepPattern[p][track][d] = seq_clipSteps[r];
 		seq_patternSet.seq_stepTiming[p][track][d] = seq_clipTiming[r];
 		seq_setMainStep(p, track, (uint8_t)d, (seq_clipOn & (1ULL << r)) != 0);
+		uint64_t* g = &seq_patternSet.gate[p][track];
+		*g = (*g & ~(1ULL << d)) | (((seq_clipHeld >> r) & 1ULL) << d);
 	}
 }
 void seq_duplicateRange(uint8_t track)
@@ -2718,6 +2823,7 @@ void seq_resetPosition()
 	seq_deltaT = 0;
 	seq_sendRealtime(MIDI_STOP);
 
+	seq_gateCloseAll();	//MOD
 	// send notes off on all channels that have notes playing and reset our bitmap to reflect that
 	voiceControl_noteOff(0xFF);
 
@@ -3362,6 +3468,7 @@ void seq_clearTrack(uint8_t trackNr, uint8_t pattern)
 	seq_patternSet.trig[pattern][trackNr]=0;	//MOD: no trigger track
 	seq_patternSet.lfo[pattern][trackNr]=0;		//MOD: not started by an LFO
 	seq_patternSet.start[pattern][trackNr]=0;	//MOD: from step 1
+	seq_patternSet.gate[pattern][trackNr]=0;	//MOD: no gates
 
 }
 //------------------------------------------------------------------------------
@@ -3423,6 +3530,7 @@ void seq_copyTrack(uint8_t srcNr, uint8_t dstNr, uint8_t pattern)
 	seq_patternSet.trig[pattern][dstNr] = seq_validTrig(dstNr, seq_patternSet.trig[pattern][srcNr]);	//MOD
 	seq_patternSet.lfo[pattern][dstNr] = seq_patternSet.lfo[pattern][srcNr];	//MOD
 	seq_patternSet.start[pattern][dstNr] = seq_patternSet.start[pattern][srcNr];	//MOD
+	seq_patternSet.gate[pattern][dstNr] = seq_patternSet.gate[pattern][srcNr];	//MOD
 
 
 }
@@ -3459,6 +3567,7 @@ void seq_copyPattern(uint8_t src, uint8_t dst)
 		seq_patternSet.trig[dst][j] = seq_patternSet.trig[src][j];	//MOD
 		seq_patternSet.lfo[dst][j] = seq_patternSet.lfo[src][j];	//MOD
 		seq_patternSet.start[dst][j] = seq_patternSet.start[src][j];	//MOD
+		seq_patternSet.gate[dst][j] = seq_patternSet.gate[src][j];	//MOD
 
 		seq_patternSet.shuffle[dst] = seq_patternSet.shuffle[src];
 		seq_patternSet.kitNr[dst] = seq_patternSet.kitNr[src];

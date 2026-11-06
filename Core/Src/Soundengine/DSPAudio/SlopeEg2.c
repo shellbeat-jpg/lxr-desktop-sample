@@ -26,6 +26,7 @@ void slopeEg2_init(SlopeEg2* eg)
 	eg->value 	= 0;
 	eg->state 	= EG_STOPPED;
 	eg->repeat	= 0;
+	eg->hold	= 0;	//MOD
 
 	slopeEg2_setSlope(eg,0.5f);
 }
@@ -107,6 +108,11 @@ IN_ITCM_RAM double slopeEg2_calc(SlopeEg2* eg)
 
 	case EG_D:
 
+		if(eg->hold)	//MOD: gate open: full level until it closes
+		{
+			eg->value = val;
+			return slopeEg2_calcSlopeValue(val,eg->slope);
+		}
 		if(val>0)
 		{
 			val -= eg->decay;

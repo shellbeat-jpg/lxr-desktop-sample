@@ -410,7 +410,8 @@ void led_updateSeqLeds()
 		uint8_t patternNr = menu_shownPattern;
 		for(uint8_t i=0; i<16; i++)
 		{
-			uint8_t isActive = seq_isMainStepActive(trackNr,menu_activeBar*16+i,patternNr);
+			uint8_t isActive = seq_isMainStepActive(trackNr,menu_activeBar*16+i,patternNr)
+					|| seq_isStepHeld(trackNr,menu_activeBar*16+i,patternNr);	//MOD: gate length
 			led_setValue(isActive,led_idx2StepLed(i));
 		}
 

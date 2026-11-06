@@ -35,6 +35,7 @@ typedef struct SLOPE_EG2_Struct
 	uint8_t repeatCnt;				/**<a counter for the already played repeats*/
 	double 	value;
 	uint8_t state;
+	uint8_t hold;					/**<MOD: gate open: the decay waits at full level*/
 
 } SlopeEg2;
 

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>XT-Firmware für LXR-02 1.2.12 – Ergänzung zum LXR-Handbuch</title>
+<title>XT-Firmware für LXR-02 1.2.13 – Ergänzung zum LXR-Handbuch</title>
 <!--
   Source of docs/XT_Manual_Supplement.de.pdf. Build: node docs/manual/build.mjs
   (needs Node and Playwright with Chromium). Layout after the LXR owners manual:
@@ -115,7 +115,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="in">
     <div>
       <div class="brand"><span class="n">XT</span><span class="t">Firmware für LXR-02</span><span class="r"></span></div>
-      <div class="sub">Version 1.2.12 · Ergänzung zum LXR-Handbuch</div>
+      <div class="sub">Version 1.2.13 · Ergänzung zum LXR-Handbuch</div>
     </div>
     <div class="mid">
       <div><b>Samples &amp; Waves</b>31 WAV-Samples, 8 Single-Cycle-Waves und 4 Wavetables von der SD-Karte, mit Start, Länge und Loops.</div>
@@ -143,7 +143,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; HINWEISE</h1>
-      <p>Diese Ergänzung beschreibt, was die <b>XT-Firmware 1.2.12</b> (vormals OE02-Samples+) dem LXR-02 und seinem Handbuch hinzufügt.</p>
+      <p>Diese Ergänzung beschreibt, was die <b>XT-Firmware 1.2.13</b> (vormals OE02-Samples+) dem LXR-02 und seinem Handbuch hinzufügt.</p>
       <p>Sie enthält die Modifikationen von <b>OpenElixir-02 1.2</b> (Moritz Waser), markiert mit <span class="oe">OE</span>.</p>
       <h2 data-toc>1.1. Zu den Tabellen</h2>
       <p>Wie im Handbuch: <b>Anzeigename</b> (drei Buchstaben), voller Name, Funktion. Die Edit-Ansicht (Encoder drücken) zeigt den vollen Namen und den Wert.</p>
@@ -154,7 +154,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li><code>LXR_XT_V1.2.12.img</code> in den obersten Ordner der Karte, alle anderen <code>LXR*.img</code> dort löschen.</li>
+        <li><code>LXR_XT_V1.2.13.img</code> in den obersten Ordner der Karte, alle anderen <code>LXR*.img</code> dort löschen.</li>
         <li>Mit gehaltener Encoder-Taste einschalten, bis „LXR Updater“ erscheint.</li>
         <li>„Update OK!“, dann das Image löschen.</li>
         <li>Das Update löscht die Samples: <code>SAMPLES</code> auf der Karte lassen, der nächste Start importiert sie neu.</li>
@@ -486,10 +486,11 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li>Mit <b>snc</b> im Takt; frei laufend driftend (generativ).</li>
         <li>Trigger- und LFO-Ziel gleichzeitig möglich.</li>
       </ul>
-      <h2 data-toc>4.8. Start, Loop, Steps kopieren (Test)</h2>
+      <h2 data-toc>4.8. Start, Loop, Gates, Kopieren (Test)</h2>
       <ul>
         <li><b>Start</b> (LAST-STEP-Seite): der Track spielt Start … letzter Step; RST und LFO-Start beginnen dort.</li>
         <li><b>Loop</b> pro Track: <b>SHIFT + PROJECT</b> an/aus für den aktiven Track. Step halten, zweiten drücken (auch auf anderer Seite); zweiter vor erstem = rückwärts. Einzelner Druck: aus. Endet mit dem Pattern-Wechsel.</li>
+        <li><b>Gate</b>: Step halten, späteren drücken: der erste hält bis zum Ende des zweiten (AEG voll, MIDI-Note-Off am Ende). Erster Step aus: Gate weg.</li>
         <li><b>Kopieren</b>: <b>COPY</b> halten, Steps wählen, loslassen; der nächste Step-Druck fügt sie mit ihren Abständen ab dort ein (bis zur Track-Länge). Steps dazwischen bleiben.</li>
         <li><b>SHIFT + MORPH</b>: Bereich Start … letzter Step dahinter duplizieren (Länge × 2, max. 64).</li>
       </ul>
@@ -830,7 +831,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     if (p.hasAttribute('data-nofoot')) return;
     if (n % 2 === 0) p.classList.add('even');
     const f = document.createElement('footer');
-    f.innerHTML = '<span>XT-Firmware für LXR-02 1.2.12 · Ergänzung</span><span class="line"></span><span class="num">' + n + '</span>';
+    f.innerHTML = '<span>XT-Firmware für LXR-02 1.2.13 · Ergänzung</span><span class="line"></span><span class="num">' + n + '</span>';
     p.appendChild(f);
   });
   const toc = document.getElementById('toc');

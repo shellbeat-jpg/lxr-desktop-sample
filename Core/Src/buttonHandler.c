@@ -845,6 +845,8 @@ static uint8_t buttonHandler_loopMode = 0;		//bit per track: its loop mode is on
 static int8_t buttonHandler_loopHeld = -1;		//step held for the loop (-1 = none)
 static uint8_t buttonHandler_loopSet = 0;		//a second step was pressed while it was held
 static uint16_t buttonHandler_seqIgnore = 0;	//the release of these step buttons does nothing
+static int8_t buttonHandler_gateHeld = -1;		//MOD: step held for a gate (-1 = none)
+static uint8_t buttonHandler_gateHeldButton = 0;
 #define BH_LOOP_MODE()	((buttonHandler_loopMode >> menu_getActiveVoice()) & 1u)
 
 //step 13 blinks while the loop mode of the active track is on
@@ -905,8 +907,27 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 			menu_showNote(l1, l2);
 		}
 	}
+	else if(buttonHandler_gateHeld >= 0 && step > buttonHandler_gateHeld)
+	{
+		//MOD: gate: the held step triggers and holds to the end of this one
+		seq_setGate(track, (uint8_t)buttonHandler_gateHeld, step);
+		buttonHandler_buttonTimerStepNr = NO_STEP_SELECTED;	//no automation recording of the held step
+		buttonHandler_disarmTimerActionStep();
+		buttonHandler_seqIgnore |= (uint16_t)(1u << buttonHandler_gateHeldButton);
+		led_updateSeqLeds();
+		preset_touchTimer(PRESET_PAT_TIMER);
+		snprintf(l2, sizeof(l2), "%u > %u", (unsigned)(buttonHandler_gateHeld + 1), (unsigned)(step + 1u));
+		menu_showNote("Gate", l2);
+	}
 	else
+	{
+		if(buttonHandler_gateHeld < 0)
+		{
+			buttonHandler_gateHeld = (int8_t)step;	//a possible gate start
+			buttonHandler_gateHeldButton = button;
+		}
 		return 0;
+	}
 	buttonHandler_seqIgnore |= (uint16_t)(1u << button);
 	return 1;
 }
@@ -1479,7 +1500,10 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 	}
 	else if(buttonHandler_getLoad() || buttonHandler_getSave()) return;
 
-	//MOD: the press was a copy / paste / loop action
+	//MOD: the held step of a possible gate is released
+	if(buttonHandler_gateHeld >= 0 && buttonHandler_gateHeldButton == seqButtonPressed)
+		buttonHandler_gateHeld = -1;
+	//MOD: the press was a copy / paste / loop / gate action
 	if(buttonHandler_seqIgnore & (1u << seqButtonPressed))
 	{
 		buttonHandler_seqIgnore &= (uint16_t)~(1u << seqButtonPressed);
@@ -1527,6 +1551,15 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 		//do nothing if timer action occured
 		if (buttonHandler_TimerActionOccured())
 			return;
+		{
+			//MOD: gates: removing a step removes its gate, a set step is no longer held
+			const uint8_t t = menu_getActiveVoice();
+			const uint8_t s = (uint8_t)(seqButtonPressed + menu_activeBar*16);
+			if(seq_isMainStepActive(t, s, menu_shownPattern))
+				seq_clearGateAfter(t, s);
+			else
+				seq_clearHeld(t, s);
+		}
 		buttonHandler_setRemoveStep(ledNr, seqButtonPressed);
 
 		break;
@@ -1811,7 +1844,8 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 				menu_activeBar++;
 
 				//if copy button is pressed, fill next bar with current bar + extend track length to next full multiple of 16
-				if(buttonHandler_getCopy())
+				//(MOD: not while steps are selected for a copy: then it only turns the page)
+				if(buttonHandler_getCopy() && !buttonHandler_copySel)
 				{
 					//extend length according to BAR
 					seq_setTrackLength(menu_getActiveVoice(), (menu_activeBar+1) *16);

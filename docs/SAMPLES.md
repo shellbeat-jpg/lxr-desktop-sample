@@ -609,6 +609,25 @@ default), `off`, `+-1`, `+-2`, `+-3`, `+1`, `-1`. Stored in the pattern, in the 
 step's probability and lock values; copying a step copies it. Other firmwares play a step with an
 `OCT` value whatever its probability, and its locks with wrong values.
 
+## Gates (1.2.13, test)
+
+Hold a step and press a later one (also on another page, switch with the bar buttons while
+holding): the first step triggers and holds to the end of the second one; the steps after it up
+to the second are held. The held steps light up, don't trigger (their locks act, e.g. a pitch
+change during the gate) and are switched off as steps.
+
+- The amp envelope holds its full level from the end of the attack while the gate is open, then
+  the decay acts as the release. Loop samples play as long as the gate.
+- MIDI: the note ends with the gate (otherwise it ends with the next note of the track).
+- Ratchets on the first step: each repeat holds to the next, the last one to the end of the gate.
+- The gate ends at the latest when the track arrives at a step that isn't held: the end of its
+  range, a loop jump back, RST of a trigger track; the stored gate stays.
+- Removing the first step removes its gate; setting a held step makes it a normal step that
+  ends the gate before it.
+- Stored in the pattern (block `GAT1` after the start positions); copying steps, duplicating
+  and copying tracks or patterns take the gates along. Other firmwares play the first step as a
+  normal trigger and the held steps as off.
+
 ## Start, loop, copying steps (1.2.12, test)
 
 - **Start**: on the LAST STEP page each encoder click moves on: length › `Start` › grid › trigger
@@ -795,5 +814,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.

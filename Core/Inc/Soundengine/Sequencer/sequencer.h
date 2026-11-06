@@ -117,6 +117,7 @@ typedef struct PatternSetStruct
 	uint8_t trig[NUM_PATTERN][NUM_TRACKS];		//MOD: trigger track: mode << 4 | target track (0 = off)
 	uint8_t lfo[NUM_PATTERN][NUM_TRACKS];		//MOD: LFO start: target track (1..7) | SEQ_LFO_NOW, 0 = off
 	uint8_t start[NUM_PATTERN][NUM_TRACKS];		//MOD: first played step (0 = step 1); the track plays start .. length-1
+	uint64_t gate[NUM_PATTERN][NUM_TRACKS];		//MOD: bit n: step n is held (the gate of an earlier step goes on)
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -132,6 +133,7 @@ typedef struct PatternBackupBufferStruct
 	uint8_t trig[NUM_TRACKS];	//MOD
 	uint8_t lfo[NUM_TRACKS];	//MOD
 	uint8_t start[NUM_TRACKS];	//MOD
+	uint64_t gate[NUM_TRACKS];	//MOD
 }PatternBackupBuffer;
 
 /*
@@ -247,6 +249,11 @@ uint8_t seq_copySteps(uint8_t track, uint64_t sel);	//number of copied steps
 void seq_pasteSteps(uint8_t track, uint8_t dst);
 //MOD: duplicate the played range (start .. last step) behind the last step, length + range
 void seq_duplicateRange(uint8_t track);
+//MOD: gates of a track of the shown pattern: step a triggers and holds to the end of step b
+void seq_setGate(uint8_t track, uint8_t a, uint8_t b);
+void seq_clearGateAfter(uint8_t track, uint8_t step);	//the held steps after a step
+void seq_clearHeld(uint8_t track, uint8_t step);		//a step no longer held
+uint8_t seq_isStepHeld(uint8_t track, uint8_t step, uint8_t pattern);
 uint8_t seq_getTrackLfo(uint8_t trackNr);
 //------------------------------------------------------------------------------
 uint8_t seq_getTrackLength(uint8_t trackNr);
