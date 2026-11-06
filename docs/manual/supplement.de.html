@@ -143,27 +143,27 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; HINWEISE</h1>
-      <p>Diese Ergänzung beschreibt, was die Firmware <b>OE02-Samples+ 1.2.11</b> dem LXR-02 und seinem Handbuch hinzufügt. Alles hier nicht Erwähnte funktioniert wie im Handbuch beschrieben.</p>
-      <p>OE02-Samples+ baut auf <b>OpenElixir-02 1.2</b> von Moritz Waser auf. Funktionen aus OpenElixir-02 sind mit <span class="oe">OE</span> markiert; alles andere ist neu in OE02-Samples+. Die Kapitel folgen dem Handbuch: Speicher, Voices, Sequencer, Performance-Modus, Effekte, globale Einstellungen und MIDI.</p>
+      <p>Diese Ergänzung beschreibt, was die Firmware <b>OE02-Samples+ 1.2.11</b> dem LXR-02 und seinem Handbuch hinzufügt.</p>
+      <p>OE02-Samples+ baut auf <b>OpenElixir-02 1.2</b> von Moritz Waser auf. Funktionen aus OpenElixir-02 sind mit <span class="oe">OE</span> markiert.</p>
       <h2 data-toc>1.1. Zu den Tabellen</h2>
-      <p>Wie im Handbuch nennen die Parametertabellen den <b>Anzeigenamen</b> (die drei Buchstaben im Display), den vollen Namen und die Funktion. Die Edit-Ansicht (Encoder drücken) zeigt den vollen Namen und den Wert mit Einheit.</p>
-      <p>Tastenkombinationen sind mit der Beschriftung unter der Step-Taste angegeben, z. B. <b>SHIFT + FX</b> (Step-Taste 15) oder <b>SHIFT + LAST STEP</b> (Step-Taste 14).</p>
+      <p>Wie im Handbuch: <b>Anzeigename</b> (drei Buchstaben), voller Name, Funktion. Die Edit-Ansicht (Encoder drücken) zeigt den vollen Namen und den Wert.</p>
+      <p>Tasten nach ihrer Beschriftung unter der Step-Taste, z. B. <b>SHIFT + FX</b> (Step 15).</p>
       <h2 data-toc>1.2. Was wo gespeichert wird</h2>
-      <p><b>Kit</b>: der Sound der 6 Voices (SAVE → Kit). <b>Pattern</b>: Sequencer-Daten. <b>Global</b>: bleibt nach einem Neustart nur nach SAVE → Global erhalten. Der Anhang listet alle neuen Einstellungen mit Speicherort.</p>
+      <p><b>Global</b>: bleibt nur nach SAVE → Global erhalten. Alle neuen Einstellungen mit Speicherort: Anhang A.</p>
     </div>
     <div class="col">
       <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li><code>LXR_OE02-Samples_V1.2.11.img</code> in den obersten Ordner der SD-Karte kopieren und alle anderen <code>LXR*.img</code>-Dateien dort löschen.</li>
-        <li>LXR ausschalten, Karte einstecken, Encoder-Taste halten und einschalten; halten, bis „LXR Updater“ erscheint.</li>
-        <li>Auf „Update OK!“ warten, dann das Image von der Karte löschen.</li>
-        <li>WAV-Dateien in <code>SAMPLES</code> lassen und normal einschalten: Das Update hat die Samples gelöscht, sie werden beim ersten Start neu importiert.</li>
+        <li><code>LXR_OE02-Samples_V1.2.11.img</code> in den obersten Ordner der Karte, alle anderen <code>LXR*.img</code> dort löschen.</li>
+        <li>Mit gehaltener Encoder-Taste einschalten, bis „LXR Updater“ erscheint.</li>
+        <li>„Update OK!“, dann das Image löschen.</li>
+        <li>Das Update löscht die Samples: <code>SAMPLES</code> auf der Karte lassen, der nächste Start importiert sie neu.</li>
       </ol>
-      <p>Nach dem Ausschalten etwa 10 Sekunden bis zum Wiedereinschalten warten; sonst kann das Display dunkel bleiben (das Gerät funktioniert trotzdem).</p>
+      <p>Nach dem Ausschalten ≈ 10 s warten, sonst kann das Display dunkel bleiben.</p>
       <h2 data-toc>1.4. Kompatibilität</h2>
-      <p>Kits und Patterns der Original-Firmware und von OpenElixir-02 laden unverändert; die neuen Einstellungen starten mit ihren Standardwerten (keine Samples, Sends 0, FX3 aus, alle Tracks in 1/16).</p>
-      <p>Mit 1.2.10 oder neuer gespeicherte Kits laden auch in älteren Firmwares; diese ignorieren, was sie nicht kennen. Voices mit Sample oder Wave als Wellenform bleiben dort stumm.</p>
-      <p>Zum Zurückwechseln das Image von OpenElixir-02 oder Erica Synths auf dieselbe Weise installieren.</p>
+      <p>Kits und Patterns der Original-Firmware und von OpenElixir-02 laden; neue Einstellungen starten mit Standardwerten.</p>
+      <p>Neue Kits laden auch in älteren Firmwares (ohne die Ergänzungen); Voices mit Sample oder Wave bleiben dort stumm, neue Engines spielen die Standard-Engine.</p>
+      <p>Zurück: das Image von OpenElixir-02 oder Erica Synths ebenso installieren.</p>
     </div>
   </div>
 </section>
@@ -180,12 +180,12 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>SAMPLES</td><td>One-Shot-Samples, WAV</td></tr>
         <tr><td>SAMPLES/LOOPS</td><td>Loop-Samples, WAV</td></tr>
         <tr><td>SAMPLES/WAVES</td><td>bis zu 8 Single-Cycle-Waves, WAV</td></tr>
-        <tr><td>SAMPLES/TABLES</td><td>bis zu 4 Wavetables, WAV (Kapitel 3.15)</td></tr>
-        <tr><td>BIGFLASH</td><td>eine Datei oder ein Ordner dieses Namens in <code>SAMPLES</code> schaltet den experimentellen 1,5-MB-Sample-Speicher ein (Kapitel 2.3)</td></tr>
-        <tr><td>INIT.SND</td><td>INIT-Vorlage für Voices: im obersten Ordner (global) und in einem Projektordner (Kapitel 2.5)</td></tr>
+        <tr><td>SAMPLES/TABLES</td><td>bis zu 4 Wavetables, WAV (3.15)</td></tr>
+        <tr><td>BIGFLASH</td><td>in <code>SAMPLES</code>: 1,5-MB-Speicher (2.3)</td></tr>
+        <tr><td>INIT.SND</td><td>INIT-Vorlage: oberster Ordner (global), Projektordner (2.5)</td></tr>
       </table>
       <h2 data-toc>2.2. Sample-Import</h2>
-      <p>Bei einem normalen Start vergleicht der LXR die Ordner mit den gespeicherten Samples (Namen und Größen). Hat sich etwas geändert, importiert er neu: „Import x/y“, dann „Import+Verify OK“. Die Samples liegen im internen Flash und spielen auch ohne Karte.</p>
+      <p>Beim Start vergleicht der LXR die Ordner mit dem internen Flash (Namen und Größen) und importiert bei Änderungen neu. Die Samples spielen auch ohne Karte.</p>
     </div>
     <div class="col">
       <table class="p2">
@@ -196,11 +196,10 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>Länge</td><td>insgesamt etwa 5,9 s mono bei 44,1 kHz (11,9 s bei 22,05 kHz); eine Stereodatei zählt mit der halben Größe</td></tr>
         <tr><td>Ignoriert</td><td>Namen, die mit <code>.</code> oder <code>_</code> beginnen</td></tr>
       </table>
-      <p>Dateien, die nicht 16 Bit haben, werden übersprungen („Not 16bit, skip:“). Was nicht mehr passt, wird in Namensreihenfolge übersprungen („Full(5.9s) skip:“). Eine Datei, die durch eine andere mit gleichem Namen und gleicher Größe ersetzt wird, wird nicht neu importiert: umbenennen.</p>
+      <p>Eine Datei, ersetzt durch eine mit gleichem Namen und gleicher Größe, wird nicht neu importiert.</p>
       <h4>Startbildschirm</h4>
       <p><b>S:12 W:3 T:2</b> = gespeicherte Samples, Waves und Wavetables; darunter <b>Used 4.2/5.9s</b> = belegte und verfügbare Sample-Zeit.</p>
-      <p><b>Ein Firmware-Update löscht die Samples.</b> <code>SAMPLES</code> auf der Karte lassen; der nächste Start importiert sie neu.</p>
-    </div>
+          </div>
   </div>
 </section>
 
@@ -208,27 +207,25 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>2.3. Experimentell: 1,5 MB Sample-Speicher</h2>
-      <p>Der Chip des LXR-02 meldet 1 MB Flash; meist hat er mehr. Mit <code>BIGFLASH</code> in <code>SAMPLES</code> nutzt der Import auch den Bereich oberhalb von 1 MB: etwa <b>17,8 s</b> statt 5,9 s.</p>
+      <p>Der Chip meldet 1 MB Flash, hat meist aber mehr. Mit <code>BIGFLASH</code> in <code>SAMPLES</code>: <b>17,8 s</b> statt 5,9 s.</p>
       <ul>
-        <li>ST garantiert diesen Bereich nicht. Jedes Sample wird nach dem Schreiben geprüft; bei einem Fehler zeigt der LXR „Big flash failed / using 512K“ und importiert in den normalen Speicher.</li>
-        <li>Der Start zeigt „Big flash: on / 1.5 MB, testing“, dann „Used x.x/17.8s“.</li>
-        <li>Bleibt das Gerät jemals am Startbildschirm hängen, <code>BIGFLASH</code> entfernen (oder ohne Karte starten). Firmware und Bootloader sind nicht betroffen.</li>
+        <li>Nicht garantiert (ST). Jedes Sample wird geprüft; bei Fehler „Big flash failed / using 512K“ und Import in den normalen Speicher.</li>
+                <li>Hängt der Start: <code>BIGFLASH</code> entfernen oder ohne Karte starten. Firmware und Bootloader sind nicht betroffen.</li>
       </ul>
       <h2 data-toc>2.4. Kits</h2>
-      <p>Ein Kit speichert jetzt pro Voice zusätzlich: die Engine <span class="oe">OE</span>, Start und Länge des Samples, die Choke-Gruppe und die FX-Sends. Pro Kit zusätzlich: die Reihenfolge der FX-Slots und den Master-Bus FX3 (FX1 speichert das Kit wie bisher). Die Ergänzungen liegen als kleiner Block am Ende der Kit-Datei.</p>
+      <p>Zusätzlich im Kit: pro Voice Engine <span class="oe">OE</span>, Start und Länge des Samples, Choke-Gruppe, Sends; pro Kit die Reihenfolge der FX-Slots und FX3.</p>
     </div>
     <div class="col">
       <h2 data-toc>2.5. INIT-Vorlagen für Voices</h2>
-      <p><b>LOAD</b> halten und die Step-Taste einer Voice (1–7) drücken. Von Kit 0 den Encoder einen Schritt zurückdrehen: Die Zeile <b>INIT: Project</b>, <b>INIT: Global</b> oder <b>INIT: Factory</b> zeigt, woher das INIT dieser Voice kommt. Anklicken für die Aktionen:</p>
+      <p><b>LOAD</b> halten + Step-Taste der Voice (1–7), von Kit 0 einen Schritt zurück: <b>INIT: Project</b> / <b>Global</b> / <b>Factory</b> zeigt die Quelle. Klick:</p>
       <table class="p2 wide">
         <tr><th>Aktion</th><th>Beschreibung</th></tr>
-        <tr><td>Load INIT</td><td>lädt die Voice aus der Projektvorlage, sonst aus der globalen Vorlage, sonst die Voreinstellungen ihrer Engine</td></tr>
-        <tr><td>Save to Project</td><td>speichert diese Voice des aktiven Kits in der Vorlage des Projekts</td></tr>
-        <tr><td>Save to Global</td><td>speichert diese Voice in der globalen Vorlage</td></tr>
-        <tr><td>Del Project INIT, Del Global INIT</td><td>entfernt diese Voice aus der Vorlage (zum Bestätigen erneut klicken)</td></tr>
-        <tr><td>Back</td><td>zurück zur Kit-Liste</td></tr>
+        <tr><td>Load INIT</td><td>aus der Projekt-, sonst der globalen Vorlage, sonst die Voreinstellungen der Engine</td></tr>
+        <tr><td>Save to Project</td><td>Voice in die Projektvorlage</td></tr>
+        <tr><td>Save to Global</td><td>Voice in die globale Vorlage</td></tr>
+        <tr><td>Del Project INIT, Del Global INIT</td><td>Voice aus der Vorlage entfernen (erneut klicken)</td></tr>
       </table>
-      <p>Eine Vorlage hält jede Voice getrennt, mit allem, was zur Voice gehört: Engine, Sound, LFO- und Velocity-Einstellungen, Sample, Start und Länge. Eine Projektvorlage setzt ein gespeichertes Projekt voraus.</p>
+      <p>Jede Voice komplett (Engine, Sound, LFO, Velocity, Sample). Projektvorlage: nur in gespeicherten Projekten.</p>
     </div>
   </div>
 </section>
@@ -239,7 +236,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>3</b> &gt; Voices</h1>
       <h2 data-toc>3.1. Engines pro Voice <span class="oe">OE</span></h2>
-      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat.<br>Neu: m<b>odal</b>, <b>fm2</b> und <b>wavetable</b> (Kapitel 3.13–3.15). <br><b>SHIFT + KIT</b> öffnet das Engine-Menü der aktiven Voice. Gespeichert im Kit.</p>
+      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat.<br>Neu: <b>modal</b>, <b>fm2</b> und <b>wavetable</b> (3.13–3.15).<br><b>SHIFT + KIT</b>: Engine-Menü der aktiven Voice. Im Kit.</p>
       <h2 data-toc>3.2. Oszillatorquellen</h2>
       <p>Hauptoszillator: eingebaute Wellenformen, <b>Samples</b> (eigene Tonhöhe, einmal oder als Loop) oder <b>Waves</b> (Single Cycles, folgen der Note).</p>
       <svg class="dg" viewBox="0 0 330 150" role="img" aria-label="Quellen des Hauptoszillators: eingebaute Wellenformen, Samples S1 bis S31 mit Start, Länge und Loop, eigene Waves W1 bis W8; danach Filter, Amp, Choke, Verzerrung und Sample-Reducer der Voice.">
@@ -258,24 +255,23 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <path d="M280 65 H292" marker-end="url(#a)"/>
         <rect x="294" y="44" width="32" height="42"/><text x="310" y="60">Dist.</text><text x="310" y="70">Sample</text><text x="310" y="79">red.</text>
       </svg>
-      <p class="note">Beispiel: Drum-Voice; die anderen Engines haben dieselbe Auswahl.</p>
     </div>
     <div class="col">
       <h2 data-toc>3.3. Oszillatorseite (OSC)</h2>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>wav</td><td>Waveform</td><td><b>sin</b> … <b>pwm (Standard)<br></b><b>S1</b> … <b>S31 (Samples)<br></b><b>W1</b> … <b>W8 (Waves)<br></b>Edit-Ansicht: Dateiname<br><b>L</b> = Loop, Slot.<br>Leere Sample-Slots werden übersprungen.</td></tr>
+        <tr><td>wav</td><td>Waveform</td><td><b>sin</b> … <b>pwm</b> (Standard)<br><b>S1</b> … <b>S31</b> (Samples)<br><b>W1</b> … <b>W8</b> (Waves)<br>Edit-Ansicht: Dateiname, <b>L</b> = Loop, Slot</td></tr>
         <tr><td>sta*</td><td>Start</td><td>ms, 0 = Anfang (alle Voices, ersetzt <b>pwm</b>)</td></tr>
         <tr><td>len*</td><td>Length</td><td>ms, 0 = bis zum Ende (Drum 1–3)</td></tr>
         <tr><td>coa</td><td>Coarse tune</td><td>mit Sample: 60 = Originaltonhöhe</td></tr>
       </table>
-      <p class="note">*: nur bei Samples. exponentielle Skala; übernommen beim Trigger, auch mit LFO/Velocity. Kurze Fades gegen Klicks.</p>
+      <p class="note">*: nur bei Samples; übernommen beim Trigger, auch mit LFO/Velocity.</p>
       <p>FM-Seite der Drum-Engine: Samples und Waves auch als FM-Quelle.</p>
       <h2 data-toc>3.4. Samples und Loops</h2>
       <ul>
-        <li><code>SAMPLES</code>: einmal pro Trigger; das AEG-Decay kann früher beenden. Retrigger blendet klickfrei aus (≈ 1 ms).</li>
+        <li><code>SAMPLES</code>: einmal pro Trigger; das AEG-Decay kann früher beenden.</li>
         <li><code>SAMPLES/LOOPS</code>: von <b>sta</b> bis <b>len</b> im Loop. Jeder Trigger startet neu bei <b>sta</b>; dazwischen läuft der Loop, bis das Decay ihn ausblendet (<b>dec</b> = 127: bis zum nächsten Trigger).</li>
-        <li>Sequencer-Stopp blendet alle Loops aus. Loop-Punkt übergeblendet (bis 256 Frames).</li>
+        <li>Sequencer-Stopp blendet alle Loops aus.</li>
       </ul>
     </div>
   </div>
@@ -286,8 +282,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>3.5. Waves</h2>
       <ul>
-        <li>Bis zu 8 WAV-Dateien in <code>SAMPLES/WAVES</code>, je ein Wellenform-Zyklus: <b>W1</b> … <b>W8</b> (W1 = erster Name, unabhängig von den Samples).</li>
-        <li>Import: 1024 Punkte, Stereo: linker Kanal; 2 KB pro Wave.</li>
+        <li>Bis zu 8 WAV-Dateien in <code>SAMPLES/WAVES</code>, je ein Zyklus: <b>W1</b> … <b>W8</b> (W1 = erster Name). Stereo: linker Kanal.</li>
         <li>Gegen Knackser: im Nulldurchgang beginnen und enden, an beiden Enden ansteigend, ohne DC-Offset.</li>
       </ul>
       <h2 data-toc>3.6. Modulierte Sample-Auswahl</h2>
@@ -309,7 +304,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>snb</td><td>FX2 send</td><td>Send in Slot B, 0 … 127</td></tr>
       </table>
       <ul>
-        <li><b>Choke</b>: ein Trigger schneidet die anderen Tracks der Gruppe ab (Fade ≈ 2 ms), z. B. offene gegen geschlossene Hi-Hat. Tracks 6 und 7 schneiden sich ohnehin.</li>
+        <li><b>Choke</b>: ein Trigger schneidet die anderen Tracks der Gruppe ab. Tracks 6 und 7 schneiden sich ohnehin.</li>
         <li><b>Sends</b>: nach Pan, nach dem Fader (außer <b>pre</b> an, Kapitel 6.3). Send/Return: Slot auf 100 % Wet.</li>
       </ul>
       <h2 data-toc>3.8. Mixerseite (MIX)</h2>
@@ -356,7 +351,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li><b>SHIFT + Encoder-Klick</b> auf einer Voice-Seite (OSC, AEG, MOD, FM, Transient, Filter; nicht in der Edit-Ansicht): neue Zufallsvariante der aktiven Voice.</li>
         <li>Stärke: <b>rnd</b> (PERF, Standard 32). Schaltende Werte wechseln mit dieser Wahrscheinlichkeit.</li>
         <li>Bleiben: Lautstärke, Pan, <b>out</b>, Sends, LFO, Choke, Engine.</li>
-        <li>Zurück: Voice neu laden (oder nicht speichern).</li>
+        <li>Zurück: Voice neu laden.</li>
       </ul>
     </div>
   </div>
@@ -408,8 +403,6 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       </table>
       <ul>
         <li><b>Position</b> = <b>pos</b> + <b>swp</b> × Pitch-EG (MOD-Seite: Decay, Slope; Amount 0 = keine Tonhöhenänderung) + LFO/Automation auf <b>pos</b>. Nicht die Amp-Hüllkurve.</li>
-        <li>Frames ausgerichtet (keine dünnen Überblendungen), echte Zwischenwellen aus den Obertönen.</li>
-        <li>Höhenbegrenzt: Fassung mit 127 … 3 Obertönen je nach Tonhöhe, kaum Aliasing.</li>
       </ul>
     </div>
     <div class="col">
@@ -417,8 +410,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <ul>
         <li>Bis zu 4 WAV-Dateien (<b>t1</b> = erster Name): 16/24 Bit oder Float, mono/stereo (links).</li>
         <li>Zykluslänge: aus dem <code>clm</code>-Block (Serum, Vital), sonst 2048 bzw. 256 (WaveEdit).</li>
-        <li>Max. 64 Frames; weniger: Zwischenwellen ergänzt. 1,25 KB pro Frame (64 Frames ≈ 0,9 s Sample-Speicher), nach den Samples.</li>
-        <li>Startbildschirm: <b>T:</b>n; übersprungen: „Table format?:“, „Table too short:“, „Table unreadable:“.</li>
+        <li>Max. 64 Frames, weniger: Zwischenwellen ergänzt. 64 Frames ≈ 0,9 s Sample-Speicher, nach den Samples.</li>
       </ul>
     </div>
   </div>
@@ -509,11 +501,9 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h2 data-toc>5.1. Performance-Menü</h2>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>bpm mrp srt</td><td>Tempo, Morph, Sample rate</td><td>wie bisher</td></tr>
         <tr><td>rol</td><td>Roll</td><td>neu <b>24</b>, <b>32</b>, <b>48</b> (1/16T, 1/32, 1/32T); in den Steps des Tracks</td></tr>
         <tr><td>dj res</td><td>DJ filter <span class="oe">OE</span></td><td>LP/HP und Resonanz auf dem Endmix</td></tr>
         <tr><td>sat frq</td><td>Saturation, split</td><td>von FX3 (Kapitel 6.5)</td></tr>
-        <tr><td>shu</td><td>Shuffle</td><td>wie bisher (Seite 2)</td></tr>
         <tr><td>vmv vmo vsw</td><td>Voice morph</td><td>Kapitel 5.4</td></tr>
         <tr><td>osx</td><td>OSR exclude</td><td><b>on</b>: Voice ignoriert globales <b>srt</b>/<b>0sr</b>; Edit-Ansicht: Voice-Tasten</td></tr>
         <tr><td>cmx cvl</td><td>Cue mix, level</td><td>Kapitel 5.5</td></tr>
@@ -626,7 +616,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>6.5. Master-Bus FX3</h2>
-      <p>Dritter Slot am Ende von <b>St1</b>: nach FX1/FX2, vor DJ-Filter und Limiter. Sättigung (S), Kompressor (C), EQ (E) in der Reihenfolge <b>ord</b>. Im Kit; ältere Kits: FX3 aus.</p>
+      <p>Dritter Slot am Ende von <b>St1</b>: nach FX1/FX2, vor DJ-Filter und Limiter. Sättigung (S), Kompressor (C), EQ (E) in der Reihenfolge <b>ord</b>. Im Kit.</p>
       <svg class="dg" viewBox="0 0 330 118" role="img" aria-label="FX3: St1 durchläuft Sättigung, Kompressor und EQ in der Reihenfolge ord, dann DJ-Filter und Limiter. Sättigung und Kompressor können das Signal an einer Frequenzweiche teilen und nur das Band darüber bearbeiten.">
         <defs><marker id="c" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path class="ah" d="M0 0 L6 3 L0 6 z"/></marker></defs>
         <text class="l" x="14" y="31">Σ St1</text>
