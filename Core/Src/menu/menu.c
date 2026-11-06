@@ -2264,7 +2264,7 @@ static void menu_repaintSimplePage()
 		strcpy(&editDisplayBuffer[0][0], "Last Step ");
 		uint8_t voice = menu_getActiveVoice();
 		//MOD: the trigger and LFO settings are always those of the active track
-		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_TRACK || menu_lastStepGrid >= 2) //track
+		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_TRACK || (menu_lastStepGrid >= 2 && menu_lastStepGrid != 6)) //track
 		{
 			strcpy(&editDisplayBuffer[0][10], "Trk: ");
 			char trackNr[4];
@@ -2278,7 +2278,16 @@ static void menu_repaintSimplePage()
 		}
 		//MOD: "[16]  1/16T  2/3": length and step grid, the brackets mark what the encoder edits;
 		//"Trg [RST] > T3": trigger track mode and target
-		if(menu_lastStepGrid >= 4)
+		if(menu_lastStepGrid == 6)
+		{
+			//MOD: "Start [5]  > 16": the track plays step 5 .. the last step
+			uint8_t l = seq_getTrackLength(menu_activeVoice);
+			if(l == 0) l = 16;
+			uint8_t s = seq_getTrackStart(menu_activeVoice);
+			if(s >= l) s = (uint8_t)(l - 1u);
+			snprintf(&editDisplayBuffer[1][0], 17, "Start [%u] > %u", (unsigned)(s + 1u), (unsigned)l);
+		}
+		else if(menu_lastStepGrid >= 4)
 		{
 			//MOD: "LFO > [T3]  NXT": the LFO of this track's voice starts track 3, on its
 			//next step / at once
@@ -4288,10 +4297,13 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 				//or the trigger target (only with a mode)
 				const uint8_t trg = SEQ_TRIG_MODE(seq_getTrackTrig(menu_activeVoice)) != SEQ_TRIG_OFF;
 				const uint8_t lfo = seq_getTrackLfo(menu_activeVoice) != 0;
+				//MOD: length > start (6) > grid > trigger > LFO start
 				uint8_t s = (uint8_t)(menu_lastStepGrid + 1u);
+				if(menu_lastStepGrid == 0)	s = 6;
+				else if(menu_lastStepGrid == 6)	s = 1;
 				if(s == 3 && !trg)	s = 4;
 				if(s == 5 && !lfo)	s = 0;
-				if(s > 5)			s = 0;
+				if(s > 5 && menu_lastStepGrid != 0)	s = 0;
 				menu_lastStepGrid = s;
 			}
 			else if(!editModeActive && menu_activePage <= VOICE7_PAGE && buttonHandler_getShift())
@@ -4369,6 +4381,22 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 2 && inc == 0)
 	{
 		//MOD: an encoder click only switches the view (this runs with inc 0 after it)
+	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid == 6)
+	{
+		//MOD: start position (step 1 .. the last step), of the track or of all tracks
+		int16_t n = (int16_t)seq_getTrackStart(menu_activeVoice) + inc;
+		uint8_t l = seq_getTrackLength(menu_activeVoice);
+		if(l == 0) l = 16;
+		if(n < 0) n = 0;
+		if(n > l - 1) n = l - 1;
+		if(buttonHandler_getMode() == SELECT_MODE_LAST_STEP_ALL)
+		{
+			for(uint8_t i=0;i<7;i++)
+				seq_setTrackStart(i, (uint8_t)n);
+		}
+		else
+			seq_setTrackStart(menu_activeVoice, (uint8_t)n);
 	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid >= 4)
 	{

@@ -460,7 +460,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>4.6. Trigger-Tracks</h2>
-      <p>LAST-STEP-Seite, jeder Encoder-Klick weiter: Länge › Raster › <b>Trg [OFF]</b> › Ziel <b>&gt;[T3]</b> › <b>LFO&gt;[T3]</b> › <b>NXT</b>/<b>NOW</b>. Belegte Ziele werden übersprungen.</p>
+      <p>LAST-STEP-Seite, jeder Encoder-Klick weiter: Länge › <b>Start</b> › Raster › <b>Trg [OFF]</b> › Ziel <b>&gt;[T3]</b> › <b>LFO&gt;[T3]</b> › <b>NXT</b>/<b>NOW</b>. Belegte Ziele werden übersprungen.</p>
       <table class="p2">
         <tr><th>Trg</th><th>Jeder aktive Step …</th></tr>
         <tr><td>RST</td><td>setzt das Ziel auf Step 1 (spielt sofort)</td></tr>
@@ -485,6 +485,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li>Das Ziel spielt bis zum letzten Step und wartet; bis zum ersten Start stumm.</li>
         <li>Mit <b>snc</b> im Takt; frei laufend driftend (generativ).</li>
         <li>Trigger- und LFO-Ziel gleichzeitig möglich.</li>
+      </ul>
+      <h2 data-toc>4.8. Start, Loop, Steps kopieren (Test)</h2>
+      <ul>
+        <li><b>Start</b> (LAST-STEP-Seite): der Track spielt Start … letzter Step; RST und LFO-Start beginnen dort.</li>
+        <li><b>Loop</b>: <b>SHIFT + PROJECT</b> an/aus. Step halten, zweiten drücken (auch auf anderer Seite): Loop des aktiven Tracks, zweiter vor erstem = rückwärts. Einzelner Druck: aus. Endet mit dem Pattern-Wechsel.</li>
+        <li><b>Kopieren</b>: <b>COPY</b> halten, Steps wählen, loslassen; der nächste Step-Druck fügt sie mit ihren Abständen ab dort ein (bis zur Track-Länge). Steps dazwischen bleiben.</li>
+        <li><b>SHIFT + MORPH</b>: Bereich Start … letzter Step dahinter duplizieren (Länge × 2, max. 64).</li>
       </ul>
     </div>
   </div>
@@ -716,7 +723,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <table class="p2 wide">
         <tr><th>Gespeichert in</th><th>Einstellungen</th></tr>
         <tr><td>Kit</td><td>Engine <span class="oe">OE</span> und ihre Einstellungen, <b>wav</b> (Sample- / Wave-Nummer), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO-Wellenformen und <b>ofs</b>; FX1, <b>ord</b> der FX-Slots; FX3 komplett; Track 7, LFO 2, <b>osx</b>, <b>oct</b></td></tr>
-        <tr><td>Pattern</td><td>Step-Raster, Flam-Werte, Akzente <b>acc</b>, <b>oct</b> der Steps, Trigger-Tracks, LFO-Start, Steps mit Velocity 0</td></tr>
+        <tr><td>Pattern</td><td>Step-Raster, Flam-Werte, Akzente <b>acc</b>, <b>oct</b> der Steps, Start, Trigger-Tracks, LFO-Start, Steps mit Velocity 0</td></tr>
         <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, die Eingangspegel (SHIFT + Regler 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>aca</b>, <b>rnd</b>, <b>rec</b>, <b>rst</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
         <tr><td>Projekt</td><td>die INIT-Vorlage für Voices, die Werte des Morph-Kits, FX-Presets <b>U1</b>–<b>U8</b></td></tr>
         <tr><td>Flash</td><td>Samples, Waves und Wavetables (von der Karte importiert)</td></tr>

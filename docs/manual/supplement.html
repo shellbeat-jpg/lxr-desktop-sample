@@ -460,7 +460,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>4.6. Trigger tracks</h2>
-      <p>LAST STEP page, each encoder click moves on: length › grid › <b>Trg [OFF]</b> › target <b>&gt;[T3]</b> › <b>LFO&gt;[T3]</b> › <b>NXT</b>/<b>NOW</b>. Taken targets are skipped.</p>
+      <p>LAST STEP page, each encoder click moves on: length › <b>Start</b> › grid › <b>Trg [OFF]</b> › target <b>&gt;[T3]</b> › <b>LFO&gt;[T3]</b> › <b>NXT</b>/<b>NOW</b>. Taken targets are skipped.</p>
       <table class="p2">
         <tr><th>Trg</th><th>Each active step …</th></tr>
         <tr><td>RST</td><td>sets the target to step 1 (plays at once)</td></tr>
@@ -485,6 +485,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li>The target plays to its last step and waits; silent until the first start.</li>
         <li>With <b>snc</b> in time; free running it drifts (generative).</li>
         <li>Trigger and LFO target possible at the same time.</li>
+      </ul>
+      <h2 data-toc>4.8. Start, loop, copying steps (test)</h2>
+      <ul>
+        <li><b>Start</b> (LAST STEP page): the track plays start … last step; RST and LFO start begin there.</li>
+        <li><b>Loop</b>: <b>SHIFT + PROJECT</b> on/off. Hold a step, press a second (also on another page): loop of the active track, second before first = backwards. A single press: off. Ends with a pattern change.</li>
+        <li><b>Copy</b>: hold <b>COPY</b>, select steps, release; the next step press pastes them with their distances from there (up to the track length). Steps in between stay.</li>
+        <li><b>SHIFT + MORPH</b>: duplicate the range start … last step behind it (length × 2, max. 64).</li>
       </ul>
     </div>
   </div>
@@ -716,7 +723,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <table class="p2 wide">
         <tr><th>Stored in</th><th>Settings</th></tr>
         <tr><td>Kit</td><td>engine <span class="oe">OE</span> and its settings, <b>wav</b> (sample / wave number), <b>sta</b>, <b>len</b>, <b>chk</b>, <b>sna</b>, <b>snb</b>, <b>out</b>, LFO waveforms and <b>ofs</b>; FX1, <b>ord</b> of the FX slots; all of FX3; track 7, LFO 2, <b>osx</b>, <b>oct</b></td></tr>
-        <tr><td>Pattern</td><td>step grid, flam values, accents <b>acc</b>, <b>oct</b> of the steps, trigger tracks, LFO start, steps with velocity 0</td></tr>
+        <tr><td>Pattern</td><td>step grid, flam values, accents <b>acc</b>, <b>oct</b> of the steps, start, trigger tracks, LFO start, steps with velocity 0</td></tr>
         <tr><td>Global</td><td>FX2, <b>sya</b>, <b>syb</b>, the input levels (SHIFT + knob 1 / 2), <b>pre</b>, <b>ips</b>, <b>mrv</b>, <b>vsw</b>, <b>cmx</b>, <b>cvl</b>, <b>aca</b>, <b>rnd</b>, <b>rec</b>, <b>rst</b>, <b>lim</b> <span class="oe">OE</span></td></tr>
         <tr><td>Project</td><td>the INIT template for voices, the values of the morph kit, FX presets <b>U1</b>–<b>U8</b></td></tr>
         <tr><td>Flash</td><td>samples, waves and wavetables (imported from the card)</td></tr>

@@ -116,6 +116,7 @@ typedef struct PatternSetStruct
 	uint8_t grid[NUM_PATTERN][NUM_TRACKS];		//MOD: step grid per track (SEQ_GRID_x, 0 = 1/16)
 	uint8_t trig[NUM_PATTERN][NUM_TRACKS];		//MOD: trigger track: mode << 4 | target track (0 = off)
 	uint8_t lfo[NUM_PATTERN][NUM_TRACKS];		//MOD: LFO start: target track (1..7) | SEQ_LFO_NOW, 0 = off
+	uint8_t start[NUM_PATTERN][NUM_TRACKS];		//MOD: first played step (0 = step 1); the track plays start .. length-1
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -130,6 +131,7 @@ typedef struct PatternBackupBufferStruct
 	uint8_t grid[NUM_TRACKS];	//MOD
 	uint8_t trig[NUM_TRACKS];	//MOD
 	uint8_t lfo[NUM_TRACKS];	//MOD
+	uint8_t start[NUM_TRACKS];	//MOD
 }PatternBackupBuffer;
 
 /*
@@ -233,6 +235,19 @@ uint8_t seq_validTrig(uint8_t trackNr, uint8_t value);	//a usable value (0 if no
 #define SEQ_TRIG_LFO	4	//the track's control mode while started by an LFO (not a trigger mode)
 uint8_t seq_validLfo(uint8_t value);
 void seq_setTrackLfo(uint8_t trackNr, uint8_t value);	//of the shown pattern
+//MOD: first played step of a track of the shown pattern (0 = step 1)
+void seq_setTrackStart(uint8_t trackNr, uint8_t start);
+uint8_t seq_getTrackStart(uint8_t trackNr);
+//MOD: loop of one track (temporary, ends with a pattern change): from step a to step b
+//(b < a: backwards); applied at the track's next step. track 0xff: no loop
+void seq_setLoop(uint8_t track, uint8_t a, uint8_t b);
+uint8_t seq_loopActive(void);	//track with a loop, 0xff = none
+//MOD: copy the selected steps of a track of the shown pattern (bit i of sel = step i)
+//and paste them from step dst on (their distances kept, cut at the track length)
+uint8_t seq_copySteps(uint8_t track, uint64_t sel);	//number of copied steps
+void seq_pasteSteps(uint8_t track, uint8_t dst);
+//MOD: duplicate the played range (start .. last step) behind the last step, length + range
+void seq_duplicateRange(uint8_t track);
 uint8_t seq_getTrackLfo(uint8_t trackNr);
 //------------------------------------------------------------------------------
 uint8_t seq_getTrackLength(uint8_t trackNr);

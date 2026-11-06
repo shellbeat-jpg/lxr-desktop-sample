@@ -606,6 +606,30 @@ default), `off`, `+-1`, `+-2`, `+-3`, `+1`, `-1`. Stored in the pattern, in the 
 step's probability and lock values; copying a step copies it. Other firmwares play a step with an
 `OCT` value whatever its probability, and its locks with wrong values.
 
+## Start, loop, copying steps (1.2.12, test)
+
+- **Start**: on the LAST STEP page each encoder click moves on: length › `Start` › grid › trigger
+  › LFO start. The track plays from `Start` to its last step (`Start [5] > 16` = steps 5 … 16);
+  the pattern ends after the longest such range. RST and LFO starts begin at `Start`. In the ALL
+  mode it sets all tracks. Stored in the pattern (block `STA1` after the LFO starts).
+- **Loop**: `SHIFT + PROJECT` turns the loop mode on (step 13 blinks) and off. Hold a step and
+  press a second one; the first can be on another page (switch with the bar buttons while
+  holding). The active track then loops from the first to the second step, in its own grid,
+  backwards if the second step lies before the first. It starts with the first step at the
+  track's next step. A single step press ends the loop mode, a pattern change ends the loop;
+  the step buttons don't edit steps in the loop mode. As a trigger target, RST and an LFO start
+  jump to the loop's first step and CLK moves on inside the loop; as a source the loop's steps
+  send the impulses. Not stored.
+- **Copy steps**: hold `COPY` and press steps of the active track (also across pages), then
+  release: they are copied with all their settings. The next step press pastes them from there,
+  each at its distance to the first copied step; steps that would lie behind the track length are
+  left out, the steps in between are kept. Pressing `COPY` again cancels.
+- **Duplicate**: `SHIFT + MORPH` copies the played range (start … last step) behind the last step
+  and lengthens the track by it: length 6 becomes 12, 20 becomes 40, at most 64.
+
+In the development build (CPU meter) `SHIFT + MORPH` and `SHIFT + PROJECT` keep their meter
+functions, so loop and duplicate are missing there.
+
 ## WAV recorder (1.2.11)
 
 The last PERF screen records the mix as a WAV file to the SD card, in real time: 16 bit stereo,
@@ -765,5 +789,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The random octave (1.2.12) is not tried on the device yet. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps) are not tried on the device yet. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.

@@ -834,6 +834,83 @@ static void buttonHandler_setTrackRotation(uint8_t seqButtonPressed)
 }
 */
 //--------------------------------------------------------
+//MOD: step copy / paste and the loop of the active track (voice mode, no modifier).
+//COPY held: the step buttons select steps (across pages); on release they are copied and
+//the next step button pastes them from there. Loop mode (SHIFT + PROJECT): hold a step,
+//press another (also on another page): the loop runs from the first to the second
+//(backwards if it lies before); a single press ends the loop mode.
+static uint64_t buttonHandler_copySel = 0;
+static uint8_t buttonHandler_pastePending = 0;
+static uint8_t buttonHandler_loopMode = 0;
+static int8_t buttonHandler_loopHeld = -1;		//step held for the loop (-1 = none)
+static uint8_t buttonHandler_loopSet = 0;		//a second step was pressed while it was held
+static uint16_t buttonHandler_seqIgnore = 0;	//the release of these step buttons does nothing
+
+static void buttonHandler_loopModeOff(void)
+{
+	buttonHandler_loopMode = 0;
+	buttonHandler_loopHeld = -1;
+	seq_setLoop(0xff, 0, 0);
+	led_setBlinkLed(LED_STEP13, 0);
+	menu_showNote("Loop off", "");
+}
+//step button in voice mode: 1 when it was a copy / paste / loop action
+static uint8_t buttonHandler_stepAction(const uint8_t button)
+{
+	const uint8_t step = (uint8_t)(button + menu_activeBar*16);
+	const uint8_t track = menu_getActiveVoice();
+	char l2[17];
+	if(copyClear_Mode == MODE_COPY_TRACK)
+	{
+		buttonHandler_copySel ^= 1ULL << step;
+		led_setValue((buttonHandler_copySel >> step) & 1u, led_idx2StepLed(button));
+		snprintf(l2, sizeof(l2), "%u selected", (unsigned)__builtin_popcountll(buttonHandler_copySel));
+		menu_showNote("Copy steps", l2);
+	}
+	else if(buttonHandler_pastePending)
+	{
+		buttonHandler_pastePending = 0;
+		seq_pasteSteps(track, step);
+		led_updateSeqLeds();
+		preset_touchTimer(PRESET_PAT_TIMER);
+		snprintf(l2, sizeof(l2), "from step %u", (unsigned)(step + 1u));
+		menu_showNote("Steps pasted", l2);
+	}
+	else if(buttonHandler_loopMode)
+	{
+		if(buttonHandler_loopHeld < 0)
+		{
+			buttonHandler_loopHeld = (int8_t)step;
+			buttonHandler_loopSet = 0;
+		}
+		else
+		{
+			seq_setLoop(track, (uint8_t)buttonHandler_loopHeld, step);
+			buttonHandler_loopSet = 1;
+			snprintf(l2, sizeof(l2), "%u > %u%s", (unsigned)(buttonHandler_loopHeld + 1), (unsigned)(step + 1u),
+					step < buttonHandler_loopHeld ? " back" : "");
+			menu_showNote("Loop", l2);
+		}
+	}
+	else
+		return 0;
+	buttonHandler_seqIgnore |= (uint16_t)(1u << button);
+	return 1;
+}
+//COPY released: copy the selected steps, the next step button pastes them
+static void buttonHandler_copyReleased(void)
+{
+	if(!buttonHandler_copySel)
+		return;
+	const uint8_t n = seq_copySteps(menu_getActiveVoice(), buttonHandler_copySel);
+	buttonHandler_copySel = 0;
+	buttonHandler_pastePending = n != 0;
+	led_updateSeqLeds();
+	char l2[17];
+	snprintf(l2, sizeof(l2), "%u: press a step", (unsigned)n);
+	menu_showNote("Steps copied", l2);
+}
+
 static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 {
 
@@ -870,6 +947,18 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 			if(menu_cpuMeterPage() < 3)
 				cpuMeter.stressFm = (cpuMeter.stressFm + 1) % (CPU_METER_MAX_STRESS + 1);
 			cpuMeter_resetPeaks();
+#else
+			//MOD: duplicate the played range of the active track behind its last step
+			{
+				const uint8_t t = menu_getActiveVoice();
+				seq_duplicateRange(t);
+				led_updateSeqLeds();
+				preset_touchTimer(PRESET_PAT_TIMER);
+				char l2[17];
+				uint8_t l = seq_getTrackLength(t);
+				snprintf(l2, sizeof(l2), "length %u", (unsigned)(l ? l : 16u));
+				menu_showNote("Duplicated", l2);
+			}
 #endif
 			break;
 
@@ -915,6 +1004,17 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 #if CPU_METER
 			//development builds: show/hide the CPU load page
 			menu_toggleCpuMeter();
+#else
+			//MOD: loop mode on/off
+			if(buttonHandler_loopMode)
+				buttonHandler_loopModeOff();
+			else
+			{
+				buttonHandler_loopMode = 1;
+				buttonHandler_loopHeld = -1;
+				led_setBlinkLed(LED_STEP13, 1);
+				menu_showNote("Loop mode", "hold+press steps");
+			}
 #endif
 			break;
 
@@ -1159,6 +1259,8 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 	else { // no key modifier pressed
 		switch (buttonHandler_stateMemory.selectButtonMode) {
 		case SELECT_MODE_VOICE:
+			if(buttonHandler_stepAction(seqButtonPressed))	//MOD: copy, paste, loop
+				break;
 			// button is held down, start a timer. If the button is held we
 			// can record automation for the one button. The regular handling for
 			// adding/removing step is handled in the button release
@@ -1361,6 +1463,27 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 		return;
 	}
 	else if(buttonHandler_getLoad() || buttonHandler_getSave()) return;
+
+	//MOD: the press was a copy / paste / loop action
+	if(buttonHandler_seqIgnore & (1u << seqButtonPressed))
+	{
+		buttonHandler_seqIgnore &= (uint16_t)~(1u << seqButtonPressed);
+		if(buttonHandler_loopMode && buttonHandler_loopHeld == (int8_t)(seqButtonPressed + menu_activeBar*16))
+		{
+			//the held step: a single press ends the loop mode
+			if(!buttonHandler_loopSet)
+				buttonHandler_loopModeOff();
+			buttonHandler_loopHeld = -1;
+		}
+		else if(buttonHandler_loopMode && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed && !buttonHandler_loopSet)
+		{
+			//held step released on another page: as a single press
+			buttonHandler_loopModeOff();
+		}
+		else if(buttonHandler_loopMode && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed)
+			buttonHandler_loopHeld = -1;
+		return;
+	}
 
 	// I don't think that the timer would be armed in this case
 	//{
@@ -2026,6 +2149,8 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 			else
 			{
 				//copy mode
+				buttonHandler_pastePending = 0;	//MOD: cancels a step paste
+				buttonHandler_copySel = 0;
 				copyClear_Mode = MODE_COPY_TRACK;
 				led_setBlinkLed(LED_COPY, 1);
 				led_clearSelectLeds();
@@ -2180,6 +2305,7 @@ void buttonHandler_buttonReleased(uint8_t buttonNr) {
 									buttonHandler_stateMemory.seqErasing);
 		} else {
 			if (!buttonHandler_getShift()) {
+				buttonHandler_copyReleased();	//MOD: selected steps
 				//copy mode abort/exit
 				copyClear_reset();
 			}
