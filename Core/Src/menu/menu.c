@@ -927,6 +927,22 @@ void menu_updateVoicePages()
 					else if(par[i] == PAR_PAN6)			{ par[i] = PAR_T7_PAN;		text[i] = TEXT_T7_PAN; }
 				}
 			}
+			//MOD: close the gaps of removed parameters (the menu ends a page at the first
+			//empty entry, e.g. OCT after the removed waveform/PWM of the added engines)
+			uint8_t n = 0;
+			for(uint8_t i=0;i<8;i++)
+			{
+				if(text[i] == TEXT_EMPTY)
+					continue;
+				text[n] = text[i];
+				par[n] = par[i];
+				n++;
+			}
+			for(;n<8;n++)
+			{
+				text[n] = TEXT_EMPTY;
+				par[n] = PAR_NONE;
+			}
 		}
 	}
 }
