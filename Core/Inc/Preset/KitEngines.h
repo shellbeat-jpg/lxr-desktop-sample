@@ -62,10 +62,13 @@ enum { LFOX_FRQ, LFOX_SYN, LFOX_AMT, LFOX_WAV, LFOX_RTG, LFOX_OFS, LFOX_VOI, LFO
 //MOD: random octave of each track 1..7 (OCT_RND_x, VoiceSlot.h), part "OCT"
 #define KIT_OCT_OFFSET			(KIT_OSX_OFFSET + 1)
 #define KIT_OCT_SIZE			7
-#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE + KIT_LFOX_SIZE + 1 + KIT_OCT_SIZE)
+//MOD: choke groups B and C (bit n = track n; group A is PAR_CHOKE_GROUP), part "CHK"
+#define KIT_CHK_OFFSET			(KIT_OCT_OFFSET + KIT_OCT_SIZE)
+#define KIT_CHK_SIZE			2
+#define KIT_DATA_SIZE			(3*NUM_VOICE_SLOTS + 1 + KIT_FX3_SIZE + KIT_T7_SIZE + KIT_LFOX_SIZE + 1 + KIT_OCT_SIZE + KIT_CHK_SIZE)
 #define KIT_SEND_DEFAULT		0
 //engine block, "SNA" + count + levels, "ORD" + 1 + order, "SNB" + count + levels
-#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE + 4 + KIT_LFOX_SIZE + 5 + 4 + KIT_OCT_SIZE)
+#define KIT_DATA_BLOCK_SIZE		(KIT_ENGINES_BLOCK_SIZE + 4 + NUM_VOICE_SLOTS + 5 + 4 + NUM_VOICE_SLOTS + 4 + KIT_FX3_SIZE + 4 + KIT_T7_SIZE + 4 + KIT_LFOX_SIZE + 5 + 4 + KIT_OCT_SIZE + 4 + KIT_CHK_SIZE)
 
 //version of this interface (for the host tests, which also build older trees)
 #define KIT_ENGINES_API		3

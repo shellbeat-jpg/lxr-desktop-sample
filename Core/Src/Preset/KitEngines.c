@@ -60,6 +60,7 @@ void kitEngines_setStock(uint8_t* engines)
 		kitEngines_lfoXStock(&engines[KIT_LFOX_OFFSET + x*KIT_LFOX_STRIDE], x);
 	engines[KIT_OSX_OFFSET] = 0;	//MOD: all voices follow the global sample rate
 	memset(&engines[KIT_OCT_OFFSET], OCT_RND_OFF, KIT_OCT_SIZE);	//MOD: no random octave
+	memset(&engines[KIT_CHK_OFFSET], 0, KIT_CHK_SIZE);	//MOD: no choke groups B, C
 }
 //---------------------------------------------------
 void kitEngines_init(void)
@@ -99,6 +100,9 @@ uint8_t kitEngines_encode(const uint8_t* engines, uint8_t* block)
 	o += 5;
 	o[0] = 'O'; o[1] = 'C'; o[2] = 'T'; o[3] = KIT_OCT_SIZE;	//MOD: random octave of the tracks
 	memcpy(&o[4], &engines[KIT_OCT_OFFSET], KIT_OCT_SIZE);
+	o += 4 + KIT_OCT_SIZE;
+	o[0] = 'C'; o[1] = 'H'; o[2] = 'K'; o[3] = KIT_CHK_SIZE;	//MOD: choke groups B, C
+	o[4] = engines[KIT_CHK_OFFSET]; o[5] = engines[KIT_CHK_OFFSET+1];
 	return KIT_DATA_BLOCK_SIZE;
 }
 //---------------------------------------------------
@@ -143,6 +147,11 @@ void kitEngines_decode(const uint8_t* block, const uint16_t size, uint8_t* engin
 		}
 		else if(t[0] == 'O' && t[1] == 'S' && t[2] == 'X' && n >= 1)	//MOD
 			engines[KIT_OSX_OFFSET] = t[4] & ((1u << NUM_VOICE_SLOTS) - 1u);
+		else if(t[0] == 'C' && t[1] == 'H' && t[2] == 'K')	//MOD: choke groups B, C
+		{
+			for(uint8_t k=0;k<KIT_CHK_SIZE && k<n;k++)
+				engines[KIT_CHK_OFFSET + k] = t[4+k] & 0x7Fu;
+		}
 		else if(t[0] == 'O' && t[1] == 'C' && t[2] == 'T')	//MOD: random octave
 		{
 			for(uint8_t k=0;k<KIT_OCT_SIZE && k<n;k++)

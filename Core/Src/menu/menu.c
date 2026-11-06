@@ -1463,6 +1463,30 @@ static void menu_randomizeVoice(void)
 	snprintf(l2, sizeof(l2), "%u%% %u changed", (unsigned)(amt * 100.f + 0.5f), (unsigned)changed);
 	menu_showNote("Random voice", l2);
 }
+//MOD: choke group of a track: 0 none, 1 A (PAR_CHOKE_GROUP), 2 B, 3 C (kit data)
+static uint8_t menu_chokeGroupOf(const uint8_t t)
+{
+	const uint8_t bit = (uint8_t)(1u << t);
+	if(activeParameters[PAR_CHOKE_GROUP] & bit)	return 1;
+	if(kitEngines[KIT_CHK_OFFSET] & bit)		return 2;
+	if(kitEngines[KIT_CHK_OFFSET+1] & bit)		return 3;
+	return 0;
+}
+static void menu_setChokeGroup(const uint8_t t, const uint8_t g)
+{
+	const uint8_t bit = (uint8_t)(1u << t);
+	activeParameters[PAR_CHOKE_GROUP] &= (uint8_t)~bit & 0x7Fu;
+	kitEngines[KIT_CHK_OFFSET] &= (uint8_t)~bit;
+	kitEngines[KIT_CHK_OFFSET+1] &= (uint8_t)~bit;
+	if(g == 1)		activeParameters[PAR_CHOKE_GROUP] |= bit;
+	else if(g == 2)	kitEngines[KIT_CHK_OFFSET] |= bit;
+	else if(g == 3)	kitEngines[KIT_CHK_OFFSET+1] |= bit;
+	frontPanel_sendData(CC_2,(uint8_t)(PAR_CHOKE_GROUP-128),activeParameters[PAR_CHOKE_GROUP]);
+}
+static char menu_chokeChar(const uint8_t g)
+{
+	return g ? (char)('A' + g - 1u) : '-';
+}
 //MOD: edit view of OSX, CHK or MRV: a voice button switches that voice (as the
 //encoder does for the active voice)
 uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
@@ -1470,10 +1494,15 @@ uint8_t menu_voiceButtonEdit(const uint8_t voiceNr)
 	if(!editModeActive || voiceNr > 6)
 		return 0;
 	const uint16_t p = menu_currentParamNr();
+	if(p == PAR_CHOKE_GROUP)	//MOD: the voice button moves the track to the next group
+	{
+		menu_setChokeGroup(voiceNr, (uint8_t)((menu_chokeGroupOf(voiceNr) + 1u) % 4u));
+		menu_repaintAll();
+		return 1;
+	}
 	const uint8_t slotBit = (uint8_t)(1u << (voiceNr < 6 ? voiceNr : 5u));
 	uint8_t on;
 	if(p == PAR_OSX)					on = (kitEngines[KIT_OSX_OFFSET] & slotBit) != 0;
-	else if(p == PAR_CHOKE_GROUP)		on = (activeParameters[p] >> voiceNr) & 1u;
 	else if(p == PAR_MORPH_VOICES)		on = !(activeParameters[p] & slotBit);	//bit set = not morphed
 	else								return 0;
 	const uint8_t keep = menu_activeVoice;
@@ -2908,10 +2937,12 @@ void menu_repaintGeneric()
 			}
 			else if(parNr == PAR_CHOKE_GROUP)
 			{
-				//MOD: on/off for the active voice, the group's tracks on the left
+				//MOD: the group of each track on the left (AA-B-CC), of the active one right
 				for(uint8_t t=0;t<7;t++)
-					editDisplayBuffer[1][t] = (curParmVal & (1u << t)) ? (char)('1' + t) : '-';
-				memcpy(&editDisplayBuffer[1][13], (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
+					editDisplayBuffer[1][t] = menu_chokeChar(menu_chokeGroupOf(t));
+				const uint8_t g = menu_chokeGroupOf(menu_activeVoice % 7u);
+				if(g)	{ memcpy(&editDisplayBuffer[1][13], "  ", 2); editDisplayBuffer[1][15] = menu_chokeChar(g); }
+				else	memcpy(&editDisplayBuffer[1][13], menuText_off, 3);
 			}
 			else if(menu_sampleWaveEditText(parNr, curParmVal))
 			{
@@ -3097,8 +3128,10 @@ void menu_repaintGeneric()
 				//MOD: is the active voice morphed
 				memcpy(valueAsText, (curParmVal & menu_activeSlotBit()) ? menuText_off : menuText_on, 3);
 			} else if(parNr == PAR_CHOKE_GROUP) {
-				//MOD: is the active voice in the choke group
-				memcpy(valueAsText, (curParmVal & (1u << (menu_activeVoice % 7u))) ? menuText_on : menuText_off, 3);
+				//MOD: choke group of the active track: off, A, B, C
+				const uint8_t g = menu_chokeGroupOf(menu_activeVoice % 7u);
+				if(g)	{ valueAsText[0] = ' '; valueAsText[1] = menu_chokeChar(g); valueAsText[2] = ' '; }
+				else	memcpy(valueAsText, menuText_off, 3);
 			} else if(menu_sampleValueText(parNr, curParmVal, valueAsText)) {
 				//MOD: sample start/length in ms
 			} else { //not if(parNr==PAR_NONE)
@@ -4686,14 +4719,12 @@ static void menu_encoderChangeParameter(int8_t inc)
 		activeParameters[paramNr] = *v;
 		return;
 	}
-	//MOD: the choke group shows/sets the bit of the active voice (on/off)
+	//MOD: the choke group of the active track: off, A, B, C
 	if(paramNr == PAR_CHOKE_GROUP)
 	{
-		const uint8_t bit = (uint8_t)(1u << (menu_activeVoice % 7u));
-		if(inc > 0)			activeParameters[paramNr] |= bit;
-		else if(inc < 0)	activeParameters[paramNr] &= (uint8_t)~bit;
-		activeParameters[paramNr] &= 0x7F;
-		frontPanel_sendData(CC_2,(uint8_t)(paramNr-128),activeParameters[paramNr]);
+		const uint8_t t = menu_activeVoice % 7u;
+		const int16_t g = (int16_t)menu_chokeGroupOf(t) + inc;
+		menu_setChokeGroup(t, (uint8_t)(g < 0 ? 0 : g > 3 ? 3 : g));
 		return;
 	}
 	//MOD: SHIFT held: edit the morph kit's value. The normal path below clamps it

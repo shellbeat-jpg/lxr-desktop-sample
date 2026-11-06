@@ -155,16 +155,19 @@ waveforms:
 
 ## Choke groups
 
-One choke group per kit: a track in the group cuts the other tracks of the group when it is
-triggered (e.g. several hi-hat samples on different voices, an open hat cut by a closed one).
+Three choke groups per kit (A, B, C; 1.2.12, before one): a track of a group cuts the other
+tracks of its group when it is triggered (e.g. several hi-hat samples on different voices, an
+open hat cut by a closed one).
 
-- AEG page of each voice: **`CHK` on/off** puts this track into the group or takes it out. The edit
-  view shows all tracks of the group on the left (e.g. `1--4-6-`); in the edit view the voice
-  buttons switch their track in or out (1.2.11).
+- AEG page of each voice: **`CHK`** = `off`, `A`, `B`, `C` sets the group of this track (one group
+  per track). The edit view shows the group of every track on the left (e.g. `AA-B-CC`); in the
+  edit view the voice buttons move their track to the next group (off › A › B › C › off).
+- Group A is the former single group (kits of 1.2.11 and older load it as A; NRPN 99 sets A);
+  B and C are stored in the kit data (part `CHK`) and unknown to older firmwares.
 - The cut is a fade of about 2 ms; a choked track stays silent until it is triggered again.
 - Tracks 6 and 7 (CL HH / OP HH) share one voice and cut each other anyway.
-- Stored in the kit (parameter slot of the former 7th MIDI note setting). Kits without it: no
-  choke group.
+- Stored in the kit (group A in the parameter slot of the former 7th MIDI note setting). Kits
+  without it: no choke group.
 
 ## Voice morph
 

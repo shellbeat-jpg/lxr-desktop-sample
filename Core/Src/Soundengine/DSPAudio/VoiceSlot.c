@@ -150,12 +150,17 @@ void slot_applyChoke(const uint8_t slot, int16_t* buf, const uint8_t size)
 static void slot_chokeOthers(const uint8_t track, const uint8_t slot)
 {
 	slot_choke[slot] = SLOT_CHOKE_OFF;		//the triggered slot plays again
-	if(!(slot_chokeGroup & (1u << track)))
+	//MOD: the group of the track: A (PAR_CHOKE_GROUP), B, C (kit data)
+	const uint8_t bit = (uint8_t)(1u << track);
+	uint8_t group = slot_chokeGroup & 0x7Fu;
+	if(!(group & bit))	group = kitEngines[KIT_CHK_OFFSET];
+	if(!(group & bit))	group = kitEngines[KIT_CHK_OFFSET+1];
+	if(!(group & bit))
 		return;
 	for(uint8_t t=0;t<7;t++)
 	{
 		const uint8_t other = t < NUM_VOICE_SLOTS ? t : NUM_VOICE_SLOTS-1;
-		if(t == track || other == slot || !(slot_chokeGroup & (1u << t)))
+		if(t == track || other == slot || !(group & (1u << t)))
 			continue;		//tracks 6/7 share a slot: they cut each other anyway
 		if(slot_choke[other] == SLOT_CHOKE_OFF)
 			slot_choke[other] = SLOT_CHOKE_FADE;
