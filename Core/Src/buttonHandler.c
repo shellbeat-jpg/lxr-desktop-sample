@@ -841,18 +841,29 @@ static void buttonHandler_setTrackRotation(uint8_t seqButtonPressed)
 //(backwards if it lies before); a single press ends the loop mode.
 static uint64_t buttonHandler_copySel = 0;
 static uint8_t buttonHandler_pastePending = 0;
-static uint8_t buttonHandler_loopMode = 0;
+static uint8_t buttonHandler_loopMode = 0;		//bit per track: its loop mode is on
 static int8_t buttonHandler_loopHeld = -1;		//step held for the loop (-1 = none)
 static uint8_t buttonHandler_loopSet = 0;		//a second step was pressed while it was held
 static uint16_t buttonHandler_seqIgnore = 0;	//the release of these step buttons does nothing
+#define BH_LOOP_MODE()	((buttonHandler_loopMode >> menu_getActiveVoice()) & 1u)
 
+//step 13 blinks while the loop mode of the active track is on
+static void buttonHandler_loopLed(void)
+{
+	led_setBlinkLed(LED_STEP13, 0);
+	if(BH_LOOP_MODE())
+		led_setBlinkLed(LED_STEP13, 1);
+}
 static void buttonHandler_loopModeOff(void)
 {
-	buttonHandler_loopMode = 0;
+	const uint8_t t = menu_getActiveVoice();
+	buttonHandler_loopMode &= (uint8_t)~(1u << t);
 	buttonHandler_loopHeld = -1;
-	seq_setLoop(0xff, 0, 0);
-	led_setBlinkLed(LED_STEP13, 0);
-	menu_showNote("Loop off", "");
+	seq_setLoop(t, 0, 0, 0);
+	buttonHandler_loopLed();
+	char l1[17];
+	snprintf(l1, sizeof(l1), "Loop off T%u", (unsigned)(t + 1u));
+	menu_showNote(l1, "");
 }
 //step button in voice mode: 1 when it was a copy / paste / loop action
 static uint8_t buttonHandler_stepAction(const uint8_t button)
@@ -876,7 +887,7 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 		snprintf(l2, sizeof(l2), "from step %u", (unsigned)(step + 1u));
 		menu_showNote("Steps pasted", l2);
 	}
-	else if(buttonHandler_loopMode)
+	else if(BH_LOOP_MODE())
 	{
 		if(buttonHandler_loopHeld < 0)
 		{
@@ -885,11 +896,13 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 		}
 		else
 		{
-			seq_setLoop(track, (uint8_t)buttonHandler_loopHeld, step);
+			seq_setLoop(track, 1, (uint8_t)buttonHandler_loopHeld, step);
 			buttonHandler_loopSet = 1;
 			snprintf(l2, sizeof(l2), "%u > %u%s", (unsigned)(buttonHandler_loopHeld + 1), (unsigned)(step + 1u),
 					step < buttonHandler_loopHeld ? " back" : "");
-			menu_showNote("Loop", l2);
+			char l1[17];
+			snprintf(l1, sizeof(l1), "Loop T%u", (unsigned)(track + 1u));
+			menu_showNote(l1, l2);
 		}
 	}
 	else
@@ -1005,15 +1018,17 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 			//development builds: show/hide the CPU load page
 			menu_toggleCpuMeter();
 #else
-			//MOD: loop mode on/off
-			if(buttonHandler_loopMode)
+			//MOD: loop mode of the active track on/off
+			if(BH_LOOP_MODE())
 				buttonHandler_loopModeOff();
 			else
 			{
-				buttonHandler_loopMode = 1;
+				buttonHandler_loopMode |= (uint8_t)(1u << menu_getActiveVoice());
 				buttonHandler_loopHeld = -1;
-				led_setBlinkLed(LED_STEP13, 1);
-				menu_showNote("Loop mode", "hold+press steps");
+				buttonHandler_loopLed();
+				char l1[17];
+				snprintf(l1, sizeof(l1), "Loop mode T%u", (unsigned)(menu_getActiveVoice() + 1u));
+				menu_showNote(l1, "hold+press steps");
 			}
 #endif
 			break;
@@ -1468,19 +1483,19 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 	if(buttonHandler_seqIgnore & (1u << seqButtonPressed))
 	{
 		buttonHandler_seqIgnore &= (uint16_t)~(1u << seqButtonPressed);
-		if(buttonHandler_loopMode && buttonHandler_loopHeld == (int8_t)(seqButtonPressed + menu_activeBar*16))
+		if(BH_LOOP_MODE() && buttonHandler_loopHeld == (int8_t)(seqButtonPressed + menu_activeBar*16))
 		{
 			//the held step: a single press ends the loop mode
 			if(!buttonHandler_loopSet)
 				buttonHandler_loopModeOff();
 			buttonHandler_loopHeld = -1;
 		}
-		else if(buttonHandler_loopMode && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed && !buttonHandler_loopSet)
+		else if(BH_LOOP_MODE() && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed && !buttonHandler_loopSet)
 		{
 			//held step released on another page: as a single press
 			buttonHandler_loopModeOff();
 		}
-		else if(buttonHandler_loopMode && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed)
+		else if(BH_LOOP_MODE() && buttonHandler_loopHeld >= 0 && (buttonHandler_loopHeld % 16) == seqButtonPressed)
 			buttonHandler_loopHeld = -1;
 		return;
 	}
@@ -1768,6 +1783,8 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 	case BUT_VOICE_6:
 	case BUT_VOICE_7:
 		buttonHandler_voiceButtonPressed(buttonNr-BUT_VOICE_1);
+		buttonHandler_loopHeld = -1;	//MOD: the loop mode LED of the new active track
+		buttonHandler_loopLed();
 		break;
 
 	case BUT_PAGE_UP:

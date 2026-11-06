@@ -238,10 +238,9 @@ void seq_setTrackLfo(uint8_t trackNr, uint8_t value);	//of the shown pattern
 //MOD: first played step of a track of the shown pattern (0 = step 1)
 void seq_setTrackStart(uint8_t trackNr, uint8_t start);
 uint8_t seq_getTrackStart(uint8_t trackNr);
-//MOD: loop of one track (temporary, ends with a pattern change): from step a to step b
-//(b < a: backwards); applied at the track's next step. track 0xff: no loop
-void seq_setLoop(uint8_t track, uint8_t a, uint8_t b);
-uint8_t seq_loopActive(void);	//track with a loop, 0xff = none
+//MOD: loop of a track (temporary, ends with a pattern change; each track its own): on:
+//from step a to step b (b < a: backwards), off: ends; applied at the track's next step
+void seq_setLoop(uint8_t track, uint8_t on, uint8_t a, uint8_t b);
 //MOD: copy the selected steps of a track of the shown pattern (bit i of sel = step i)
 //and paste them from step dst on (their distances kept, cut at the track length)
 uint8_t seq_copySteps(uint8_t track, uint64_t sel);	//number of copied steps

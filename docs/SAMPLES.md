@@ -612,11 +612,14 @@ step's probability and lock values; copying a step copies it. Other firmwares pl
   › LFO start. The track plays from `Start` to its last step (`Start [5] > 16` = steps 5 … 16);
   the pattern ends after the longest such range. RST and LFO starts begin at `Start`. In the ALL
   mode it sets all tracks. Stored in the pattern (block `STA1` after the LFO starts).
-- **Loop**: `SHIFT + PROJECT` turns the loop mode on (step 13 blinks) and off. Hold a step and
+- **Loop**: per track: `SHIFT + PROJECT` turns the loop mode of the active track on (step 13
+  blinks while that track is active) and off; several tracks can loop at once, each in its own
+  range. Hold a step and
   press a second one; the first can be on another page (switch with the bar buttons while
   holding). The active track then loops from the first to the second step, in its own grid,
   backwards if the second step lies before the first. It starts with the first step at the
-  track's next step. A single step press ends the loop mode, a pattern change ends the loop;
+  track's next step. A single step press ends the loop mode of the track, a pattern change ends
+  the loops;
   the step buttons don't edit steps in the loop mode. As a trigger target, RST and an LFO start
   jump to the loop's first step and CLK moves on inside the loop; as a source the loop's steps
   send the impulses. Not stored.

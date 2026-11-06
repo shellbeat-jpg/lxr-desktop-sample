@@ -1242,11 +1242,13 @@ static inline uint8_t seq_trackLen(const uint8_t track)
 }
 //MOD: start position and loop. A track plays the positions 0 .. seq_playLen()-1, which
 //seq_mapStep() turns into steps: start .. length-1, or the loop a .. b (b < a: backwards).
-static uint8_t seq_loopTrack = 0xff;	//track with a loop (0xff = none)
-static uint8_t seq_loopA, seq_loopB;
-static uint8_t seq_loopPattern;			//pattern the loop was set in
-static uint8_t seq_loopReq = 0;			//a loop change waits for the track's next step
-static uint8_t seq_loopReqTrack = 0xff, seq_loopReqA, seq_loopReqB;
+static uint8_t seq_loopOn = 0;			//bit per track: it has a loop
+static uint8_t seq_loopA[NUM_TRACKS], seq_loopB[NUM_TRACKS];
+static uint8_t seq_loopPattern[NUM_TRACKS];	//pattern the loop was set in
+static uint8_t seq_loopReq = 0;			//bit per track: a loop change waits for its next step
+static uint8_t seq_loopReqOn = 0;		//the change: loop on / off
+static uint8_t seq_loopReqA[NUM_TRACKS], seq_loopReqB[NUM_TRACKS];
+#define SEQ_LOOPED(track)	((seq_loopOn >> (track)) & 1u)
 static uint8_t seq_trackStart(const uint8_t track)
 {
 	const uint8_t s = seq_patternSet.start[seq_activePattern][track];
@@ -1260,14 +1262,17 @@ static uint8_t seq_rangeLen(const uint8_t track)
 }
 static uint8_t seq_playLen(const uint8_t track)
 {
-	if(track == seq_loopTrack)
-		return (uint8_t)((seq_loopA <= seq_loopB ? seq_loopB - seq_loopA : seq_loopA - seq_loopB) + 1u);
+	if(SEQ_LOOPED(track))
+	{
+		const uint8_t a = seq_loopA[track], b = seq_loopB[track];
+		return (uint8_t)((a <= b ? b - a : a - b) + 1u);
+	}
 	return seq_rangeLen(track);
 }
 static uint8_t seq_mapStep(const uint8_t track, const uint8_t p)
 {
-	if(track == seq_loopTrack)
-		return (uint8_t)(seq_loopA <= seq_loopB ? seq_loopA + p : seq_loopA - p);
+	if(SEQ_LOOPED(track))
+		return (uint8_t)(seq_loopA[track] <= seq_loopB[track] ? seq_loopA[track] + p : seq_loopA[track] - p);
 	return (uint8_t)(seq_trackStart(track) + p);
 }
 //position of a step in the played range, -1 if it is outside
@@ -1276,8 +1281,8 @@ static int16_t seq_posOf(const uint8_t track, const int8_t step)
 	if(step < 0)
 		return -1;
 	int16_t p;
-	if(track == seq_loopTrack)
-		p = seq_loopA <= seq_loopB ? (int16_t)(step - seq_loopA) : (int16_t)(seq_loopA - step);
+	if(SEQ_LOOPED(track))
+		p = seq_loopA[track] <= seq_loopB[track] ? (int16_t)(step - seq_loopA[track]) : (int16_t)(seq_loopA[track] - step);
 	else
 		p = (int16_t)(step - seq_trackStart(track));
 	return (p >= 0 && p < seq_playLen(track)) ? p : -1;
@@ -1287,7 +1292,7 @@ static int16_t seq_posOf(const uint8_t track, const int8_t step)
 __attribute__((noinline)) static uint8_t seq_ownClock(const uint8_t track)
 {
 	return seq_trackTicks(track) != 24u || seq_ctlMode[track] == SEQ_TRIG_RST || seq_ctlMode[track] == SEQ_TRIG_CLK
-			|| seq_ctlMode[track] == SEQ_TRIG_LFO || track == seq_loopTrack || seq_patternSet.start[seq_activePattern][track] != 0;
+			|| seq_ctlMode[track] == SEQ_TRIG_LFO || SEQ_LOOPED(track) || seq_patternSet.start[seq_activePattern][track] != 0;
 }
 //length of the pattern in 1/16 steps when it has grid tracks (the longest track in time)
 __attribute__((noinline)) static uint16_t seq_gridPatternSteps(uint8_t* hasGrid)
@@ -1448,7 +1453,7 @@ static void seq_ctlSetMode(const uint8_t d, const uint8_t m, const int32_t T)
 //the loop of a track ends: on the pattern's clock again (trigger targets keep theirs)
 static void seq_loopEnd(const uint8_t tr)
 {
-	seq_loopTrack = 0xff;
+	seq_loopOn &= (uint8_t)~(1u << tr);
 	if(seq_ctlMode[tr] == SEQ_TRIG_OFF || seq_ctlMode[tr] == SEQ_TRIG_MUT)
 	{
 		seq_ctlOrigin[tr] = 0;
@@ -1457,67 +1462,67 @@ static void seq_loopEnd(const uint8_t tr)
 			seq_stepIndex[tr] = (int8_t)((uint32_t)seq_gridSteps % seq_trackLen(tr));
 	}
 }
-//every tick before the trigger tracks: a loop set in another pattern ends; a requested
+//every tick before the trigger tracks: loops set in another pattern end; a requested
 //change happens at the track's next step, the loop starts with its first step
 static void seq_loopTick(const int32_t T)
 {
-	if(seq_loopTrack != 0xff && seq_loopPattern != seq_activePattern)
-		seq_loopEnd(seq_loopTrack);
-	if(!seq_loopReq)
+	if(!seq_loopOn && !seq_loopReq)
 		return;
-	const uint8_t tr = seq_loopReqTrack != 0xff ? seq_loopReqTrack : seq_loopTrack;
-	if(tr >= NUM_TRACKS)
+	for(uint8_t tr=0;tr<NUM_TRACKS;tr++)
 	{
-		seq_loopReq = 0;
-		return;
+		const uint8_t bit = (uint8_t)(1u << tr);
+		if((seq_loopOn & bit) && seq_loopPattern[tr] != seq_activePattern)
+			seq_loopEnd(tr);
+		if(!(seq_loopReq & bit))
+			continue;
+		const int32_t t = seq_ownClock(tr) ? T - seq_ctlOrigin[tr] : T;
+		if(t >= 0 && (t % seq_trackTicks(tr)) != 0)
+			continue;
+		seq_loopReq &= (uint8_t)~bit;
+		if(seq_loopOn & bit)
+			seq_loopEnd(tr);
+		if(!(seq_loopReqOn & bit))
+			continue;
+		seq_loopOn |= bit;
+		seq_loopA[tr] = seq_loopReqA[tr];
+		seq_loopB[tr] = seq_loopReqB[tr];
+		seq_loopPattern[tr] = seq_activePattern;
+		seq_ctlOrigin[tr] = T;	//its first step now
+		if(seq_ctlMode[tr] == SEQ_TRIG_CLK)
+		{
+			seq_ctlEnd[tr] = 0;	//waits for the next impulse, which plays the first step
+			seq_stepIndex[tr] = -1;
+		}
+		else if(seq_ctlMode[tr] == SEQ_TRIG_LFO)
+			seq_ctlEnd[tr] = (int32_t)seq_playLen(tr) * seq_trackTicks(tr);	//once, then waits for the LFO
+		else
+			seq_ctlEnd[tr] = -1;
 	}
-	const int32_t t = seq_ownClock(tr) ? T - seq_ctlOrigin[tr] : T;
-	if(t >= 0 && (t % seq_trackTicks(tr)) != 0)
-		return;
-	seq_loopReq = 0;
-	if(seq_loopTrack != 0xff)
-		seq_loopEnd(seq_loopTrack);
-	if(seq_loopReqTrack == 0xff)
-		return;
-	seq_loopTrack = tr;
-	seq_loopA = seq_loopReqA;
-	seq_loopB = seq_loopReqB;
-	seq_loopPattern = seq_activePattern;
-	seq_ctlOrigin[tr] = T;	//its first step now
-	if(seq_ctlMode[tr] == SEQ_TRIG_CLK)
-	{
-		seq_ctlEnd[tr] = 0;	//waits for the next impulse, which plays the first step
-		seq_stepIndex[tr] = -1;
-	}
-	else if(seq_ctlMode[tr] == SEQ_TRIG_LFO)
-		seq_ctlEnd[tr] = (int32_t)seq_playLen(tr) * seq_trackTicks(tr);	//once, then waits for the LFO
-	else
-		seq_ctlEnd[tr] = -1;
 }
-void seq_setLoop(uint8_t track, uint8_t a, uint8_t b)
+//on: loop from step a to b; off: the loop of the track ends
+void seq_setLoop(uint8_t track, uint8_t on, uint8_t a, uint8_t b)
 {
 	if(track >= NUM_TRACKS)
-		track = 0xff;
+		return;
+	const uint8_t bit = (uint8_t)(1u << track);
 	if(a >= NUM_STEPS) a = NUM_STEPS-1;
 	if(b >= NUM_STEPS) b = NUM_STEPS-1;
 	if(!seq_running)
 	{
 		//stopped: at once (the start plays the loop from its first step)
-		seq_loopReq = 0;
-		seq_loopTrack = track;
-		seq_loopA = a;
-		seq_loopB = b;
-		seq_loopPattern = seq_activePattern;
+		seq_loopReq &= (uint8_t)~bit;
+		if(on)	seq_loopOn |= bit;
+		else	seq_loopOn &= (uint8_t)~bit;
+		seq_loopA[track] = a;
+		seq_loopB[track] = b;
+		seq_loopPattern[track] = seq_activePattern;
 		return;
 	}
-	seq_loopReqA = a;
-	seq_loopReqB = b;
-	seq_loopReqTrack = track;
-	seq_loopReq = 1;
-}
-uint8_t seq_loopActive(void)
-{
-	return seq_loopReq ? seq_loopReqTrack : seq_loopTrack;
+	seq_loopReqA[track] = a;
+	seq_loopReqB[track] = b;
+	if(on)	seq_loopReqOn |= bit;
+	else	seq_loopReqOn &= (uint8_t)~bit;
+	seq_loopReq |= bit;
 }
 //MOD: start position of a track of the shown pattern
 void seq_setTrackStart(uint8_t trackNr, uint8_t start)
