@@ -159,7 +159,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li>„Update OK!“, dann das Image löschen.</li>
         <li>Das Update löscht die Samples: <code>SAMPLES</code> auf der Karte lassen, der nächste Start importiert sie neu.</li>
       </ol>
-      <p>Nach dem Ausschalten ≈ 10 s warten, sonst kann das Display dunkel bleiben.</p>
+      <p>Nach dem Ausschalten ≈ 10 s warten.</p>
       <h2 data-toc>1.4. Kompatibilität</h2>
       <p>Kits und Patterns der Original-Firmware und von OpenElixir-02 laden; neue Einstellungen starten mit Standardwerten.</p>
       <p>Neue Kits laden auch in älteren Firmwares (ohne die Ergänzungen); Voices mit Sample oder Wave bleiben dort stumm, neue Engines spielen die Standard-Engine.</p>
@@ -198,7 +198,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       </table>
       <p>Eine Datei, ersetzt durch eine mit gleichem Namen und gleicher Größe, wird nicht neu importiert.</p>
       <h4>Startbildschirm</h4>
-      <p><b>S:12 W:3 T:2</b> = gespeicherte Samples, Waves und Wavetables; darunter <b>Used 4.2/5.9s</b> = belegte und verfügbare Sample-Zeit.</p>
+      <p><b>S:12 W:3 T:2</b> = gespeicherte Samples, Waves und Wavetables.<br>Darunter: <b>Used 4.2/5.9s</b> = belegte und verfügbare Sample-Zeit.</p>
           </div>
   </div>
 </section>
@@ -207,10 +207,10 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h2 data-toc>2.3. Experimentell: 1,5 MB Sample-Speicher</h2>
-      <p>Der Chip meldet 1 MB Flash, hat meist aber mehr. Mit <code>BIGFLASH</code> in <code>SAMPLES</code>: <b>17,8 s</b> statt 5,9 s.</p>
+      <p>Der Chip meldet 1 MB Flash, hat meist aber mehr. <br>Mit <code>BIGFLASH</code> in <code>SAMPLES Verzeichnis</code>: <b>17,8 s</b> statt 5,9 s.</p>
       <ul>
         <li>Nicht garantiert (ST). Jedes Sample wird geprüft; bei Fehler „Big flash failed / using 512K“ und Import in den normalen Speicher.</li>
-                <li>Hängt der Start: <code>BIGFLASH</code> entfernen oder ohne Karte starten. Firmware und Bootloader sind nicht betroffen.</li>
+                <li>Hängt der Start dauerhaft: <code>BIGFLASH</code> entfernen oder ohne Karte starten. Firmware und Bootloader sind nicht betroffen.</li>
       </ul>
       <h2 data-toc>2.4. Kits</h2>
       <p>Zusätzlich im Kit: pro Voice Engine <span class="oe">OE</span>, Start und Länge des Samples, Choke-Gruppe, Sends; pro Kit die Reihenfolge der FX-Slots und FX3.</p>
@@ -225,7 +225,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>Save to Global</td><td>Voice in die globale Vorlage</td></tr>
         <tr><td>Del Project INIT, Del Global INIT</td><td>Voice aus der Vorlage entfernen (erneut klicken)</td></tr>
       </table>
-      <p>Jede Voice komplett (Engine, Sound, LFO, Velocity, Sample). Projektvorlage: nur in gespeicherten Projekten.</p>
+      <p>Jede komplette Voice (Engine, Sound, LFO, Velocity, Sample). Projektvorlage: nur in gespeicherten Projekten.</p>
     </div>
   </div>
 </section>
@@ -317,16 +317,16 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <h2 data-toc>3.8. LFO-Seite (LFO)</h2>
       <table class="p2">
         <tr><th>wav</th><th>Neue Wellenformen</th></tr>
-        <tr><td>cyc</td><td>Step-Zähler: ein Schritt pro Trigger, <b>mod</b> = Anzahl (Round Robin)</td></tr>
-        <tr><td>xtr</td><td>exponentielles Dreieck</td></tr>
+        <tr><td>cyc</td><td>Step-Zähler: ein Schritt pro Trigger, <br><b>mod</b> = Anzahl (Round Robin)</td></tr>
+        <tr><td>xtr</td><td>Exponentielles Dreieck</td></tr>
         <tr><td>si1 tr1 su1 sd1 sq1</td><td>One-Shot: Sinus, Dreieck, Säge auf/ab, Rechteck</td></tr>
         <tr><td>xu1 xd1 xt1</td><td>One-Shot exponentiell: auf, ab, Dreieck</td></tr>
-        <tr><td>rn1</td><td>neuer Zufallswert pro Trigger</td></tr>
-        <tr><td>w1 … w8 / w1. … w8.</td><td>die Waves, laufend / One-Shot</td></tr>
+        <tr><td>rn1</td><td>Neuer Zufallswert pro Trigger</td></tr>
+        <tr><td>w1 … w8 / w1. … w8.</td><td>Waves (laufend / One-Shot)</td></tr>
       </table>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>ofs</td><td>Offset</td><td>One-Shot: Verzögerung bis zum Start (64 ≈ halber Zyklus)</td></tr>
+        <tr><td>ofs</td><td>Offset</td><td>One-Shot: Verzögerung bis zum Start <br>(64 ≈ halber Zyklus)</td></tr>
         <tr><td>mod</td><td>Amount</td><td>Edit-Ansicht: Bereich des Ziels, z. B. <b>21..127</b></td></tr>
         <tr><td>dst</td><td>Destination</td><td>auch Rate, Stärke … <b>jedes</b> anderen LFOs</td></tr>
       </table>
