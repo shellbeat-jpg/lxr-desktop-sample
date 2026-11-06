@@ -144,7 +144,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>1</b> &gt; HINWEISE</h1>
       <p>Diese Ergänzung beschreibt, was die Firmware <b>OE02-Samples+ 1.2.11</b> dem LXR-02 und seinem Handbuch hinzufügt.</p>
-      <p>OE02-Samples+ baut auf <b>OpenElixir-02 1.2</b> von Moritz Waser auf. Funktionen aus OpenElixir-02 sind mit <span class="oe">OE</span> markiert.</p>
+      <p>Sie enthält die Modifikationen von <b>OpenElixir-02 1.2</b> (Moritz Waser), markiert mit <span class="oe">OE</span>.</p>
       <h2 data-toc>1.1. Zu den Tabellen</h2>
       <p>Wie im Handbuch: <b>Anzeigename</b> (drei Buchstaben), voller Name, Funktion. Die Edit-Ansicht (Encoder drücken) zeigt den vollen Namen und den Wert.</p>
       <p>Tasten nach ihrer Beschriftung unter der Step-Taste, z. B. <b>SHIFT + FX</b> (Step 15).</p>
@@ -180,7 +180,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>SAMPLES</td><td>One-Shot-Samples, WAV</td></tr>
         <tr><td>SAMPLES/LOOPS</td><td>Loop-Samples, WAV</td></tr>
         <tr><td>SAMPLES/WAVES</td><td>bis zu 8 Single-Cycle-Waves, WAV</td></tr>
-        <tr><td>SAMPLES/TABLES</td><td>bis zu 4 Wavetables, WAV (3.15)</td></tr>
+        <tr><td>SAMPLES/TABLES</td><td>bis zu 4 Wavetables, WAV (3.14)</td></tr>
         <tr><td>BIGFLASH</td><td>in <code>SAMPLES</code>: 1,5-MB-Speicher (2.3)</td></tr>
         <tr><td>INIT.SND</td><td>INIT-Vorlage: oberster Ordner (global), Projektordner (2.5)</td></tr>
       </table>
@@ -236,7 +236,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>3</b> &gt; Voices</h1>
       <h2 data-toc>3.1. Engines pro Voice <span class="oe">OE</span></h2>
-      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat.<br>Neu: <b>modal</b>, <b>fm2</b> und <b>wavetable</b> (3.13–3.15).<br><b>SHIFT + KIT</b>: Engine-Menü der aktiven Voice. Im Kit.</p>
+      <p>Jeder der 6 Slots wählt seine Engine: Drum, Snare, Cymbal, Hi-Hat.<br>Neu: <b>modal</b>, <b>fm2</b> und <b>wavetable</b> (3.12–3.14).<br><b>SHIFT + KIT</b>: Engine-Menü der aktiven Voice. Im Kit.</p>
       <h2 data-toc>3.2. Oszillatorquellen</h2>
       <p>Hauptoszillator: eingebaute Wellenformen, <b>Samples</b> (eigene Tonhöhe, einmal oder als Loop) oder <b>Waves</b> (Single Cycles, folgen der Note).</p>
       <svg class="dg" viewBox="0 0 330 150" role="img" aria-label="Quellen des Hauptoszillators: eingebaute Wellenformen, Samples S1 bis S31 mit Start, Länge und Loop, eigene Waves W1 bis W8; danach Filter, Amp, Choke, Verzerrung und Sample-Reducer der Voice.">
@@ -307,11 +307,6 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li><b>Choke</b>: ein Trigger schneidet die anderen Tracks der Gruppe ab. Tracks 6 und 7 schneiden sich ohnehin.</li>
         <li><b>Sends</b>: nach Pan, nach dem Fader (außer <b>pre</b> an, Kapitel 6.3). Send/Return: Slot auf 100 % Wet.</li>
       </ul>
-      <h2 data-toc>3.8. Mixerseite (MIX)</h2>
-      <table class="p3">
-        <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
-        <tr><td>out</td><td>Audio out</td><td>wie bisher, <b>FX</b> = 100 % in Slot A, neu <b>FXB</b> = 100 % in Slot B</td></tr>
-      </table>
     </div>
   </div>
 </section>
@@ -319,7 +314,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>3.9. LFO-Seite (LFO)</h2>
+      <h2 data-toc>3.8. LFO-Seite (LFO)</h2>
       <table class="p2">
         <tr><th>wav</th><th>Neue Wellenformen</th></tr>
         <tr><td>cyc</td><td>Step-Zähler: ein Schritt pro Trigger, <b>mod</b> = Anzahl (Round Robin)</td></tr>
@@ -338,15 +333,15 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <p class="note">One-Shots: ein Zyklus pro Trigger (Voice von <b>rtg</b>, sonst die eigene), dann halten. Länge: <b>frq</b> / <b>snc</b>.</p>
     </div>
     <div class="col">
-      <h2 data-toc>3.10. Track 7</h2>
+      <h2 data-toc>3.9. Track 7</h2>
       <p>Tracks 6 und 7 spielen eine Voice. Track 7 hat eigene Werte für Decay, <b>wav</b>, <b>coa</b> (±24 Halbtöne zu Track 6), <b>sna</b>, <b>snb</b>, <b>pan</b> und einen eigenen LFO. Edit-Ansicht: „Trk7 …“, <b>=t6</b> = wie Track 6. Sends und Pan: die des zuletzt triggernden Tracks.</p>
-      <h2 data-toc>3.11. LFO 2 (Test)</h2>
+      <h2 data-toc>3.10. LFO 2 (Test)</h2>
       <ul>
         <li>Zweiter LFO-Bildschirm, LFO-Taste erneut: <b>LFO 2</b> der Voice, gleiche Parameter.</li>
         <li>Track 7: die LFO-Seite ist sein eigener LFO; wirkt, solange Track 7 spielt.</li>
         <li>Im Kit gespeichert, nicht gemorpht.</li>
       </ul>
-      <h2 data-toc>3.12. Zufalls-Voice</h2>
+      <h2 data-toc>3.11. Zufalls-Voice</h2>
       <ul>
         <li><b>SHIFT + Encoder-Klick</b> auf einer Voice-Seite (OSC, AEG, MOD, FM, Transient, Filter; nicht in der Edit-Ansicht): neue Zufallsvariante der aktiven Voice.</li>
         <li>Stärke: <b>rnd</b> (PERF, Standard 32). Schaltende Werte wechseln mit dieser Wahrscheinlichkeit.</li>
@@ -360,7 +355,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>3.13. Engine modal (Test)</h2>
+      <h2 data-toc>3.12. Engine modal (Test)</h2>
       <p>Physical Modelling: 6 Resonatoren schwingen in den Moden eines angeschlagenen Körpers. Drum-Seiten:</p>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
@@ -375,7 +370,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       <p class="note">Das Transient-Sample regt zusätzlich an. Ein neuer Schlag addiert sich zum Klingen. Neue Voice: Decay 110.</p>
     </div>
     <div class="col">
-      <h2 data-toc>3.14. Engine fm2 (Test)</h2>
+      <h2 data-toc>3.13. Engine fm2 (Test)</h2>
       <p>2-Operator-FM: Sinus-Träger, Sinus-Modulator mit eigenem Index-Decay. FM-Seite:</p>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
@@ -392,7 +387,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
 <section class="page">
   <div class="cols">
     <div class="col">
-      <h2 data-toc>3.15. Engine wavetable (Test)</h2>
+      <h2 data-toc>3.14. Engine wavetable (Test)</h2>
       <p>Durchfährt einen Satz von Wellen (Frames). FM-Seite:</p>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
@@ -507,7 +502,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>vmv vmo vsw</td><td>Voice morph</td><td>Kapitel 5.4</td></tr>
         <tr><td>osx</td><td>OSR exclude</td><td><b>on</b>: Voice ignoriert globales <b>srt</b>/<b>0sr</b>; Edit-Ansicht: Voice-Tasten</td></tr>
         <tr><td>cmx cvl</td><td>Cue mix, level</td><td>Kapitel 5.5</td></tr>
-        <tr><td>rnd</td><td>Random</td><td>Stärke der Zufalls-Voice (3.12)</td></tr>
+        <tr><td>rnd</td><td>Random</td><td>Stärke der Zufalls-Voice (3.11)</td></tr>
         <tr><td>rec rst</td><td>Record WAV</td><td>Seite 3, Kapitel 5.2</td></tr>
       </table>
     </div>
@@ -600,7 +595,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
       </table>
       <p class="note">FX1 und <b>ord</b>: Kit. FX2 und Sync: global.</p>
       <h2 data-toc>6.3. Sends und Pre-Fader</h2>
-      <p><b>sna</b> / <b>snb</b> (AEG-Seite): Sends in Slot A / B.</p>
+      <p><b>sna</b> / <b>snb</b> (AEG-Seite): Sends in Slot A / B. MIX <b>out</b> = <b>FXB</b>: 100 % in Slot B.</p>
       <table class="p3">
         <tr><th>Anzeige</th><th>Name</th><th>Beschreibung</th></tr>
         <tr><td>pre</td><td>Pre-fader sends</td><td>CONFIG, Seite 2. <b>off</b>: Sends hinter dem Fader. <b>on</b>: davor, der Fader regelt nur trocken (Fader unten = nur das Echo).</td></tr>
@@ -737,7 +732,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li><b>docs/MOD_TARGETS.md</b>: die Modulationsziele jeder Voice.</li>
       </ul>
       <p>github.com/shellbeat-jpg/lxr-desktop-sample</p>
-      <p class="note">OE02-Samples+ ist freie Software unter der GNU General Public License 3.0. Es ist ein Fork von OpenElixir-02 1.2 von Moritz Waser, basierend auf der LXR-Firmware von Julian Schmidt (Sonic Potions) und Erica Synths. Schrift: Barlow, SIL Open Font License.</p>
+      <p class="note">OE02-Samples+ ist freie Software unter der GNU General Public License 3.0. Sie basiert auf der LXR-Firmware von Julian Schmidt (Sonic Potions) und Erica Synths und enthält die Modifikationen von OpenElixir-02 1.2 (Moritz Waser). Schrift: Barlow, SIL Open Font License.</p>
     </div>
   </div>
 </section>
