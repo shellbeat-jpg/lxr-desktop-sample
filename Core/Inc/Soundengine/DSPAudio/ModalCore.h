@@ -29,6 +29,7 @@ typedef struct
 	uint8_t hard;	/* hardness of the mallet 0..127 (soft = long pulse) */
 	uint8_t mat;	/* material: high modes decay faster 0..127 */
 	uint8_t noise;	/* exciter: 0 mallet, 1 noise burst */
+	uint8_t hold;	/* MOD: gate open: the modes ring on (30 s), the damping acts as release */
 } ModalParams;
 
 typedef struct
@@ -60,7 +61,7 @@ static const float modalCore_ratios[MODAL_MODELS][MODAL_MODES] =
 static inline void modalCore_setParams(ModalCore* m, const ModalParams* p, const float fs)
 {
 	const uint8_t model = p->model < MODAL_MODELS ? p->model : MODAL_MODELS-1;
-	const float t60 = 0.03f * powf(200.f, p->damp / 127.f);
+	const float t60 = p->hold ? 30.f : 0.03f * powf(200.f, p->damp / 127.f);
 	const float mat = p->mat * (2.f / 127.f);
 	const float inh = p->inh / 127.f;
 	const float B = inh * inh * 0.08f;

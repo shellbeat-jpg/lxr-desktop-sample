@@ -58,6 +58,12 @@ void Modal_trigger(ModalVoice* v, const uint8_t vel, const uint8_t note)
 void Modal_calcAsync(ModalVoice* v)
 {
 	enginePost_calcAmp((VoiceCommon*)v, &v->ampFilterInput, &v->lastGain);
+	//MOD: a gate keeps the modes ringing until it closes
+	if(v->par.hold != v->oscVolEg.hold)
+	{
+		v->par.hold = v->oscVolEg.hold;
+		v->dirty = 1;
+	}
 	if(v->dirty)
 	{
 		v->dirty = 0;

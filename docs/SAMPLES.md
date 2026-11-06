@@ -617,7 +617,9 @@ to the second are held. The held steps light up, don't trigger (their locks act,
 change during the gate) and are switched off as steps.
 
 - The amp envelope holds its full level from the end of the attack while the gate is open, then
-  the decay acts as the release. Loop samples play as long as the gate.
+  the decay acts as the release. Loop samples play as long as the gate; a one-shot sample still
+  ends with its length. `modal`: the modes ring on while the gate is open, `dmp` then acts as the
+  release.
 - MIDI: the note ends with the gate (otherwise it ends with the next note of the track).
 - Ratchets on the first step: each repeat holds to the next, the last one to the end of the gate.
 - The gate ends at the latest when the track arrives at a step that isn't held: the end of its
