@@ -305,6 +305,8 @@ void seq_setExtSync(uint8_t isExt);
 //------------------------------------------------------------------------------
 /** switch to pattern patNr after the current pattern has finished*/
 void seq_setNextPattern(const uint8_t patNr);
+//MOD: main loop: loads the kit of a pattern change (pattern mode Aut)
+void seq_processKitLoad(void);
 //------------------------------------------------------------------------------
 void seq_toggleStep(uint8_t voice, uint8_t stepNr, uint8_t patternNr);
 //------------------------------------------------------------------------------

@@ -987,6 +987,7 @@ lcd_process_display_interrupt = 1;
 	  adc_checkPots();
 	  soundengine_process();
 	  rec_process();	//MOD: WAV recorder: write to the card
+	  seq_processKitLoad();	//MOD: the kit of a pattern change
 	//  menu_tick();
 	  screensaver_check();
 	//  menu_tick();

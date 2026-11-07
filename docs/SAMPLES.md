@@ -651,8 +651,8 @@ tracks or patterns take the mark along.
   range. Hold a step and
   press a second one; the first can be on another page (switch with the bar buttons while
   holding). The active track then loops from the first to the second step, in its own grid,
-  backwards if the second step lies before the first. It starts with the first step at the
-  track's next step. A single step press ends the loop mode of the track, a pattern change ends
+  backwards if the second step lies before the first. At the track's next step it plays on from
+  there if that step lies inside the loop, else it starts with the loop's first step. A single step press ends the loop mode of the track, a pattern change ends
   the loops;
   the step buttons don't edit steps in the loop mode. As a trigger target, RST and an LFO start
   jump to the loop's first step and CLK moves on inside the loop; as a source the loop's steps

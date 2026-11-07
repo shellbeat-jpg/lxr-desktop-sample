@@ -653,6 +653,21 @@ static uint8_t seq_determineNextPattern(uint8_t autoIncrement)
 
 #include "Soundengine/MIDI/Uart.h"
 
+//MOD: the kit of a pattern change (pattern mode Aut), loaded in the main loop
+static volatile int16_t seq_kitLoadPending = -1;
+void seq_processKitLoad(void)
+{
+	const int16_t kit = seq_kitLoadPending;
+	if(kit < 0)
+		return;
+	seq_kitLoadPending = -1;
+	//turn FX off to save cycles
+	fxBus.fxType = FX_OFF;
+	preset_loadDrumsetRam((uint8_t)kit, 0, 1);
+	menu_selectedPresetNr[SAVE_TYPE_KIT] = (uint8_t)kit;
+	menu_loadedPresetNr[CURRENT_KIT] = (uint8_t)kit;
+	preset_touchTimer(PRESET_KIT_TIMER);
+}
 IN_ITCM_RAM void seq_setPendingPatternActive()
 {
   midi_process_block = 1;
@@ -700,12 +715,9 @@ IN_ITCM_RAM void seq_setPendingPatternActive()
 		}
 		else if(activeParameters[PAR_PATTERN_MODE] == 1)
 		{
-			//turn FX off to save cycles
-			fxBus.fxType = FX_OFF;
-			preset_loadDrumsetRam(seq_patternSet.kitNr[seq_activePattern], 0, 1);
-			menu_selectedPresetNr[SAVE_TYPE_KIT] = seq_patternSet.kitNr[seq_activePattern];
-			menu_loadedPresetNr[CURRENT_KIT] = seq_patternSet.kitNr[seq_activePattern];
-			preset_touchTimer(PRESET_KIT_TIMER);
+			//MOD: the kit loads in the main loop (seq_processKitLoad): loading it here, in the
+			//sequencer's step, stalled the first steps of the pattern
+			seq_kitLoadPending = (int16_t)seq_patternSet.kitNr[seq_activePattern];
 		}
 
 		//use shuffle value from pattern
@@ -1591,6 +1603,12 @@ static void seq_loopTick(const int32_t T)
 		if(t >= 0 && (t % seq_trackTicks(tr)) != 0)
 			continue;
 		seq_loopReq &= (uint8_t)~bit;
+		//the step the track would play now without the change (on its own clock it hasn't
+		//stepped yet in this tick, on the 1/16 clock seq_nextStep already moved it)
+		const uint8_t G = seq_trackTicks(tr);
+		const int8_t next = seq_ownClock(tr)
+				? (t >= 0 ? (int8_t)seq_mapStep(tr, (uint8_t)(((uint32_t)t / G) % seq_playLen(tr))) : -1)
+				: seq_stepIndex[tr];
 		if(seq_loopOn & bit)
 			seq_loopEnd(tr);
 		if(!(seq_loopReqOn & bit))
@@ -1599,11 +1617,14 @@ static void seq_loopTick(const int32_t T)
 		seq_loopA[tr] = seq_loopReqA[tr];
 		seq_loopB[tr] = seq_loopReqB[tr];
 		seq_loopPattern[tr] = seq_activePattern;
-		seq_ctlOrigin[tr] = T;	//its first step now
+		//a step inside the loop plays on (no restart), else the loop starts with its first step
+		const int16_t p = seq_posOf(tr, next);
+		seq_ctlOrigin[tr] = T - (p > 0 ? (int32_t)p * G : 0);
 		if(seq_ctlMode[tr] == SEQ_TRIG_CLK)
 		{
-			seq_ctlEnd[tr] = 0;	//waits for the next impulse, which plays the first step
-			seq_stepIndex[tr] = -1;
+			seq_ctlEnd[tr] = 0;	//waits for the next impulse: on inside the loop, else its first step
+			if(seq_posOf(tr, seq_stepIndex[tr]) < 0)
+				seq_stepIndex[tr] = -1;
 		}
 		else if(seq_ctlMode[tr] == SEQ_TRIG_LFO)
 			seq_ctlEnd[tr] = (int32_t)seq_playLen(tr) * seq_trackTicks(tr);	//once, then waits for the LFO
