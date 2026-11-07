@@ -88,6 +88,8 @@ void led_clearAllBlinkLeds();
 
 /**this function needs to be called periodically to check if it is time to turn of a pulsed led*/
 void led_tickHandler();
+//MOD: prepared steps that are off flash on the beat
+void led_preparedBlink(uint8_t on);
 
 
 void led_blinkHandler();

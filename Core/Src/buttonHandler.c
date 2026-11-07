@@ -846,6 +846,7 @@ static int8_t buttonHandler_loopHeld = -1;		//step held for the loop (-1 = none)
 static uint8_t buttonHandler_loopSet = 0;		//a second step was pressed while it was held
 static uint16_t buttonHandler_seqIgnore = 0;	//the release of these step buttons does nothing
 static int8_t buttonHandler_gateHeld = -1;		//MOD: step held for a gate (-1 = none)
+static int8_t buttonHandler_voiceHeld = -1;		//MOD: voice button held (prepared steps)
 static uint8_t buttonHandler_gateHeldButton = 0;
 #define BH_LOOP_MODE()	((buttonHandler_loopMode >> menu_getActiveVoice()) & 1u)
 
@@ -873,7 +874,16 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 	const uint8_t step = (uint8_t)(button + menu_activeBar*16);
 	const uint8_t track = menu_getActiveVoice();
 	char l2[17];
-	if(copyClear_Mode == MODE_COPY_TRACK)
+	if(buttonHandler_voiceHeld >= 0)
+	{
+		//MOD: voice button held: mark the step as prepared (or no longer)
+		const uint8_t on = seq_togglePrepared((uint8_t)buttonHandler_voiceHeld, step);
+		led_updateSeqLeds();
+		preset_touchTimer(PRESET_PAT_TIMER);
+		snprintf(l2, sizeof(l2), "step %u %s", (unsigned)(step + 1u), on ? "on" : "off");
+		menu_showNote("Prepared", l2);
+	}
+	else if(copyClear_Mode == MODE_COPY_TRACK)
 	{
 		buttonHandler_copySel ^= 1ULL << step;
 		led_setValue((buttonHandler_copySel >> step) & 1u, led_idx2StepLed(button));
@@ -1668,6 +1678,7 @@ static void buttonHandler_voiceButtonPressed(uint8_t voiceNr)
 	//MOD: edit view of OSX, CHK or MRV: the voice buttons switch the voices
 	if(menu_voiceButtonEdit(voiceNr))
 		return;
+	buttonHandler_voiceHeld = (int8_t)voiceNr;	//MOD: held + step button: prepared step
 
 	//if in step mode, return to voice/edit mode
 	if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_STEP)
@@ -2250,6 +2261,9 @@ void buttonHandler_buttonReleased(uint8_t buttonNr) {
 		return;
 	}
 */
+	//MOD: voice button released: no more prepared-step marking
+	if(buttonNr >= BUT_VOICE_1 && buttonNr <= BUT_VOICE_7 && buttonHandler_voiceHeld == (int8_t)(buttonNr - BUT_VOICE_1))
+		buttonHandler_voiceHeld = -1;
 	// for the rest...
 	switch (buttonNr) {
 

@@ -630,6 +630,16 @@ change during the gate) and are switched off as steps.
   and copying tracks or patterns take the gates along. Other firmwares play the first step as a
   normal trigger and the held steps as off.
 
+## Prepared steps (1.2.13, test)
+
+Hold the voice button of the track and press a step: the step is marked as prepared (or no
+longer). The mark is a property of its own and doesn't switch the step: a step press switches
+it on and off as before, the mark stays. While a prepared step is off, its LED flashes on the
+beat like the PLAY button (stopped: about twice a second), so steps meant to be set live stay
+visible; a step that is on lights as usual. A step needs no other settings to be prepared.
+Stored in the pattern (block `PRP1` after the gates); copying steps, duplicating and copying
+tracks or patterns take the mark along.
+
 ## Start, loop, copying steps (1.2.12, test)
 
 - **Start**: on the LAST STEP page each encoder click moves on: length › `Start` › grid › trigger
@@ -816,5 +826,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates and prepared steps of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.

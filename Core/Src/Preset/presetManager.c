@@ -109,6 +109,7 @@ typedef struct PatternFileDataStruct
 	uint8_t lfo[NUM_TRACKS];	//MOD
 	uint8_t start[NUM_TRACKS];	//MOD
 	uint64_t gate[NUM_TRACKS];	//MOD
+	uint64_t prep[NUM_TRACKS];	//MOD
 }PatternFileData;
 static PatternFileData preset_patternBuffer;
 
@@ -197,30 +198,43 @@ static void preset_readStartBlock(uint8_t* start)
 }
 //MOD: gates after the start positions: a tag and 8 bytes per track (bit n = step n held)
 static const char preset_gateTag[4] = { 'G','A','T','1' };
-static void preset_writeGateBlock(const uint8_t patternNr)
+static const char preset_prepTag[4] = { 'P','R','P','1' };	//MOD: prepared steps, the same layout
+static void preset_writeBitsBlock(const char* tagName, const uint64_t* bits)
 {
 	UINT bytesWritten;
 	uint8_t b[NUM_TRACKS*8];
 	for(uint8_t i=0;i<NUM_TRACKS;i++)
 		for(uint8_t k=0;k<8;k++)
-			b[i*8+k] = (uint8_t)(seq_patternSet.gate[patternNr][i] >> (8*k));
-	preset_fwrite((FIL*)&SDFile, preset_gateTag, sizeof(preset_gateTag), &bytesWritten);
+			b[i*8+k] = (uint8_t)(bits[i] >> (8*k));
+	preset_fwrite((FIL*)&SDFile, tagName, 4, &bytesWritten);
 	preset_fwrite((FIL*)&SDFile, b, sizeof(b), &bytesWritten);
 }
-static void preset_readGateBlock(uint64_t* gate)
+static void preset_writeGateBlock(const uint8_t patternNr)
+{
+	preset_writeBitsBlock(preset_gateTag, seq_patternSet.gate[patternNr]);
+	preset_writeBitsBlock(preset_prepTag, seq_patternSet.prep[patternNr]);
+}
+static uint8_t preset_readBitsBlock(const char* tagName, uint64_t* bits)
 {
 	UINT bytesRead;
 	char tag[4];
-	memset(gate, 0, NUM_TRACKS*sizeof(uint64_t));
+	memset(bits, 0, NUM_TRACKS*sizeof(uint64_t));
 	if(f_read((FIL*)&SDFile, tag, sizeof(tag), &bytesRead) != FR_OK || bytesRead != sizeof(tag)
-			|| memcmp(tag, preset_gateTag, sizeof(tag)) != 0)
-		return;
+			|| memcmp(tag, tagName, sizeof(tag)) != 0)
+		return 0;
 	uint8_t b[NUM_TRACKS*8];
 	if(f_read((FIL*)&SDFile, b, sizeof(b), &bytesRead) != FR_OK || bytesRead != sizeof(b))
-		return;
+		return 0;
 	for(uint8_t i=0;i<NUM_TRACKS;i++)
 		for(uint8_t k=0;k<8;k++)
-			gate[i] |= (uint64_t)b[i*8+k] << (8*k);
+			bits[i] |= (uint64_t)b[i*8+k] << (8*k);
+	return 1;
+}
+static void preset_readGateBlock(uint64_t* gate, uint64_t* prep)
+{
+	memset(prep, 0, NUM_TRACKS*sizeof(uint64_t));
+	if(preset_readBitsBlock(preset_gateTag, gate))
+		preset_readBitsBlock(preset_prepTag, prep);
 }
 static void preset_readLfoBlock(uint8_t* lfo)
 {
@@ -2150,7 +2164,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 	preset_readTrigBlock(buf->trig);	//MOD
 	preset_readLfoBlock(buf->lfo);		//MOD
 	preset_readStartBlock(buf->start);	//MOD
-	preset_readGateBlock(buf->gate);	//MOD
+	preset_readGateBlock(buf->gate, buf->prep);	//MOD (and the prepared steps)
 
 	//complete: copy into the pattern
 	memcpy(seq_patternSet.seq_subStepPattern[patternNr], buf->steps, sizeof(buf->steps));
@@ -2163,6 +2177,7 @@ static uint8_t preset_readPatternData(uint8_t patternNr, uint8_t dataVersion)
 	memcpy(seq_patternSet.lfo[patternNr], buf->lfo, sizeof(buf->lfo));	//MOD
 	memcpy(seq_patternSet.start[patternNr], buf->start, sizeof(buf->start));	//MOD
 	memcpy(seq_patternSet.gate[patternNr], buf->gate, sizeof(buf->gate));	//MOD
+	memcpy(seq_patternSet.prep[patternNr], buf->prep, sizeof(buf->prep));	//MOD
 	seq_patternSet.shuffle[patternNr] = buf->shuffle;
 	seq_patternSet.kitNr[patternNr] = buf->kitNr;
 	preset_validateKitNr(patternNr);

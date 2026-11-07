@@ -26,6 +26,7 @@ Waser), alles andere aus XT.
 | Zufallsoktave | Jeder Trigger spielt eine zufällige Oktave in einem Bereich (`+-1` … `-3`); pro Step ersetzt `OCT` sie (`vce` = wie Voice). Test. | VOICE (OSC `OCT`), Step-Seite (`OCT`) | Kit, Pattern (Step) | – |
 | Start, Loop, Steps kopieren | `Start` pro Track (LAST-STEP-Seite); Loop pro Track (`SHIFT + PROJECT`, auch rückwärts); gewählte Steps kopieren/einfügen (`COPY`); Bereich duplizieren (`SHIFT + MORPH`). Test. | Sequencer | Pattern (Start) | – |
 | Gates | Step halten, späteren drücken: der erste hält bis zum Ende des zweiten (AEG voll, MIDI-Note-Off am Ende). Test. | Sequencer | Pattern | – |
+| Vorbereitete Steps | Voice-Taste + Step markiert einen Step; solange er aus ist, blinkt er im Takt. Test. | Sequencer | Pattern | – |
 | WAV-Recorder | Nimmt St1 auf die SD-Karte auf (`REC/RECnnn.WAV`, 16 Bit Stereo): 1, 2 oder 4 Durchläufe des Patterns oder bis Stop; Start mit PLAY oder beim nächsten Pattern-Start. | PERF, letzter Screen (`REC`, `RST`, Encoder-Klick) | Global | – |
 | Modal-Engine | Neue Engine: Physical Modelling einer angeschlagenen Membran, eines Stabs, einer Saite, Glocke, Platte oder eines Glases (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2-Engine | 2-Operator-FM-Percussion: Ratio `RAT`, Index `IDX` mit eigenem Abklingen `IDC`, Feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |

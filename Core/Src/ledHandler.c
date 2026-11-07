@@ -655,8 +655,38 @@ void led_blinkHandler()
 	if(led_blinkPrescaler>=2)led_blinkPrescaler=0;
 }
 //-------------------------------------------------------
+//MOD: prepared steps that are off flash on the beat (the sequencer calls it like the
+//start/stop LED; stopped: led_tickHandler), in the step view of the active track
+extern uint8_t seq_running;
+static uint8_t led_prepState = 0;
+void led_preparedBlink(uint8_t on)
+{
+	if(buttonHandler_getMode() != SELECT_MODE_VOICE)
+		return;
+	const uint8_t trackNr = menu_getActiveVoice();
+	const uint8_t patternNr = menu_getViewedPattern();
+	for(uint8_t i=0;i<16;i++)
+	{
+		const uint8_t s = (uint8_t)(menu_activeBar*16 + i);
+		if(!seq_isStepPrepared(trackNr, s, patternNr) || seq_isMainStepActive(trackNr, s, patternNr)
+				|| seq_isStepHeld(trackNr, s, patternNr))
+			continue;
+		const uint8_t led = led_idx2StepLed(i);
+		if(on)	led_setValueTemp(1, led);
+		else	led_reset(led);
+	}
+	led_prepState = on;
+}
+//-------------------------------------------------------
 void led_tickHandler()
 {
+	//MOD: prepared steps flash also while stopped (≈ 2 Hz, a short flash)
+	if(!seq_running)
+	{
+		const uint8_t on = (systick_ticks % 2000u) < 500u;
+		if(on != led_prepState)
+			led_preparedBlink(on);
+	}
 	for(int i=0;i<NUM_OF_PULSABLE_LEDS;i++)
 	{
 		//if the led is active at the moment

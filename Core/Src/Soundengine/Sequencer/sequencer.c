@@ -245,6 +245,7 @@ void seq_copyPatternToBackupBuffer(uint8_t patternNr)
 	memcpy(&patternBackupBuffer.lfo, &seq_patternSet.lfo[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&patternBackupBuffer.start, &seq_patternSet.start[patternNr],  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&patternBackupBuffer.gate, &seq_patternSet.gate[patternNr],  sizeof(uint64_t)*NUM_TRACKS);	//MOD
+	memcpy(&patternBackupBuffer.prep, &seq_patternSet.prep[patternNr],  sizeof(uint64_t)*NUM_TRACKS);	//MOD
 
 
 
@@ -267,6 +268,7 @@ void seq_copyBackupBufferToPattern(uint8_t patternNr)
 	memcpy(&seq_patternSet.lfo[patternNr], &patternBackupBuffer.lfo,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&seq_patternSet.start[patternNr], &patternBackupBuffer.start,  sizeof(uint8_t)*NUM_TRACKS);	//MOD
 	memcpy(&seq_patternSet.gate[patternNr], &patternBackupBuffer.gate,  sizeof(uint64_t)*NUM_TRACKS);	//MOD
+	memcpy(&seq_patternSet.prep[patternNr], &patternBackupBuffer.prep,  sizeof(uint64_t)*NUM_TRACKS);	//MOD
 
 	seq_patternSet.shuffle[patternNr] = patternBackupBuffer.shuffle;
 	seq_patternSet.kitNr[patternNr] = patternBackupBuffer.kitNr;
@@ -1542,6 +1544,18 @@ void seq_clearHeld(uint8_t track, uint8_t step)
 	if(track < NUM_TRACKS && step < NUM_STEPS)
 		seq_patternSet.gate[frontParser_shownPattern][track] &= ~(1ULL << step);
 }
+uint8_t seq_togglePrepared(uint8_t track, uint8_t step)
+{
+	if(track >= NUM_TRACKS || step >= NUM_STEPS) return 0;
+	uint64_t* m = &seq_patternSet.prep[frontParser_shownPattern][track];
+	*m ^= 1ULL << step;
+	return (uint8_t)((*m >> step) & 1ULL);
+}
+uint8_t seq_isStepPrepared(uint8_t track, uint8_t step, uint8_t pattern)
+{
+	return track < NUM_TRACKS && step < NUM_STEPS && pattern < NUM_PATTERN
+			&& ((seq_patternSet.prep[pattern][track] >> step) & 1ULL);
+}
 uint8_t seq_isStepHeld(uint8_t track, uint8_t step, uint8_t pattern)
 {
 	return track < NUM_TRACKS && step < NUM_STEPS && pattern < NUM_PATTERN
@@ -1638,6 +1652,7 @@ static StepTiming seq_clipTiming[NUM_STEPS];
 static uint64_t seq_clipSel = 0;	//bit r: a step r steps after the first one
 static uint64_t seq_clipOn = 0;		//bit r: that step is on
 static uint64_t seq_clipHeld = 0;	//bit r: that step is held (gate)
+static uint64_t seq_clipPrep = 0;	//bit r: that step is prepared
 static uint8_t seq_shownLen(const uint8_t track)
 {
 	const uint8_t l = seq_patternSet.length[frontParser_shownPattern][track];
@@ -1651,10 +1666,12 @@ static void seq_copyStep(const uint8_t track, const uint8_t from, const uint8_t 
 	seq_setMainStep(p, track, to, seq_intIsMainStepActive(track, from, p));
 	uint64_t* g = &seq_patternSet.gate[p][track];	//MOD: held (gate)
 	*g = (*g & ~(1ULL << to)) | (((*g >> from) & 1ULL) << to);
+	uint64_t* m = &seq_patternSet.prep[p][track];	//MOD: prepared
+	*m = (*m & ~(1ULL << to)) | (((*m >> from) & 1ULL) << to);
 }
 uint8_t seq_copySteps(uint8_t track, uint64_t sel)
 {
-	seq_clipSel = seq_clipOn = seq_clipHeld = 0;
+	seq_clipSel = seq_clipOn = seq_clipHeld = seq_clipPrep = 0;
 	if(track >= NUM_TRACKS || !sel)
 		return 0;
 	const uint8_t p = frontParser_shownPattern;
@@ -1672,6 +1689,8 @@ uint8_t seq_copySteps(uint8_t track, uint64_t sel)
 			seq_clipOn |= 1ULL << r;
 		if((seq_patternSet.gate[p][track] >> i) & 1ULL)
 			seq_clipHeld |= 1ULL << r;
+		if((seq_patternSet.prep[p][track] >> i) & 1ULL)
+			seq_clipPrep |= 1ULL << r;
 		n++;
 	}
 	return n;
@@ -1694,6 +1713,8 @@ void seq_pasteSteps(uint8_t track, uint8_t dst)
 		seq_setMainStep(p, track, (uint8_t)d, (seq_clipOn & (1ULL << r)) != 0);
 		uint64_t* g = &seq_patternSet.gate[p][track];
 		*g = (*g & ~(1ULL << d)) | (((seq_clipHeld >> r) & 1ULL) << d);
+		uint64_t* m = &seq_patternSet.prep[p][track];
+		*m = (*m & ~(1ULL << d)) | (((seq_clipPrep >> r) & 1ULL) << d);
 	}
 }
 void seq_duplicateRange(uint8_t track)
@@ -2211,6 +2232,7 @@ IN_ITCM_RAM void seq_nextStep()
 		//a quarter beat occured (multiple of 4 steps in the 16 step pattern)
 		//turn on the start/stop led (beat indicator)
 		led_setValue(1,LED_START_STOP);
+		led_preparedBlink(1);	//MOD: prepared steps that are off
 
 	}
 	else if ((masterStepPos&3) == 1)
@@ -2218,6 +2240,7 @@ IN_ITCM_RAM void seq_nextStep()
 		//TODO datenmenge zur front reduzieren
 		//turn it of again on the next step
 		led_setValue(0,LED_START_STOP);
+		led_preparedBlink(0);	//MOD
 	}
 
 	//--------- Time to process the single tracks -------------------------
@@ -3469,6 +3492,7 @@ void seq_clearTrack(uint8_t trackNr, uint8_t pattern)
 	seq_patternSet.lfo[pattern][trackNr]=0;		//MOD: not started by an LFO
 	seq_patternSet.start[pattern][trackNr]=0;	//MOD: from step 1
 	seq_patternSet.gate[pattern][trackNr]=0;	//MOD: no gates
+	seq_patternSet.prep[pattern][trackNr]=0;	//MOD: no prepared steps
 
 }
 //------------------------------------------------------------------------------
@@ -3531,6 +3555,7 @@ void seq_copyTrack(uint8_t srcNr, uint8_t dstNr, uint8_t pattern)
 	seq_patternSet.lfo[pattern][dstNr] = seq_patternSet.lfo[pattern][srcNr];	//MOD
 	seq_patternSet.start[pattern][dstNr] = seq_patternSet.start[pattern][srcNr];	//MOD
 	seq_patternSet.gate[pattern][dstNr] = seq_patternSet.gate[pattern][srcNr];	//MOD
+	seq_patternSet.prep[pattern][dstNr] = seq_patternSet.prep[pattern][srcNr];	//MOD
 
 
 }
@@ -3568,6 +3593,7 @@ void seq_copyPattern(uint8_t src, uint8_t dst)
 		seq_patternSet.lfo[dst][j] = seq_patternSet.lfo[src][j];	//MOD
 		seq_patternSet.start[dst][j] = seq_patternSet.start[src][j];	//MOD
 		seq_patternSet.gate[dst][j] = seq_patternSet.gate[src][j];	//MOD
+		seq_patternSet.prep[dst][j] = seq_patternSet.prep[src][j];	//MOD
 
 		seq_patternSet.shuffle[dst] = seq_patternSet.shuffle[src];
 		seq_patternSet.kitNr[dst] = seq_patternSet.kitNr[src];

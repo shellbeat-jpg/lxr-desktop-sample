@@ -118,6 +118,7 @@ typedef struct PatternSetStruct
 	uint8_t lfo[NUM_PATTERN][NUM_TRACKS];		//MOD: LFO start: target track (1..7) | SEQ_LFO_NOW, 0 = off
 	uint8_t start[NUM_PATTERN][NUM_TRACKS];		//MOD: first played step (0 = step 1); the track plays start .. length-1
 	uint64_t gate[NUM_PATTERN][NUM_TRACKS];		//MOD: bit n: step n is held (the gate of an earlier step goes on)
+	uint64_t prep[NUM_PATTERN][NUM_TRACKS];		//MOD: bit n: step n is prepared (blinks while it is off)
 }PatternSet;
 
 typedef struct PatternBackupBufferStruct
@@ -134,6 +135,7 @@ typedef struct PatternBackupBufferStruct
 	uint8_t lfo[NUM_TRACKS];	//MOD
 	uint8_t start[NUM_TRACKS];	//MOD
 	uint64_t gate[NUM_TRACKS];	//MOD
+	uint64_t prep[NUM_TRACKS];	//MOD
 }PatternBackupBuffer;
 
 /*
@@ -254,6 +256,10 @@ void seq_setGate(uint8_t track, uint8_t a, uint8_t b);
 void seq_clearGateAfter(uint8_t track, uint8_t step);	//the held steps after a step
 void seq_clearHeld(uint8_t track, uint8_t step);		//a step no longer held
 uint8_t seq_isStepHeld(uint8_t track, uint8_t step, uint8_t pattern);
+//MOD: prepared steps of a track of the shown pattern: a mark of its own, kept when the step
+//is switched on or off; an off prepared step blinks
+uint8_t seq_togglePrepared(uint8_t track, uint8_t step);	//the new state
+uint8_t seq_isStepPrepared(uint8_t track, uint8_t step, uint8_t pattern);
 uint8_t seq_getTrackLfo(uint8_t trackNr);
 //------------------------------------------------------------------------------
 uint8_t seq_getTrackLength(uint8_t trackNr);
