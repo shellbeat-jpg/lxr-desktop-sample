@@ -952,15 +952,14 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 
 	uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
 
-	//MOD: a track button (voice 1-7) held: mark the step of that track as prepared; only
-	//where the step buttons set steps (voice mode, not the step edit mode)
-	if(buttonHandler_voiceHeld >= 0 && buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_VOICE
-			&& !buttonHandler_getShift() && !buttonHandler_getLoad() && !buttonHandler_getSave())
+	//MOD: a voice button held (in every mode): mark the step of that track as prepared
+	if(buttonHandler_voiceHeld >= 0 && !buttonHandler_getShift() && !buttonHandler_getLoad() && !buttonHandler_getSave())
 	{
 		const uint8_t step = (uint8_t)(seqButtonPressed + menu_activeBar*16);
 		const uint8_t on = seq_togglePrepared((uint8_t)buttonHandler_voiceHeld, step);
 		buttonHandler_seqIgnore |= (uint16_t)(1u << seqButtonPressed);
-		led_updateSeqLeds();
+		if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_VOICE)
+			led_updateSeqLeds();
 		preset_touchTimer(PRESET_PAT_TIMER);
 		char l2[17];
 		snprintf(l2, sizeof(l2), "step %u %s", (unsigned)(step + 1u), on ? "on" : "off");
