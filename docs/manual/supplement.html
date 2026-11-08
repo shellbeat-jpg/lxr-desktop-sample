@@ -481,20 +481,18 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>4.7. LFO start</h2>
       <p><b>LFO&gt;[T3]</b>: each start of the LFO waveform of this track's voice (new cycle, <b>rtg</b>, one-shot) starts track 3 at step 1: <b>NXT</b> at the next step in the target's grid, <b>NOW</b> at once.</p>
-      <ul>
-        <li>The target plays to its last step and waits; silent until the first start.</li>
-        <li>With <b>snc</b> in time; free running it drifts (generative).</li>
-        <li>Trigger and LFO target possible at the same time.</li>
-      </ul>
+      <p>The target plays to its last step and waits (silent until the first start). With <b>snc</b> in time, free it drifts. Trigger and LFO target at once.</p>
       <h2 data-toc>4.8. Start, loop, gates, copying (test)</h2>
       <ul>
-        <li><b>Start</b> (LAST STEP page): the track plays start … last step; RST and LFO start begin there.</li>
-        <li><b>Loop</b> per track: <b>SHIFT + PROJECT</b> on/off for the active track. Hold a step, press a second (also on another page); second before first = backwards. Single press: off; ends with a pattern change.</li>
-        <li><b>Gate</b>: hold a step, press a later one: the first holds to the end of the second (AEG full, MIDI note off at the end).</li>
+        <li><b>Start</b> (LAST STEP page): track plays from there, also after RST/LFO.</li>
+        <li><b>Loop</b> per track: <b>SHIFT + PROJECT</b> on/off for the active track. Hold a step, press a second (also another page); second before first = backwards. Single press or pattern change: off.</li>
+        <li><b>Gate</b>: hold a step, press a later one: the first holds to the end of the second (AEG full, note off at the end).</li>
         <li><b>Prepared</b>: hold the voice button + step to mark; while off it flashes on the beat.</li>
-        <li><b>Copy</b>: hold <b>COPY</b>, select steps, release; each step press pastes them from there, also into tracks of the same engine. <b>COPY</b> ends.</li>
-        <li><b>SHIFT + MORPH</b>: duplicate the range start … last step behind it (length × 2, max. 64).</li>
+        <li><b>Copy</b>: hold <b>COPY</b>, select steps, release; each step press pastes them there, also into tracks of the same engine. <b>COPY</b> ends.</li>
+        <li><b>SHIFT + MORPH</b>: duplicate the range start … last step behind it (× 2, max. 64).*</li>
+        <li><b>COPY + ‹ / ›</b>: undo / redo the last pattern change (one step).*</li>
       </ul>
+      <p class="note">*: Deviation: in the original, <b>COPY + ›</b> fills the next bar.</p>
     </div>
   </div>
 </section>

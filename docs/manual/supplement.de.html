@@ -481,20 +481,18 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>4.7. LFO-Start</h2>
       <p><b>LFO&gt;[T3]</b>: jeder Start der LFO-Wellenform der Voice dieses Tracks (neuer Zyklus, <b>rtg</b>, One-Shot) startet Track 3 bei Step 1: <b>NXT</b> beim nächsten Step im Raster des Ziels, <b>NOW</b> sofort.</p>
-      <ul>
-        <li>Das Ziel spielt bis zum letzten Step und wartet; bis zum ersten Start stumm.</li>
-        <li>Mit <b>snc</b> im Takt; frei laufend driftend (generativ).</li>
-        <li>Trigger- und LFO-Ziel gleichzeitig möglich.</li>
-      </ul>
+      <p>Das Ziel spielt bis zum letzten Step und wartet (bis zum ersten Start stumm). Mit <b>snc</b> im Takt, frei driftend. Trigger- und LFO-Ziel zugleich möglich.</p>
       <h2 data-toc>4.8. Start, Loop, Gates, Kopieren (Test)</h2>
       <ul>
-        <li><b>Start</b> (LAST-STEP-Seite): der Track spielt Start … letzter Step; RST und LFO-Start beginnen dort.</li>
-        <li><b>Loop</b> pro Track: <b>SHIFT + PROJECT</b> an/aus für den aktiven Track. Step halten, zweiten drücken (auch auf anderer Seite); zweiter vor erstem = rückwärts. Einzeldruck: aus; endet beim Pattern-Wechsel.</li>
-        <li><b>Gate</b>: Step halten, späteren drücken: der erste hält bis zum Ende des zweiten (AEG voll, MIDI-Note-Off am Ende). Erster Step aus: Gate weg.</li>
+        <li><b>Start</b> (LAST-STEP-Seite): Track spielt ab dort, auch nach RST/LFO.</li>
+        <li><b>Loop</b> pro Track: <b>SHIFT + PROJECT</b> an/aus für den aktiven Track. Step halten, zweiten drücken (auch andere Seite); zweiter vor erstem = rückwärts. Einzeldruck oder Pattern-Wechsel: aus.</li>
+        <li><b>Gate</b>: Step halten, späteren drücken: der erste hält bis zum Ende des zweiten (AEG voll, Note-Off am Ende). Erster Step aus: Gate weg.</li>
         <li><b>Vorbereitet</b>: Voice-Taste halten + Step markiert; aus blinkt er im Takt.</li>
-        <li><b>Kopieren</b>: <b>COPY</b> halten, Steps wählen, loslassen; jeder Step-Druck fügt sie mit ihren Abständen ab dort ein, auch in Tracks derselben Engine. <b>COPY</b> beendet.</li>
-        <li><b>SHIFT + MORPH</b>: Bereich Start … letzter Step dahinter duplizieren (Länge × 2, max. 64).</li>
+        <li><b>Kopieren</b>: <b>COPY</b> halten, Steps wählen, loslassen; jeder Step-Druck fügt sie ab dort ein, auch in Tracks derselben Engine. <b>COPY</b> beendet.</li>
+        <li><b>SHIFT + MORPH</b>: Start … letzter Step dahinter duplizieren (× 2, max. 64).*</li>
+        <li><b>COPY + ‹ / ›</b>: Undo / Redo der letzten Pattern-Änderung (ein Schritt).*</li>
       </ul>
+      <p class="note">*: Abweichung: im Original füllt <b>COPY + ›</b> den nächsten Takt.</p>
     </div>
   </div>
 </section>

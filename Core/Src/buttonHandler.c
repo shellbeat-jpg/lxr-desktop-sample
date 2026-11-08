@@ -894,6 +894,7 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 			menu_showNote("Not pasted", "other engine");
 		else
 		{
+			seq_undoMark(0xffff);
 			seq_pasteSteps(track, step);
 			led_updateSeqLeds();
 			preset_touchTimer(PRESET_PAT_TIMER);
@@ -922,6 +923,7 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 	else if(buttonHandler_gateHeld >= 0 && step > buttonHandler_gateHeld)
 	{
 		//MOD: gate: the held step triggers and holds to the end of this one
+		seq_undoMark(0xffff);
 		seq_setGate(track, (uint8_t)buttonHandler_gateHeld, step);
 		buttonHandler_buttonTimerStepNr = NO_STEP_SELECTED;	//no automation recording of the held step
 		buttonHandler_disarmTimerActionStep();
@@ -942,6 +944,19 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 	}
 	buttonHandler_seqIgnore |= (uint16_t)(1u << button);
 	return 1;
+}
+//MOD: undo / redo of the last change of the shown pattern
+static void buttonHandler_undo(const uint8_t redo)
+{
+	if(seq_undo(redo))
+	{
+		led_updateSeqLeds();
+		preset_touchTimer(PRESET_PAT_TIMER);
+		menu_repaintAll();
+		menu_showNote(redo ? "Redo" : "Undo", "");
+	}
+	else
+		menu_showNote(redo ? "Redo" : "Undo", "nothing");
 }
 //COPY released: copy the selected steps, the next step button pastes them
 static void buttonHandler_copyReleased(void)
@@ -968,6 +983,7 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 	if(buttonHandler_voiceHeld >= 0 && !buttonHandler_getShift() && !buttonHandler_getLoad() && !buttonHandler_getSave())
 	{
 		const uint8_t step = (uint8_t)(seqButtonPressed + menu_activeBar*16);
+		seq_undoMark(0xffff);
 		const uint8_t on = seq_togglePrepared((uint8_t)buttonHandler_voiceHeld, step);
 		buttonHandler_seqIgnore |= (uint16_t)(1u << seqButtonPressed);
 		if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_VOICE)
@@ -1013,6 +1029,7 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 			//MOD: duplicate the played range of the active track behind its last step
 			{
 				const uint8_t t = menu_getActiveVoice();
+				seq_undoMark(0xffff);
 				seq_duplicateRange(t);
 				led_updateSeqLeds();
 				preset_touchTimer(PRESET_PAT_TIMER);
@@ -1453,6 +1470,7 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 		case SELECT_MODE_LAST_STEP_ALL:
 			{
 				const uint8_t barOffset = menu_activeBar*16;
+				seq_undoMark(0xffff);	//MOD: undo
 				for(uint8_t i = 0;i<7;i++)
 				{
 					seq_setTrackLength(i, seqButtonPressed+barOffset+1);
@@ -1473,6 +1491,7 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 		case SELECT_MODE_LAST_STEP_TRACK:
 			{
 				const uint8_t barOffset = menu_activeBar*16;
+				seq_undoMark(0xffff);	//MOD: undo
 				seq_setTrackLength(menu_activeVoice, seqButtonPressed+barOffset+1);
 				menu_repaint();
 				led_clearAllBlinkLeds();
@@ -1589,6 +1608,7 @@ static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 				seq_clearGateAfter(t, s);
 			else
 				seq_clearHeld(t, s);
+			seq_undoMark(0xffff);	//MOD: undo
 			buttonHandler_setRemoveStep(ledNr, seqButtonPressed);
 			if(hadGate)
 				led_updateSeqLeds();	//the LEDs of the held steps go out at once
@@ -1854,6 +1874,12 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 		break;
 
 	case BUT_PAGE_UP:
+		//MOD: COPY + >: redo (while steps are selected for a copy only the page turns)
+		if(buttonHandler_getCopy() && !buttonHandler_copySel)
+		{
+			buttonHandler_undo(1);
+			break;
+		}
 		if((buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PATTERN) || (buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_SONG))
 		{
 			//pattern bank mode
@@ -1878,34 +1904,6 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 
 				//if copy button is pressed, fill next bar with current bar + extend track length to next full multiple of 16
 				//(MOD: not while steps are selected for a copy: then it only turns the page)
-				if(buttonHandler_getCopy() && !buttonHandler_copySel)
-				{
-					//extend length according to BAR
-					seq_setTrackLength(menu_getActiveVoice(), (menu_activeBar+1) *16);
-
-					Step *src, *dst;
-					for(int k=0;k<16;k++)
-					{
-						dst=&seq_patternSet.seq_subStepPattern[seq_activePattern][menu_getActiveVoice()][(menu_activeBar*16)+k];
-						src=&seq_patternSet.seq_subStepPattern[seq_activePattern][menu_getActiveVoice()][((menu_activeBar-1)*16)+k];
-						dst->note		= src->note;
-						dst->param1Nr 	= src->param1Nr;
-						dst->param1Val 	= src->param1Val;
-						dst->param2Nr	= src->param2Nr;
-						dst->param2Val	= src->param2Val;
-						dst->prob		= src->prob;
-						dst->volume		= src->volume;
-					}
-
-					/*
-					 * 	Step seq_subStepPattern[NUM_PATTERN][NUM_TRACKS][NUM_STEPS];	//contains step data
-						uint16_t seq_mainSteps[NUM_BARS][NUM_PATTERN][NUM_TRACKS];		//bits represent if step is active
-					 */
-					//for(int i=0;i<NUM_TRACKS;i++)
-					//{
-						seq_patternSet.seq_mainSteps[menu_activeBar][seq_activePattern][menu_getActiveVoice()] = seq_patternSet.seq_mainSteps[menu_activeBar - 1][seq_activePattern][menu_getActiveVoice()];
-					//}
-				}
 
 				//if shift is pressed, set pattern length to end of next bar
 				if(buttonHandler_getShift())
@@ -1938,6 +1936,12 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 		break;
 
 	case BUT_PAGE_DOWN:
+		//MOD: COPY + <: undo
+		if(buttonHandler_getCopy() && !buttonHandler_copySel)
+		{
+			buttonHandler_undo(0);
+			break;
+		}
 		if((buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PATTERN) || (buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_SONG))
 		{
 			//pattern bank mode

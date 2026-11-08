@@ -259,6 +259,11 @@ uint8_t seq_isStepHeld(uint8_t track, uint8_t step, uint8_t pattern);
 //MOD: prepared steps of a track of the shown pattern: a mark of its own, kept when the step
 //is switched on or off; an off prepared step blinks
 uint8_t seq_togglePrepared(uint8_t track, uint8_t step);	//the new state
+//MOD: undo / redo of the last change of the shown pattern (one step). seq_undoMark before a
+//change (key: consecutive marks with the same key, e.g. turning one value, count as one);
+//seq_undo(0) undoes, seq_undo(1) redoes: 1 if done
+void seq_undoMark(uint16_t key);
+uint8_t seq_undo(uint8_t redo);
 uint8_t seq_isStepPrepared(uint8_t track, uint8_t step, uint8_t pattern);
 uint8_t seq_getTrackLfo(uint8_t trackNr);
 //------------------------------------------------------------------------------

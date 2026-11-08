@@ -1556,6 +1556,72 @@ void seq_clearHeld(uint8_t track, uint8_t step)
 	if(track < NUM_TRACKS && step < NUM_STEPS)
 		seq_patternSet.gate[frontParser_shownPattern][track] &= ~(1ULL << step);
 }
+//MOD: undo / redo ---------------------------------------------------------
+//one copy of the shown pattern before its last change; undo and redo swap it in and out
+typedef struct
+{
+	Step steps[NUM_TRACKS][NUM_STEPS];
+	StepTiming timing[NUM_TRACKS][NUM_STEPS];
+	uint16_t main[NUM_BARS][NUM_TRACKS];
+	uint64_t gate[NUM_TRACKS], prep[NUM_TRACKS];
+	uint8_t length[NUM_TRACKS], start[NUM_TRACKS], grid[NUM_TRACKS], trig[NUM_TRACKS], lfo[NUM_TRACKS];
+} SeqUndo;
+static SeqUndo seq_undoBuf;
+static uint8_t seq_undoPattern = 0xff;	//0xff: nothing to undo
+static uint8_t seq_undone = 0;			//the buffer holds the state after the change (redo)
+static uint16_t seq_undoKey = 0xffff;
+#define SEQ_SWAP(a, b, n)	do { uint8_t* x_ = (uint8_t*)(a); uint8_t* y_ = (uint8_t*)(b); \
+	for(uint16_t i_=0;i_<(n);i_++) { const uint8_t t_ = x_[i_]; x_[i_] = y_[i_]; y_[i_] = t_; } } while(0)
+static void seq_undoCopy(const uint8_t p, const uint8_t swap)
+{
+	SeqUndo* u = &seq_undoBuf;
+	if(swap)
+	{
+		SEQ_SWAP(u->steps, seq_patternSet.seq_subStepPattern[p], sizeof(u->steps));
+		SEQ_SWAP(u->timing, seq_patternSet.seq_stepTiming[p], sizeof(u->timing));
+		for(uint8_t b=0;b<NUM_BARS;b++)
+			SEQ_SWAP(u->main[b], seq_patternSet.seq_mainSteps[b][p], sizeof(u->main[b]));
+		SEQ_SWAP(u->gate, seq_patternSet.gate[p], sizeof(u->gate));
+		SEQ_SWAP(u->prep, seq_patternSet.prep[p], sizeof(u->prep));
+		SEQ_SWAP(u->length, seq_patternSet.length[p], NUM_TRACKS);
+		SEQ_SWAP(u->start, seq_patternSet.start[p], NUM_TRACKS);
+		SEQ_SWAP(u->grid, seq_patternSet.grid[p], NUM_TRACKS);
+		SEQ_SWAP(u->trig, seq_patternSet.trig[p], NUM_TRACKS);
+		SEQ_SWAP(u->lfo, seq_patternSet.lfo[p], NUM_TRACKS);
+		return;
+	}
+	memcpy(u->steps, seq_patternSet.seq_subStepPattern[p], sizeof(u->steps));
+	memcpy(u->timing, seq_patternSet.seq_stepTiming[p], sizeof(u->timing));
+	for(uint8_t b=0;b<NUM_BARS;b++)
+		memcpy(u->main[b], seq_patternSet.seq_mainSteps[b][p], sizeof(u->main[b]));
+	memcpy(u->gate, seq_patternSet.gate[p], sizeof(u->gate));
+	memcpy(u->prep, seq_patternSet.prep[p], sizeof(u->prep));
+	memcpy(u->length, seq_patternSet.length[p], NUM_TRACKS);
+	memcpy(u->start, seq_patternSet.start[p], NUM_TRACKS);
+	memcpy(u->grid, seq_patternSet.grid[p], NUM_TRACKS);
+	memcpy(u->trig, seq_patternSet.trig[p], NUM_TRACKS);
+	memcpy(u->lfo, seq_patternSet.lfo[p], NUM_TRACKS);
+}
+void seq_undoMark(uint16_t key)
+{
+	const uint8_t p = frontParser_shownPattern;
+	if(key != 0xffff && key == seq_undoKey && p == seq_undoPattern && !seq_undone)
+		return;	//the same change goes on (e.g. turning one value)
+	seq_undoCopy(p, 0);
+	seq_undoPattern = p;
+	seq_undone = 0;
+	seq_undoKey = key;
+}
+uint8_t seq_undo(uint8_t redo)
+{
+	const uint8_t p = frontParser_shownPattern;
+	if(seq_undoPattern != p || (redo ? !seq_undone : seq_undone))
+		return 0;	//another pattern shown, or nothing to undo / redo
+	seq_undoCopy(p, 1);
+	seq_undone = (uint8_t)!redo;
+	seq_undoKey = 0xffff;
+	return 1;
+}
 uint8_t seq_togglePrepared(uint8_t track, uint8_t step)
 {
 	if(track >= NUM_TRACKS || step >= NUM_STEPS) return 0;

@@ -664,6 +664,11 @@ tracks or patterns take the mark along.
   track length are left out, the steps in between are kept. Pressing `COPY` ends the pasting.
 - **Duplicate**: `SHIFT + MORPH` copies the played range (start … last step) behind the last step
   and lengthens the track by it: length 6 becomes 12, 20 becomes 40, at most 64.
+- **Undo / redo**: `COPY + ‹` undoes the last change of the shown pattern (steps and their
+  settings, paste, duplicate, gates, prepared marks, length/start/grid), `COPY + ›` redoes it. One
+  step; turning one value counts as one change. Showing another pattern ends it.
+- **Deviation from the original**: there `COPY + ›` fills the next bar with the previous one;
+  here that is `SHIFT + MORPH` (duplicate, also lengthens), and `COPY + ‹ / ›` are undo / redo.
 
 In the development build (CPU meter) `SHIFT + MORPH` and `SHIFT + PROJECT` keep their meter
 functions, so loop and duplicate are missing there.

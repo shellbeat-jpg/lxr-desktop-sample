@@ -24,7 +24,7 @@ Waser), everything else from XT.
 | Step accent | Accent per step, `ACA` = level (+0.1 … +6 dB). | Step page (`ACC`), CONFIG 2 (`ACA`) | Pattern (`ACC`), global (`ACA`) | – |
 | Random voice | SHIFT + encoder click on a voice page varies the active voice by `RND`; volume, pan, output, sends, LFO and engine stay. | Voice pages, PERF (`RND`) | Global (`RND`) | – |
 | Random octave | Each trigger plays a random octave in a range (`+-1` … `-3`); per step `OCT` replaces it (`vce` = as the voice). Test. | VOICE (OSC `OCT`), step page (`OCT`) | Kit, pattern (step) | – |
-| Start, loop, copy steps | `Start` per track (LAST STEP page); loop per track (`SHIFT + PROJECT`, also backwards); copy/paste selected steps (`COPY`); duplicate the range (`SHIFT + MORPH`). Test. | Sequencer | Pattern (start) | – |
+| Start, loop, copy steps | `Start` per track (LAST STEP page); loop per track (`SHIFT + PROJECT`, also backwards); copy/paste selected steps (`COPY`); duplicate the range (`SHIFT + MORPH`); undo/redo (`COPY + ‹ / ›`). Test. | Sequencer | Pattern (start) | – |
 | Gates | Hold a step, press a later one: the first holds to the end of the second (AEG at full level, MIDI note off at the end). Test. | Sequencer | Pattern | – |
 | Prepared steps | Voice button + step marks a step; while it is off it flashes on the beat. Test. | Sequencer | Pattern | – |
 | WAV recorder | Records St1 to the SD card (`REC/RECnnn.WAV`, 16 bit stereo): 1, 2 or 4 passes of the pattern or until stop; starts with PLAY or at the next pattern start. | PERF, last screen (`REC`, `RST`, encoder click) | Global | – |

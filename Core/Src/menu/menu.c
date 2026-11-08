@@ -4415,6 +4415,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	{
 		//MOD: an encoder click only switches the view (this runs with inc 0 after it)
 	}
+	else if (menu_activePage == MENU_LAST_STEP_PAGE && inc != 0 && (seq_undoMark((uint16_t)(0x7f00u | (menu_lastStepGrid << 4) | (menu_activeVoice & 0xfu))), 0))
+	{
+		//MOD: undo mark before a change on the LAST STEP page (never taken)
+	}
 	else if (menu_activePage == MENU_LAST_STEP_PAGE && menu_lastStepGrid == 6)
 	{
 		//MOD: start position (step 1 .. the last step), of the track or of all tracks
@@ -5397,6 +5401,11 @@ void menu_sendAllGlobals()
 // This includes values for the currently active step in the sequencer
 void menu_parseGlobalParam(uint16_t paramNr, uint8_t value)
 {
+	//MOD: undo mark before a change of the selected step (one per step and setting)
+	if(paramNr == PAR_STEP_VOLUME || paramNr == PAR_STEP_NOTE || paramNr == PAR_STEP_PROB || paramNr == PAR_STEP_FLAM
+			|| paramNr == PAR_STEP_SHIFT || paramNr == PAR_STEP_ACCENT || paramNr == PAR_STEP_OCT
+			|| paramNr == PAR_P1_DEST || paramNr == PAR_P2_DEST || paramNr == PAR_P1_VAL || paramNr == PAR_P2_VAL)
+		seq_undoMark((uint16_t)(((paramNr & 0x1ffu) << 6) | (activeParameters[PAR_ACTIVE_STEP] & 0x3fu)));
 	switch(paramNr)
 	{
 
