@@ -664,6 +664,9 @@ tracks or patterns take the mark along.
   track length are left out, the steps in between are kept. Pressing `COPY` ends the pasting.
 - **Duplicate**: `SHIFT + MORPH` copies the played range (start … last step) behind the last step
   and lengthens the track by it: length 6 becomes 12, 20 becomes 40, at most 64.
+- **Length ± 16**: `SHIFT + ›` / `SHIFT + ‹` change the active track's length by 16 steps from
+  its current length (12 → 28 → 12; 1 … 64, lengths up to 16 stay with `SHIFT + ‹`) and show the
+  page of the last step. The stock firmware set the end of the page turned to instead (12 → 32 → 16).
 - **Undo / redo**: `COPY + ‹` undoes the last change of the shown pattern (steps and their
   settings, paste, duplicate, gates, prepared marks, length/start/grid), `COPY + ›` redoes it. One
   step; turning one value counts as one change. Showing another pattern ends it.

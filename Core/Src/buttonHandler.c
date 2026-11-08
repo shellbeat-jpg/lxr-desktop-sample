@@ -1851,6 +1851,20 @@ static void buttonHandler_voiceButtonPressed(uint8_t voiceNr)
 }
 
 //--------------------------------------------------------
+//MOD: SHIFT + < / >: change the active track's length by 16 steps (1 ... 64) and show the page of its last step
+static void buttonHandler_shiftLength(const int8_t d)
+{
+	const uint8_t v = menu_getActiveVoice();
+	const int16_t len = seq_getTrackLength(v);
+	const int16_t n = len + d;
+	if(n >= 1 && n <= NUM_STEPS)
+	{
+		seq_undoMark(0xffff);
+		seq_setTrackLength(v, (uint8_t)n);
+		menu_activeBar = (uint8_t)((n - 1) / 16);
+	}
+}
+
 void buttonHandler_buttonPressed(uint8_t buttonNr) {
 
 	screensaver_touch();
@@ -1897,23 +1911,11 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 		}
 		else
 		{
-			//step view -> bar mode
-			if(menu_activeBar < NUM_BARS-1)
-			{
+			//MOD: SHIFT + >: track length + 16 (from the current length, not the shown page)
+			if(buttonHandler_getShift())
+				buttonHandler_shiftLength(16);
+			else if(menu_activeBar < NUM_BARS-1)
 				menu_activeBar++;
-
-				//if copy button is pressed, fill next bar with current bar + extend track length to next full multiple of 16
-				//(MOD: not while steps are selected for a copy: then it only turns the page)
-
-				//if shift is pressed, set pattern length to end of next bar
-				if(buttonHandler_getShift())
-				{
-					const uint8_t len = 16 + 16* menu_activeBar;
-					seq_setTrackLength(menu_getActiveVoice(), len);
-							//menu_repaint();
-							//led_clearAllBlinkLeds();
-				}
-			}
 			//refresh LEDs
 			if((buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_LAST_STEP_TRACK) ||(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_LAST_STEP_ALL))
 			{
@@ -1960,20 +1962,11 @@ void buttonHandler_buttonPressed(uint8_t buttonNr) {
 		}
 		else
 		{
-			if(menu_activeBar > 0)
-			{
-				//seq bar mode
+			//MOD: SHIFT + <: track length - 16 (lengths up to 16 stay)
+			if(buttonHandler_getShift())
+				buttonHandler_shiftLength(-16);
+			else if(menu_activeBar > 0)
 				menu_activeBar--;
-
-				//if shift is pressed, set pattern length to end of next bar
-				if(buttonHandler_getShift())
-				{
-					const uint8_t len = 16 + 16* menu_activeBar;
-					seq_setTrackLength(menu_getActiveVoice(), len);
-							//menu_repaint();
-							//led_clearAllBlinkLeds();
-				}
-			}
 
 			if((buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_LAST_STEP_TRACK) ||(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_LAST_STEP_ALL))
 			{
