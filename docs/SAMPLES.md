@@ -835,5 +835,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates and prepared steps of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates, prepared steps and undo/redo of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
 `sh tests/host/run.sh`.
