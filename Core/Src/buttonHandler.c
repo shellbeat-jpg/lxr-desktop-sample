@@ -840,7 +840,13 @@ static void buttonHandler_setTrackRotation(uint8_t seqButtonPressed)
 //press another (also on another page): the loop runs from the first to the second
 //(backwards if it lies before); a single press ends the loop mode.
 static uint64_t buttonHandler_copySel = 0;
-static uint8_t buttonHandler_pastePending = 0;
+static uint8_t buttonHandler_pastePending = 0;	//until COPY is pressed again: several pastes
+static uint8_t buttonHandler_copyTrack = 0;		//track the steps were copied from
+//MOD: the engine of a track (tracks 6 and 7 share voice 6)
+static uint8_t buttonHandler_trackEngine(const uint8_t t)
+{
+	return voiceSlots[t < NUM_VOICE_SLOTS ? t : NUM_VOICE_SLOTS-1].engine;
+}
 static uint8_t buttonHandler_loopMode = 0;		//bit per track: its loop mode is on
 static int8_t buttonHandler_loopHeld = -1;		//step held for the loop (-1 = none)
 static uint8_t buttonHandler_loopSet = 0;		//a second step was pressed while it was held
@@ -883,12 +889,17 @@ static uint8_t buttonHandler_stepAction(const uint8_t button)
 	}
 	else if(buttonHandler_pastePending)
 	{
-		buttonHandler_pastePending = 0;
-		seq_pasteSteps(track, step);
-		led_updateSeqLeds();
-		preset_touchTimer(PRESET_PAT_TIMER);
-		snprintf(l2, sizeof(l2), "from step %u", (unsigned)(step + 1u));
-		menu_showNote("Steps pasted", l2);
+		//MOD: paste as often as wanted (COPY ends it), also into other tracks of the same engine
+		if(buttonHandler_trackEngine(track) != buttonHandler_trackEngine(buttonHandler_copyTrack))
+			menu_showNote("Not pasted", "other engine");
+		else
+		{
+			seq_pasteSteps(track, step);
+			led_updateSeqLeds();
+			preset_touchTimer(PRESET_PAT_TIMER);
+			snprintf(l2, sizeof(l2), "T%u step %u", (unsigned)(track + 1u), (unsigned)(step + 1u));
+			menu_showNote("Steps pasted", l2);
+		}
 	}
 	else if(BH_LOOP_MODE())
 	{
@@ -937,12 +948,13 @@ static void buttonHandler_copyReleased(void)
 {
 	if(!buttonHandler_copySel)
 		return;
-	const uint8_t n = seq_copySteps(menu_getActiveVoice(), buttonHandler_copySel);
+	buttonHandler_copyTrack = menu_getActiveVoice();
+	const uint8_t n = seq_copySteps(buttonHandler_copyTrack, buttonHandler_copySel);
 	buttonHandler_copySel = 0;
 	buttonHandler_pastePending = n != 0;
 	led_updateSeqLeds();
 	char l2[17];
-	snprintf(l2, sizeof(l2), "%u: press a step", (unsigned)n);
+	snprintf(l2, sizeof(l2), "%u, COPY: end", (unsigned)n);
 	menu_showNote("Steps copied", l2);
 }
 

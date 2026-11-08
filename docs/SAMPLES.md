@@ -658,9 +658,10 @@ tracks or patterns take the mark along.
   jump to the loop's first step and CLK moves on inside the loop; as a source the loop's steps
   send the impulses. Not stored.
 - **Copy steps**: hold `COPY` and press steps of the active track (also across pages), then
-  release: they are copied with all their settings. The next step press pastes them from there,
-  each at its distance to the first copied step; steps that would lie behind the track length are
-  left out, the steps in between are kept. Pressing `COPY` again cancels.
+  release: they are copied with all their settings. Each following step press pastes them from
+  there, each at its distance to the first copied step, as often as wanted, also into other
+  tracks with the same engine (another engine: "Not pasted"); steps that would lie behind the
+  track length are left out, the steps in between are kept. Pressing `COPY` ends the pasting.
 - **Duplicate**: `SHIFT + MORPH` copies the played range (start … last step) behind the last step
   and lengthens the track by it: length 6 becomes 12, 20 becomes 40, at most 64.
 
