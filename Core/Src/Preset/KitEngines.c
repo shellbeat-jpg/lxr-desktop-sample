@@ -513,11 +513,12 @@ static void kitEngines_reset(const uint8_t slot, const uint8_t engine)
 			{ 1, 70, 30, 0, 80, 60, 0 },		//modal
 			{ 2, 255, 255, 255, 50, 40, 0 },	//FM2: ratio 1, index, index decay, no feedback
 			{ 0, 255, 255, 255, 0, 60, 0 },		//wavetable: basic set, sweep
+			{ 0, 64, 0, 0, 54, 64, 20 },		//vox: vocal folds, adult tract, "a"
 		};
 		for(uint8_t role=0;role<NUM_SLOT_ROLES;role++)
 			if(ownInit[engine-ENGINE_MODAL][role] != 255)
 				activeParameters[slot_rolePar[slot][role]] = ownInit[engine-ENGINE_MODAL][role];
-		if(engine == ENGINE_MODAL)
+		if(engine == ENGINE_MODAL || engine == ENGINE_VOX)
 		{
 			activeParameters[PAR_VELOD1 + 2*slot] = 110;
 			if(slot == NUM_VOICE_SLOTS-1)

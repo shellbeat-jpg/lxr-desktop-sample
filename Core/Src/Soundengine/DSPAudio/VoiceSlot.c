@@ -59,6 +59,7 @@ static void slot_initEngine(VoiceSlot* s, const uint8_t slot)
 	case ENGINE_MODAL:	Modal_init(&s->u.modal, slot);		break;
 	case ENGINE_FM2:	Fm2_init(&s->u.fm2, slot);			break;
 	case ENGINE_WAVE:	Wave_init(&s->u.wave, slot);		break;
+	case ENGINE_VOX:	Vox_init(&s->u.vox, slot);			break;
 	default:			Drum_init(&s->u.drum, slot);		break;
 	}
 }
@@ -213,6 +214,7 @@ void slot_trigger(const uint8_t track, const uint8_t vel, const uint8_t noteIn)
 	case ENGINE_MODAL:	Modal_trigger(&s->u.modal, vel, note);				break;
 	case ENGINE_FM2:	Fm2_trigger(&s->u.fm2, vel, note);					break;
 	case ENGINE_WAVE:	Wave_trigger(&s->u.wave, vel, note);				break;
+	case ENGINE_VOX:	Vox_trigger(&s->u.vox, vel, note);					break;
 	default:			Drum_trigger(&s->u.drum, vel, note);				break;
 	}
 	lfo_extraRetrigger(slot, second);	//MOD: 2nd LFOs, track 7 LFO
@@ -358,6 +360,9 @@ uint8_t slot_setRoleParameter(const uint16_t par, const uint8_t itg, const float
 			case ENGINE_WAVE:
 				if(!slot_setPitchEgRole(&s->u.wave.oscPitchEg, &s->u.wave.egPitchModAmount, role, itg))
 					Wave_setRole(&s->u.wave, role, itg, flt, isFloatModulator);
+				break;
+			case ENGINE_VOX:
+				Vox_setRole(&s->u.vox, role, itg, flt, isFloatModulator);
 				break;
 			case ENGINE_HIHAT:
 				if(role != 6)

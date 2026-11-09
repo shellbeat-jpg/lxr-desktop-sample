@@ -19,7 +19,7 @@
 static uint8_t engineMenu_slot;
 static uint8_t engineMenu_choice;
 
-static const char* const engineMenu_names[NUM_ENGINES] = { "drum", "snare", "cymbal", "hi-hat", "modal", "fm2", "wavetable" };
+static const char* const engineMenu_names[NUM_ENGINES] = { "drum", "snare", "cymbal", "hi-hat", "modal", "fm2", "wavetable", "vox" };
 //---------------------------------------------------
 void engineMenu_open(void)
 {

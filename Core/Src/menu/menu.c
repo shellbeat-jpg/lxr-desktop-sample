@@ -352,6 +352,13 @@ const Name valueNames[NUM_NAMES] =
 		{SHORT_WT_SCAN, CAT_VOICE, LONG_WT_SCAN},/*TEXT_WT_SCAN*/
 		{SHORT_OCT_RND, CAT_OSC, LONG_OCT_RND},/*TEXT_OCT_RND*/
 		{SHORT_OCT_RND, CAT_STEP, LONG_STEP_OCT},/*TEXT_STEP_OCT*/
+		{SHORT_VOX_SRC, CAT_VOICE, LONG_VOX_SRC},/*TEXT_VOX_SRC*/
+		{SHORT_VOX_LEN, CAT_VOICE, LONG_VOX_LEN},/*TEXT_VOX_LEN*/
+		{SHORT_VOX_NAS, CAT_VOICE, LONG_VOX_NAS},/*TEXT_VOX_NAS*/
+		{SHORT_VOX_CNS, CAT_VOICE, LONG_VOX_CNS},/*TEXT_VOX_CNS*/
+		{SHORT_VOX_VOW, CAT_VOICE, LONG_VOX_VOW},/*TEXT_VOX_VOW*/
+		{SHORT_VOX_TNS, CAT_VOICE, LONG_VOX_TNS},/*TEXT_VOX_TNS*/
+		{SHORT_VOX_BRE, CAT_VOICE, LONG_VOX_BRE},/*TEXT_VOX_BRE*/
 
 
 };
@@ -819,19 +826,21 @@ static uint8_t menu_sampleWaveEditText(const uint16_t parNr, const uint8_t val)
 }
 //---------------------------------------------------------------
 //MOD: names and types of the engine settings of the added engines (modal, FM2,
-//wavetable) by role; 0 = as the drum (the pitch EG of FM2 and wavetable)
+//wavetable, vox) by role; 0 = as the drum (the pitch EG of FM2 and wavetable)
 #define MENU_OWN_MENU(m)	(DTYPE_MENU | ((m)<<8))
 static const uint8_t menu_ownText[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
 {
 	{ TEXT_MDL_MODEL, TEXT_MDL_DAMP, TEXT_MDL_POS, TEXT_MDL_INH, TEXT_MDL_HARD, TEXT_MDL_MAT, TEXT_MDL_EXC },
 	{ TEXT_FM2_RATIO, 0, 0, 0, TEXT_FM2_INDEX, TEXT_FM2_IDEC, TEXT_FM2_FB },
 	{ TEXT_WT_SET, 0, 0, 0, TEXT_WT_POS, TEXT_WT_SWEEP, TEXT_WT_SCAN },
+	{ TEXT_VOX_SRC, TEXT_VOX_LEN, TEXT_VOX_NAS, TEXT_VOX_CNS, TEXT_VOX_VOW, TEXT_VOX_TNS, TEXT_VOX_BRE },
 };
 static const uint16_t menu_ownDtype[NUM_ENGINES-ENGINE_MODAL][NUM_SLOT_ROLES] =
 {
 	{ MENU_OWN_MENU(MENU_MODAL_MODEL), DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, MENU_OWN_MENU(MENU_MODAL_EXC) },
 	{ MENU_OWN_MENU(MENU_FM2_RATIO), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127 },
 	{ MENU_OWN_MENU(MENU_WAVE_SET), 0, 0, 0, DTYPE_0B127, DTYPE_0B127, MENU_OWN_MENU(MENU_WAVE_SCAN) },
+	{ MENU_OWN_MENU(MENU_VOX_SRC), DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127, DTYPE_0B127 },
 };
 uint8_t menu_ownRoleText(const uint16_t par)
 {
@@ -4122,6 +4131,8 @@ static uint8_t getMaxEntriesForMenu(uint8_t menuId)
 		return waveSetNames[0][0];
 	case MENU_WAVE_SCAN:
 		return waveScanNames[0][0];
+	case MENU_VOX_SRC:
+		return voxSrcNames[0][0];
 	case MENU_OCT_RND:
 		return octRndNames[0][0];
 	case MENU_STEP_OCT:
@@ -4249,6 +4260,9 @@ static void getMenuItemNameForValue(const uint8_t menuId, const uint8_t curParmV
 		break;
 	case MENU_WAVE_SCAN:
 		p = MENU_ITEM(waveScanNames);
+		break;
+	case MENU_VOX_SRC:
+		p = MENU_ITEM(voxSrcNames);
 		break;
 	case MENU_OCT_RND:
 		p = MENU_ITEM(octRndNames);

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>XT firmware for LXR-02 1.2.13 – Supplement to the LXR Owners Manual</title>
+<title>XT firmware for LXR-02 1.2.14 – Supplement to the LXR Owners Manual</title>
 <!--
   Source of docs/XT_Manual_Supplement.pdf. Build: node docs/manual/build.mjs
   (needs Node and Playwright with Chromium). Layout after the LXR owners manual:
@@ -115,13 +115,13 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="in">
     <div>
       <div class="brand"><span class="n">XT</span><span class="t">Firmware for LXR-02</span><span class="r"></span></div>
-      <div class="sub">Version 1.2.13 · supplement to the LXR owners manual</div>
+      <div class="sub">Version 1.2.14 · supplement to the LXR owners manual</div>
     </div>
     <div class="mid">
       <div><b>Samples &amp; waves</b>31 WAV samples, 8 single-cycle waves and 4 wavetables from the SD card, with start, length and loops.</div>
       <div><b>Sequencer</b>A step grid per track, ratchets and roll locks, trigger tracks, LFO start, lock trigger and instant pattern switching.</div>
       <div><b>Effects</b>A second FX slot, sends, pre-fader option and a master bus on St1: saturation, compressor and EQ.</div>
-      <div><b>Engines &amp; more</b>Modal, FM2 and wavetable (test), kit and voice morph, cue, WAV recorder, INIT templates.</div>
+      <div><b>Engines &amp; more</b>Modal, FM2, wavetable and vox (test), kit and voice morph, cue, WAV recorder, INIT templates.</div>
     </div>
     <div class="foot">
       <p>Not an official Erica Synths or Sonic Potions document; not affiliated with or approved by Erica Synths. The XT firmware is based on the LXR firmware and contains the modifications of OpenElixir-02 1.2 (Moritz Waser). Install it at your own risk. Licence: GPL-3.0.</p>
@@ -143,7 +143,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
   <div class="cols">
     <div class="col">
       <h1 data-toc><b>1</b> &gt; NOTES</h1>
-      <p>This supplement describes what the <b>XT firmware 1.2.13</b> (formerly OE02-Samples+) adds to the LXR-02 and its manual.</p>
+      <p>This supplement describes what the <b>XT firmware 1.2.14</b> (formerly OE02-Samples+) adds to the LXR-02 and its manual.</p>
       <p>It contains the modifications of <b>OpenElixir-02 1.2</b> (Moritz Waser), marked <span class="oe">OE</span>.</p>
       <h2 data-toc>1.1. About the tables</h2>
       <p>As in the manual: <b>display name</b> (three letters), full name, function. The edit view (press the encoder) shows the full name and the value.</p>
@@ -154,7 +154,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h2 data-toc>1.3. Installation</h2>
       <ol>
-        <li><code>LXR_XT_V1.2.13.img</code> into the top folder of the card; delete all other <code>LXR*.img</code> there.</li>
+        <li><code>LXR_XT_V1.2.14.img</code> into the top folder of the card; delete all other <code>LXR*.img</code> there.</li>
         <li>Switch on with the encoder button held until “LXR Updater” appears.</li>
         <li>“Update OK!”, then delete the image.</li>
         <li>The update erases the samples: leave <code>SAMPLES</code> on the card, the next start imports them again.</li>
@@ -236,7 +236,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     <div class="col">
       <h1 data-toc><b>3</b> &gt; Voices</h1>
       <h2 data-toc>3.1. Engines per voice <span class="oe">OE</span></h2>
-      <p>Each of the 6 slots selects its engine: drum, snare, cymbal, hi-hat.<br>New: <b>modal</b>, <b>fm2</b> and <b>wavetable</b> (3.12–3.14).<br><b>SHIFT + KIT</b>: engine menu of the active voice. In the kit.</p>
+      <p>Each of the 6 slots selects its engine: drum, snare, cymbal, hi-hat.<br>New: <b>modal</b>, <b>fm2</b>, <b>wavetable</b> and <b>vox</b> (3.12–3.15).<br><b>SHIFT + KIT</b>: engine menu of the active voice. In the kit.</p>
       <h2 data-toc>3.2. Oscillator sources</h2>
       <p>Main oscillator: built-in waveforms, <b>samples</b> (own pitch, once or as a loop) or <b>waves</b> (single cycles, follow the note).</p>
       <svg class="dg" viewBox="0 0 330 150" role="img" aria-label="Sources of the main oscillator: built-in waveforms, samples S1 to S31 with start, length and loop, user waves W1 to W8; then filter, amp, choke, distortion and sample reducer of the voice.">
@@ -408,6 +408,19 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <li>Cycle length: from the <code>clm</code> chunk (Serum, Vital), else 2048 or 256 (WaveEdit).</li>
         <li>Max. 64 frames; fewer: in-between waves are added. 64 frames ≈ 0.9 s of sample memory, after the samples.</li>
       </ul>
+      <h2 data-toc>3.15. Engine vox (test)</h2>
+      <p>Voice model: source → vocal tract (10 … 36 sections) with nose.</p>
+      <table class="p3">
+        <tr><th>Display</th><th>Name</th><th>Description</th></tr>
+        <tr><td>len</td><td>Tract len.</td><td>MOD: small … 64 = adult … giant</td></tr>
+        <tr><td>nas</td><td>Nasal</td><td>MOD: velum closed … open</td></tr>
+        <tr><td>cns</td><td>Consonant</td><td>MOD: noise burst on a trigger, 18 … 90 ms</td></tr>
+        <tr><td>vow</td><td>Vowel</td><td>FM: u › o › ɔ › a › ɛ › e › i › y</td></tr>
+        <tr><td>tns</td><td>Tension</td><td>FM: soft … pressed</td></tr>
+        <tr><td>src</td><td>Source</td><td>FM: <b>vce</b> voice, <b>syr</b> syrinx</td></tr>
+        <tr><td>bre</td><td>Breath</td><td>FM: breath; syrinx: drive</td></tr>
+      </table>
+      <p class="note">Transient = extra source. New voice: decay 110.</p>
     </div>
   </div>
 </section>
@@ -708,7 +721,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
         <tr><td>CC 122–127</td><td>LFO <b>mod</b></td></tr>
         <tr><td>NRPN 27–32 · 57–62</td><td>LFO <b>wav</b> · LFO <b>ofs</b></td></tr>
         <tr><td>NRPN 87–92 · 100–105</td><td>MIX <b>out</b> · OSC <b>sta</b>; <b>len</b>: 93, 94, 97</td></tr>
-        <tr><td>NRPN 98</td><td>engine <span class="oe">OE</span>: slot × 4 + engine, 24/30/36 + slot: modal/fm2/wt</td></tr>
+        <tr><td>NRPN 98</td><td>engine <span class="oe">OE</span>: slot × 4 + engine, 24/30/36/42 + slot: modal/fm2/wt/vox</td></tr>
         <tr><td>NRPN 99 · 106–117</td><td><b>chk</b> · FX1 <span class="oe">OE</span></td></tr>
       </table>
     </div>
@@ -824,7 +837,7 @@ svg.dg { display: block; width: 100%; height: auto; margin: 1.6mm 0 2.4mm; }
     if (p.hasAttribute('data-nofoot')) return;
     if (n % 2 === 0) p.classList.add('even');
     const f = document.createElement('footer');
-    f.innerHTML = '<span>XT firmware for LXR-02 1.2.13 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
+    f.innerHTML = '<span>XT firmware for LXR-02 1.2.14 · Supplement</span><span class="line"></span><span class="num">' + n + '</span>';
     p.appendChild(f);
   });
   const toc = document.getElementById('toc');

@@ -50,6 +50,7 @@
 #define MENU_WAVE_SCAN		31
 #define MENU_OCT_RND		32	//MOD: random octave of a track
 #define MENU_STEP_OCT		33	//MOD: of a step
+#define MENU_VOX_SRC		34	//MOD: vox engine
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -440,6 +441,13 @@ const char octRndNames[][4] =
 		{"off"}, {"+-1"}, {"+1"}, {"-1"}, {"+-2"}, {"+2"}, {"-2"}, {"+-3"}, {"+3"}, {"-3"},
 };
 //MOD: of a step (STEP_OCT_x, SeqStep.h): vce = the track's
+//MOD: vox engine: the sources
+const char voxSrcNames[][4] =
+{
+		{2},
+		{"vce"},	// vocal folds
+		{"syr"},	// syrinx (bird)
+};
 const char stepOctNames[][4] =
 {
 		{7},
@@ -631,6 +639,13 @@ const char shortNames[][4]  =
 	{"swp"},
 	{"scn"},
 	{"oct"},	//MOD: random octave
+	{"src"},	//MOD: vox engine
+	{"len"},
+	{"nas"},
+	{"cns"},
+	{"vow"},
+	{"tns"},
+	{"bre"},
 
 };
 //-----------------------------------------------------------------
@@ -828,6 +843,13 @@ const char longNames[][16] =
 	{"Scan mode"},	//MOD
 	{"Octave rnd"},	//MOD: random octave of the track
 	{"Octave rnd"},	//MOD: of the step
+	{"Source"},		//MOD: vox engine
+	{"Tract len."},
+	{"Nasal"},
+	{"Consonant"},
+	{"Vowel"},
+	{"Tension"},
+	{"Breath"},
 };
 
 

@@ -33,6 +33,7 @@ typedef struct
 	uint8_t bre;	/* voice: breath noise; syrinx: drive (air sac pressure) */
 	uint8_t tns;	/* voice: tension (soft/breathy .. pressed); syrinx: labial tension */
 	uint8_t src;	/* 0 vocal folds, 1 syrinx */
+	uint8_t cns;	/* consonant: noise burst at the front of the mouth on a trigger, 0 = off */
 } VoxParams;
 
 typedef struct
@@ -47,6 +48,9 @@ typedef struct
 	float oq, tilt, tiltZ, breath, gain;
 	float sx, sy, sa, sb, sT, sLo, sHi, sPrev;	/* syrinx */
 	float out0, out1, dcX, dcY;
+	float pn;				/* level by pitch: sqrt(f0 / tract rate) */
+	uint16_t bPos, bLen;	/* consonant burst */
+	uint8_t cns;
 	uint32_t rnd;
 	uint8_t N, nv, src, odd, nasOn;
 } VoxCore;
@@ -97,6 +101,9 @@ static const float voxCore_syrHi[VOX_SYR][VOX_SYR] =
 };
 
 #define VOX_FST(fs)		((fs) * 0.5f)	/* tract rate */
+#define VOX_GLOT_GAIN	1.f
+#define VOX_SYR_GAIN	2.5f
+#define VOX_CNS_GAIN	6.f
 
 static inline float voxCore_bilin(const float t[VOX_SYR][VOX_SYR], const float b, const float a)
 {
@@ -154,10 +161,11 @@ static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 	}
 	/* source */
 	v->src = p->src != 0;
+	v->cns = p->cns;
 	const float t = p->tns / 127.f;
 	v->oq = 0.85f - 0.5f * t;					/* open quotient */
 	v->tilt = 0.75f - 0.65f * t;				/* lowpass of the source: soft = dark */
-	v->breath = p->bre * (0.6f / 127.f);
+	v->breath = p->bre * (4.f / 127.f);
 	v->gain = 1.f / (0.3f + 0.7f * v->oq);
 	/* syrinx: drive -> alpha, tension -> beta (table indices) */
 	v->sa = p->bre * ((VOX_SYR - 1) / 127.f);
@@ -167,17 +175,26 @@ static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 	v->sHi = voxCore_bilin(voxCore_syrHi, v->sb, v->sa);
 }
 
-static inline void voxCore_setPitch(VoxCore* v, const float f0)
+static inline void voxCore_setPitch(VoxCore* v, const float f0, const float fs)
 {
 	v->f0 = f0;
+	const float r = f0 / VOX_FST(fs);
+	v->pn = sqrtf(r > 1e-4f ? r : 1e-4f);
 }
 
 /* a trigger: restarts the source (the tract keeps ringing) */
 static inline void voxCore_trigger(VoxCore* v)
 {
 	v->phase = 0.f;
+	v->bPos = 0;
+	v->bLen = v->cns ? (uint16_t)(400.f + 1600.f * v->cns * v->cns * (1.f / 16129.f)) : 0;	/* 18 .. 90 ms */
 	if(!v->rnd) v->rnd = 0x2545F491u;
 	if(!(v->sx == v->sx) || v->sx == 0.f) { v->sx = 0.2f; v->sy = 0.f; }
+	{
+		float u = (v->sx - v->sLo) / (v->sHi - v->sLo + 1e-3f);
+		u = u < 0.f ? 0.f : (u > 1.f ? 1.f : u);
+		v->sPrev = u * u;	/* no step at the start */
+	}
 }
 
 static inline void voxCore_syrRhs(const float x, const float y, const float a, const float b, float* dx, float* dy)
@@ -215,7 +232,7 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 		float u = (x - v->sLo) / (v->sHi - v->sLo + 1e-3f);
 		u = u < 0.f ? 0.f : (u > 1.f ? 1.f : u);
 		u *= u;
-		const float d = (u - v->sPrev) * 4.f;
+		const float d = (u - v->sPrev) * VOX_SYR_GAIN / (v->pn * v->pn);
 		v->sPrev = u;
 		return d;
 	}
@@ -229,7 +246,7 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 		d = 6.75f * ph * (2.f - 3.f * ph);
 		u = 6.75f * ph * ph * (1.f - ph);
 		/* scaled to the period (steeper for a short open phase) */
-		d *= v->f0 / (v->oq * fst) * 8.f;
+		d *= VOX_GLOT_GAIN;
 	}
 	v->tiltZ += (1.f - v->tilt) * (d - v->tiltZ);
 	return v->tiltZ * v->gain + v->breath * noise * (0.15f + u);
@@ -278,8 +295,9 @@ static inline float voxCore_tick(VoxCore* v, const float src)
 	return out;
 }
 
-/* n samples at fs (the tract runs at fs/2, linearly interpolated) */
-static inline void voxCore_render(VoxCore* v, float* out, const uint8_t n, const float fs)
+/* n samples at fs (the tract runs at fs/2, linearly interpolated);
+ * extra = the transient sample (int16, may be 0) as an additional source */
+static inline void voxCore_render(VoxCore* v, const int16_t* extra, float* out, const uint8_t n, const float fs)
 {
 	const float fst = VOX_FST(fs);
 	for(uint8_t i=0;i<n;i++)
@@ -288,7 +306,18 @@ static inline void voxCore_render(VoxCore* v, float* out, const uint8_t n, const
 		if(!v->odd)
 		{
 			v->out0 = v->out1;
-			v->out1 = voxCore_tick(v, voxCore_source(v, fst));
+			float s = voxCore_source(v, fst);
+			if(extra) s += (extra[i] + (i+1 < n ? extra[i+1] : 0)) * (1.f / 32768.f);
+			if(v->bPos < v->bLen)
+			{
+				/* consonant: the source starts in the second half of the burst */
+				const float e = 1.f - v->bPos / (float)v->bLen;
+				if(2u * v->bPos < v->bLen) s = 0.f;
+				v->rnd = v->rnd * 1664525u + 1013904223u;
+				v->R[(3u * v->N) / 4u] += (int32_t)v->rnd * (1.f / 2147483648.f) * e * e * e * VOX_CNS_GAIN;
+				v->bPos++;
+			}
+			v->out1 = voxCore_tick(v, s);
 			y = 0.5f * (v->out0 + v->out1);
 		}
 		else

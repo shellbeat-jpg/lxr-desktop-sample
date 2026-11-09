@@ -3,7 +3,7 @@
 > From [OpenElixir-02 v1.2](https://github.com/tunefish777/openelixir-02/blob/v1.2/docs/ENGINES.md)
 > by Moritz Waser (tunefish), included in XT, unchanged below this note. See
 > [SAMPLES.md](SAMPLES.md) for what XT adds, among it three more engines (tests):
-> `modal` (engine 4), `fm2` (5) and `wavetable` (6), NRPN 98 value 24 + 6 × (engine − 4) + slot;
+> `modal` (engine 4), `fm2` (5), `wavetable` (6) and `vox` (7), NRPN 98 value 24 + 6 × (engine − 4) + slot;
 > see [SAMPLES.md](SAMPLES.md#modal-engine-1211-test).
 
 Each of the 6 voice slots can run any of the 4 engines: drum, snare, cymbal or hi-hat. Track 7

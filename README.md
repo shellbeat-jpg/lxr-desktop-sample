@@ -56,6 +56,7 @@ All modulation and step automation targets with their display names: [docs/MOD_T
 | Modal engine | New engine: physical model of a struck membrane, bar, string, bell, plate or glass (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2 engine | 2-operator FM percussion: ratio `RAT`, index `IDX` with its own decay `IDC`, feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |
 | Wavetable engine | Scans sine › triangle › square › saw, a set made from the user waves or 4 own sets from `SAMPLES/TABLES` (Serum, Vital, WaveEdit); lined-up frames, real in-between waves, band limited; `SWP` sweep by the pitch EG, `SCN` smooth, stepped or back and forth. Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit; sets: sample memory | NRPN 98 |
+| Vox engine | Physical model of a voice: vocal folds or a bird's syrinx into a vocal tract with nasal branch; vowel morph `VOW` (u … y), `LEN`, `NAS`, consonant burst `CNS`, `TNS`, `BRE`, `SRC`. Test. | VOICE (SHIFT + KIT, `vox`) | Kit | NRPN 98 |
 
 ### Sequencer / tracks
 

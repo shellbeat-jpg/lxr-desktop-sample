@@ -23,7 +23,7 @@ endif()
 # The project name names the build outputs (files can't carry the "+"); the
 # start-up screen and the USB-MIDI device name show LXR_DISPLAY_NAME (FIRMWARE_NAME).
 project(XT
-    VERSION 1.2.13
+    VERSION 1.2.14
     DESCRIPTION "XT firmware for LXR-02: custom firmware for the Erica Synths LXR-02 drum machine, with the OpenElixir-02 1.2 modifications"
     LANGUAGES C ASM
 )

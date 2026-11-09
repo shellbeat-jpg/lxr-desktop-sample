@@ -790,11 +790,38 @@ calculated).
 The MOD page keeps the drum's pitch EG (decay, slope, amount); with the amount at 0 it only sweeps
 the position. MIDI: NRPN 98 value 36 + slot.
 
+## Vox engine (1.2.14, test)
+
+`vox`: a physical model of a voice, after the idea of
+[CHIMERA](https://github.com/jamesondh/chimera-vocal-synth) (MIT), reduced for the LXR. A source
+drives a tube of 10 … 36 sections (the vocal tract) with a nasal branch: vowels, vowel sweeps,
+nasal and whispered sounds, talking basses, choir-like stabs, bird calls. Choose it like the other
+engines (SHIFT + KIT, `vox`); drum pages:
+
+| Page | Displayed name | Name | Description |
+|---|---|---|---|
+| OSC | `COA`, `FIN` | Coarse, Fine | the pitch of the source (the note follows) |
+| MOD | `LEN` | Tract len. | 0 = 10 sections (small, bright) … 64 = adult (22, about 17 cm) … 127 = 36 (giant) |
+| MOD | `NAS` | Nasal | velum opening: 0 = closed … 127 = wide open (nasal, "ng") |
+| MOD | `CNS` | Consonant | 0 = off; otherwise a noise burst at the front of the mouth on a trigger, 18 … 90 ms, the source sets in at its middle ("t", "ts") |
+| FM | `VOW` | Vowel | morphs u › o › ɔ › a › ɛ › e › i › y (0, 18, 36, 54, 73, 91, 109, 127) |
+| FM | `TNS` | Tension | vocal folds: soft and dark (0) … pressed and bright (127); syrinx: labial tension |
+| FM | `SRC` | Source | `vce` vocal folds, `syr` syrinx (a bird's: from a pure whistle to pulses) |
+| FM | `BRE` | Breath | vocal folds: breath noise (127 with `TNS` 0: whispered); syrinx: drive (air sac pressure) |
+
+The vowel shapes were fitted offline to the formants of the 8 vowels (`tools/vox`). The tube runs
+at half the sample rate (sound up to about 11 kHz). The amp EG applies (new voice: decay 110), so do
+the filter, the transient sample (it is fed into the tract as an extra source: clicks become mouth
+sounds), the distortion, the LFO (e.g. on `VOW`: talking), velocity, gates and the mix page. A
+trigger restarts the source; the tract keeps ringing. Not included: consonants other than the
+burst, text, singing from notes. MIDI: NRPN 98 value 42 + slot. CPU: estimated 3–5 % per voice
+(syrinx at high pitches about twice that); host test `tests/host/vox.c`.
+
 ## Modulation targets of the added engines (1.2.11)
 
-The settings of `modal`, `fm2` and `wavetable` are LFO, velocity and step automation targets on
+The settings of `modal`, `fm2`, `wavetable` and `vox` are LFO, velocity and step automation targets on
 every voice, named as on their pages (e.g. LFO `dst` `pos`, step `dst` `1po`). On voice 4 the
-first setting (`MDL`, `RAT`, `SET`) and on voice 6/7 the last one (`EXC`, `FBK`, `SCN`) have no
+first setting (`MDL`, `RAT`, `SET`, `SRC`) and on voice 6/7 the last one (`EXC`, `FBK`, `SCN`, `BRE`) have no
 place of their own in the stock target list; there they take the place of the oscillator
 waveform target (`wav`), which these engines don't have. Kits keep their targets.
 
@@ -835,5 +862,5 @@ Tested on the device: sample import and playback, the skipping of invalid files,
 (`STA`/`LEN`), loops, the modulated sample selection (`RND` and `CYC`), the choke group (`CHK`),
 the file name in the waveform edit view, voice INIT and the experimental 1.5 MB mode (`BIGFLASH`,
 samples above 1 MB play correctly). The additions of 1.2.3 to 1.2.11 were tried on the device
-before their release; the engines `modal`, `fm2`, `wavetable` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates, prepared steps and undo/redo of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal engine:
+before their release; the engines `modal`, `fm2`, `wavetable`, `vox` and the wave sets are tests. The additions of 1.2.12 (random octave, start, loop, copying steps, choke groups) and the gates, prepared steps and undo/redo of 1.2.13 are tests. Host tests (Linux, gcc) for import, playback and the modal and vox engines:
 `sh tests/host/run.sh`.
