@@ -15,3 +15,5 @@ echo "== Import (Schritt 1)"; ./import_test
 echo "== Wiedergabe (Schritt 2)"; ./play_test
 gcc -O1 -w -I"$R/Core/Inc" -o modal_test "$R/tests/host/modal.c" -lm
 echo "== Modal-Engine"; ./modal_test
+gcc -O2 -w -I"$R/Core/Inc" -o vox_test "$R/tests/host/vox.c" -lm
+echo "== Vox-Engine (Prototyp)"; ./vox_test
