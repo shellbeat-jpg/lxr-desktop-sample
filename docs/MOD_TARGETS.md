@@ -14,9 +14,9 @@ The targets of the step automation (`P1`/`P2`, step page `dst`), the LFOs (`dst`
   Inharmonic, `hrd` Hardness, `mat` Material, `exc` Exciter (e.g. step `dst` `1dm`). FM2: `rat`
   Ratio, `idx` FM index, `idc` Index decay, `fbk` Feedback; wavetable: `set` Table set, `pos` Wave
   pos., `swp` Pos. sweep, `scn` Scan mode (the pitch EG keeps the drum's names); vox (1.2.14): `src`
-  Source, `len` Tract len., `nas` Nasal, `cns` Consonant, `vow` Vowel, `tns` Tension, `bre` Breath.
+  Source, `len` Tract len., `nas` Nasal, `veg` Vowel EG, `vow` Vowel, `tns` Tension, `chd` Chord.
   On voice 4 the first of these settings (`mdl`, `rat`, `set`, `src`) and on voice 6 the last one
-  (`exc`, `fbk`, `scn`, `bre`)
+  (`exc`, `fbk`, `scn`, `chd`)
   take the place of the oscillator waveform target `wav`.
 - Value of a `wav` lock (`val`): 0 … 5 = standard waveforms, 6 … 36 = samples S1 … S31, 37 … 44 = user waves W1 … W8.
 

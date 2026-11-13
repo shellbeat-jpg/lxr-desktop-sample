@@ -7,7 +7,8 @@
  * sections (the vocal tract, Kelly-Lochbaum lattice at half the sample rate)
  * with a nasal branch. Vowel shapes (area functions) were fitted offline to
  * the formants of 8 vowels; VOW morphs between them, LEN scales the tract
- * (continuously: the lips sit between the last two sections).
+ * (continuously: the lips sit between the last two sections). A vowel EG
+ * sweeps the vowel per hit; up to 4 sources play a chord through one tract.
  * Syrinx: the normal form of Gardner/Mindlin (labial oscillator).
  * No hardware dependencies: also built by the host test (tests/host/vox.c).
  *
@@ -25,16 +26,18 @@
 #define VOX_MAXN	36
 #define VOX_NASN	12		/* nasal tube (at LEN = 22 sections) */
 #define VOX_SYR		8
+#define VOX_SRCS	4		/* sources of a chord */
+#define VOX_CHORDS	8
 
 typedef struct
 {
 	uint8_t vow;	/* vowel 0..127: u o ɔ a ɛ e i y */
 	uint8_t nas;	/* velum opening 0..127 */
 	uint8_t len;	/* tract length 0..127 (10 .. 36 sections, 64 = 22 = adult) */
-	uint8_t bre;	/* voice: breath noise; syrinx: drive (air sac pressure) */
 	uint8_t tns;	/* voice: tension (soft/breathy .. pressed); syrinx: labial tension */
 	uint8_t src;	/* 0 vocal folds, 1 syrinx */
-	uint8_t cns;	/* consonant: noise burst at the front of the mouth on a trigger, 0 = off */
+	uint8_t veg;	/* vowel EG: 63 = off, below: each hit comes from u, above: from i (decays with the amp EG) */
+	uint8_t chd;	/* chord / unison: off uni oct 5th min maj sus m7 (extra vocal fold sources) */
 } VoxParams;
 
 typedef struct
@@ -45,10 +48,11 @@ typedef struct
 	float nR[VOX_NASN];
 	float nk[VOX_NASN];
 	float nA0;				/* velum port area */
-	float phase, f0;		/* source phase 0..1, pitch [Hz] */
-	float oq, tilt, tiltZ, breath, gain;
+	float f0;				/* pitch [Hz] */
+	float oq, tilt, tiltZ, gain;
+	float ph[VOX_SRCS], ratio[VOX_SRCS], srcNorm;	/* sources of a chord */
+	uint8_t nSrc;
 	float sx, sy, sa, sb, sT, sLo, sHi;	/* syrinx */
-	float nzZ;				/* breath noise highpass */
 	float out0, out1, dcX, dcY;
 	float pn;				/* level by pitch: sqrt(f0 / tract rate) */
 	float Nf, NfT;			/* tract length in sections (smoothed, target): the last section is partial */
@@ -56,8 +60,7 @@ typedef struct
 	float vowPos;			/* vowel position 0..VOX_VOWELS-1 */
 	float sLoT, sHiT, sTT;	/* syrinx: targets (smoothed per tick: no clicks) */
 	uint8_t shapeDirty;
-	uint16_t bPos, bLen;	/* consonant burst */
-	uint8_t cns;
+	float vegOff, env, vowEff;	/* vowel EG: offset in vowels, envelope 0..1, the vowel that sounds */
 	uint32_t rnd;
 	uint8_t N, nv, src, odd, nasOn;
 } VoxCore;
@@ -110,8 +113,6 @@ static const float voxCore_syrHi[VOX_SYR][VOX_SYR] =
 #define VOX_FST(fs)		((fs) * 0.5f)	/* tract rate */
 #define VOX_GLOT_GAIN	1.f
 #define VOX_SYR_GAIN	0.7f
-#define VOX_CNS_GAIN	6.f
-#define VOX_BREATH_GAIN	2.f
 
 static inline float voxCore_bilin(const float t[VOX_SYR][VOX_SYR], const float b, const float a)
 {
@@ -131,7 +132,7 @@ static inline void voxCore_shape(VoxCore* v)
 	v->lipF = v->Nf - (N - 1);
 	if(v->lipF < 0.f) v->lipF = 0.f;
 	if(v->lipF > 1.f) v->lipF = 1.f;
-	const float pos = v->vowPos;
+	const float pos = v->vowEff;
 	const uint8_t a = pos >= VOX_VOWELS-1 ? VOX_VOWELS-2 : (uint8_t)pos;
 	const float fv = pos - a;
 	const float sc = (float)VOX_REFN / v->Nf;
@@ -157,6 +158,16 @@ static inline void voxCore_shape(VoxCore* v)
 	v->nv = (uint8_t)(v->Nf * 0.5f + 0.5f);
 }
 
+/* the envelope of the vowel EG, 0..1 (control rate): the sounding vowel */
+static inline void voxCore_setEnv(VoxCore* v, const float env)
+{
+	v->env = env;
+	float e = v->vowPos + v->vegOff * env;
+	if(e < 0.f) e = 0.f;
+	if(e > VOX_VOWELS - 1) e = VOX_VOWELS - 1;
+	if(fabsf(e - v->vowEff) > 0.002f || !v->N) { v->vowEff = e; v->shapeDirty = 1; }
+}
+
 /* parameters (control rate); length and syrinx settle smoothly */
 static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 {
@@ -164,7 +175,7 @@ static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 		: VOX_REFN + (VOX_MAXN - VOX_REFN) * ((p->len - 64) / 63.f);
 	if(v->Nf < VOX_MINN) { v->Nf = v->NfT; v->N = 0; }	/* first call */
 	const float vp = p->vow * ((VOX_VOWELS - 1) / 127.f);
-	if(vp != v->vowPos || !v->N) { v->vowPos = vp; v->shapeDirty = 1; }
+	v->vowPos = vp;
 	/* velum area: measured so that each step of NAS changes the spectrum about equally */
 	{
 		static const float q[9] = { 0.f, 0.02f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 0.9f, 1.f };
@@ -190,15 +201,29 @@ static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 	}
 	/* source */
 	v->src = p->src != 0;
-	v->cns = p->cns;
 	const float t = p->tns / 127.f;
 	v->oq = 0.85f - 0.5f * t;					/* open quotient */
 	v->tilt = 0.75f - 0.65f * t;				/* lowpass of the source: soft = dark */
-	const float b = p->bre * (1.f / 127.f);
-	v->breath = VOX_BREATH_GAIN * b * b;
-	v->gain = (1.f - 0.7f * b * b) / (0.3f + 0.7f * v->oq);	/* much breath: less voicing (whisper) */
+	v->gain = 1.f / (0.3f + 0.7f * v->oq);
+	/* chord: frequency ratios of the sources (equal temperament; uni: +-12 cents) */
+	{
+		static const float ch[VOX_CHORDS][VOX_SRCS] = {
+			{ 1.f, 0.f, 0.f, 0.f }, { 1.f, 1.00696f, 0.99309f, 0.f }, { 1.f, 2.f, 0.f, 0.f }, { 1.f, 1.49831f, 0.f, 0.f },
+			{ 1.f, 1.18921f, 1.49831f, 0.f }, { 1.f, 1.25992f, 1.49831f, 0.f }, { 1.f, 1.33484f, 1.49831f, 0.f },
+			{ 1.f, 1.18921f, 1.49831f, 1.78180f } };
+		const uint8_t c = p->chd < VOX_CHORDS ? p->chd : VOX_CHORDS-1;
+		uint8_t n = 0;
+		for(uint8_t i=0;i<VOX_SRCS;i++)
+			if(ch[c][i] > 0.f) v->ratio[n++] = ch[c][i];
+		v->nSrc = n;
+		v->srcNorm = n == 1 ? 1.f : (n == 2 ? 0.7071f : (n == 3 ? 0.5774f : 0.5f));
+	}
+	/* vowel EG: from u (0) or y (VOX_VOWELS-1) at full offset */
+	v->vegOff = (p->veg - 63) * ((VOX_VOWELS - 1) / 63.f);
+	voxCore_setEnv(v, v->env);
+	if(!v->N) v->shapeDirty = 1;
 	/* syrinx: drive -> alpha, tension -> beta (table indices; alpha from the 2nd column: always oscillating) */
-	v->sa = 1.f + p->bre * ((VOX_SYR - 2) / 127.f);
+	v->sa = 3.5f;	/* drive (air sac pressure): fixed, mid range */
 	v->sb = p->tns * ((VOX_SYR - 1) / 127.f);
 	v->sTT = voxCore_bilin(voxCore_syrT, v->sb, v->sa);
 	v->sLoT = voxCore_bilin(voxCore_syrLo, v->sb, v->sa);
@@ -216,9 +241,7 @@ static inline void voxCore_setPitch(VoxCore* v, const float f0, const float fs)
 /* a trigger: restarts the source (the tract keeps ringing) */
 static inline void voxCore_trigger(VoxCore* v)
 {
-	v->phase = 0.f;
-	v->bPos = 0;
-	v->bLen = v->cns ? (uint16_t)(400.f + 1600.f * v->cns * v->cns * (1.f / 16129.f)) : 0;	/* 18 .. 90 ms */
+	for(uint8_t i=0;i<VOX_SRCS;i++) v->ph[i] = i * 0.31f;	/* unison: not in phase */
 	if(!v->rnd) v->rnd = 0x2545F491u;
 	if(!(v->sx == v->sx) || v->sx == 0.f) { v->sx = 0.2f; v->sy = 0.f; }
 }
@@ -227,6 +250,27 @@ static inline void voxCore_syrRhs(const float x, const float y, const float a, c
 {
 	*dx = y;
 	*dy = -a - b * x - x * x * x - x * x * y + x * x - x * y;
+}
+
+/* vocal folds: KLGLOTT88-like flow pulse u = 27/4 phi^2 (1 - phi) in the open phase; the
+ * derivative of the sources from..nSrc-1 (a chord), through the spectral tilt */
+static inline float voxCore_folds(VoxCore* v, const float fst, const uint8_t from)
+{
+	const float inc = v->f0 / fst, ioq = 1.f / v->oq;
+	float d = 0.f;
+	for(uint8_t i=from;i<v->nSrc;i++)
+	{
+		float p = v->ph[i] + inc * v->ratio[i];
+		if(p >= 1.f) p -= (float)(int)p;
+		v->ph[i] = p;
+		if(p < v->oq)
+		{
+			const float q = p * ioq;
+			d += 6.75f * q * (2.f - 3.f * q);
+		}
+	}
+	v->tiltZ += (1.f - v->tilt) * (d * VOX_GLOT_GAIN - v->tiltZ);
+	return v->tiltZ * v->gain;
 }
 
 /* the source at the tract rate: flow derivative into the tract */
@@ -264,25 +308,11 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 		 * no clicks when settings change */
 		const float rg = 1.f / (v->sHi - v->sLo + 1e-3f);
 		const float un = (x - v->sLo) * rg;
-		if(un <= 0.f || un >= 1.f) return 0.f;
-		return 2.f * un * y * rg * (VOX_SYR_GAIN / v->pn);	/* / pn: as loud at low as at high pitches */
+		const float sy = (un <= 0.f || un >= 1.f) ? 0.f : 2.f * un * y * rg * (VOX_SYR_GAIN / v->pn);	/* / pn: as loud at low as at high pitches */
+		/* a chord: the other notes come from vocal fold sources */
+		return v->nSrc > 1 ? (sy + voxCore_folds(v, fst, 1)) * v->srcNorm : sy;
 	}
-	/* vocal folds: KLGLOTT88-like flow pulse u = 27/4 phi^2 (1 - phi) in the open phase */
-	v->phase += v->f0 / fst;
-	if(v->phase >= 1.f) v->phase -= (float)(int)v->phase;
-	float d = 0.f, u = 0.f;
-	if(v->phase < v->oq)
-	{
-		const float ph = v->phase / v->oq;
-		d = 6.75f * ph * (2.f - 3.f * ph) * VOX_GLOT_GAIN;
-		u = 6.75f * ph * ph * (1.f - ph);
-	}
-	v->tiltZ += (1.f - v->tilt) * (d - v->tiltZ);
-	/* breath: aspiration noise, modulated by the flow (not chopped: half of it always there),
-	 * highpassed (no rumble) */
-	const float hn = noise - v->nzZ;
-	v->nzZ += 0.3f * (noise - v->nzZ);
-	return v->tiltZ * v->gain + v->breath * hn * (0.5f + 0.5f * u);
+	return voxCore_folds(v, fst, 0) * v->srcNorm;
 }
 
 /* one tick of the tract (at the tract rate): returns the radiated sound.
@@ -356,15 +386,6 @@ static inline void voxCore_render(VoxCore* v, const int16_t* extra, float* out, 
 			v->out0 = v->out1;
 			float s = voxCore_source(v, fst);
 			if(extra) s += (extra[i] + (i+1 < n ? extra[i+1] : 0)) * (1.f / 32768.f);
-			if(v->bPos < v->bLen)
-			{
-				/* consonant: the source starts in the second half of the burst */
-				const float e = 1.f - v->bPos / (float)v->bLen;
-				if(2u * v->bPos < v->bLen) s = 0.f;
-				v->rnd = v->rnd * 1664525u + 1013904223u;
-				v->R[(3u * v->N) / 4u] += (int32_t)v->rnd * (1.f / 2147483648.f) * e * e * e * VOX_CNS_GAIN;
-				v->bPos++;
-			}
 			v->out1 = voxCore_tick(v, s);
 			y = 0.5f * (v->out0 + v->out1);
 		}

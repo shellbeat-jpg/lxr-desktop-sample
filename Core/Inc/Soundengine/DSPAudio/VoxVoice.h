@@ -4,7 +4,7 @@
  * MOD (XT): test engine "vox", a physical model of a voice (VoxCore.h).
  * Uses the drum voice's pages; its 7 engine specific settings (roles of
  * VoiceSlot.h): 0 source (vocal folds / syrinx), 1 tract length, 2 nasal,
- * 3 consonant, 4 vowel, 5 tension, 6 breath (syrinx: drive). Pitch, amp EG,
+ * 3 vowel EG, 4 vowel, 5 tension, 6 chord. Pitch, amp EG,
  * filter, transient (as an additional source), distortion, LFO and mix as for
  * every engine.
  *

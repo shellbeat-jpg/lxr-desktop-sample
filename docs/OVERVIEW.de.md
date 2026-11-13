@@ -31,7 +31,7 @@ Waser), alles andere aus XT.
 | Modal-Engine | Neue Engine: Physical Modelling einer angeschlagenen Membran, eines Stabs, einer Saite, Glocke, Platte oder eines Glases (`MDL`, `DMP`, `POS`, `INH`, `HRD`, `MAT`, `EXC`). Test. | VOICE (SHIFT + KIT, `modal`) | Kit | NRPN 98 |
 | FM2-Engine | 2-Operator-FM-Percussion: Ratio `RAT`, Index `IDX` mit eigenem Abklingen `IDC`, Feedback `FBK`. Test. | VOICE (SHIFT + KIT, `fm2`) | Kit | NRPN 98 |
 | Wavetable-Engine | Durchfährt Sinus › Dreieck › Rechteck › Sägezahn, ein Set aus den User-Waves oder 4 eigene Sets aus `SAMPLES/TABLES` (Serum, Vital, WaveEdit); ausgerichtete Frames, echte Zwischenwellen, höhenbegrenzt; `SWP` Sweep durch den Pitch-EG, `SCN` weich, stufig oder vor und zurück. Test. | VOICE (SHIFT + KIT, `wavetable`) | Kit; Sets: Sample-Speicher | NRPN 98 |
-| Vox-Engine | Physikalisches Modell einer Stimme: Stimmlippen oder Vogel-Syrinx in einen Vokaltrakt mit Nasenabzweig; Vokal-Morph `VOW` (u … y), `LEN`, `NAS`, Konsonant-Burst `CNS`, `TNS`, `BRE`, `SRC`. Test. | VOICE (SHIFT + KIT, `vox`) | Kit | NRPN 98 |
+| Vox-Engine | Physikalisches Modell einer Stimme: Stimmlippen oder Vogel-Syrinx in einen Vokaltrakt mit Nasenabzweig; Vokal-Morph `VOW` (u … y), `LEN`, `NAS`, Vokal-Hüllkurve `VEG`, Akkord/Unisono `CHD`, `TNS`, `SRC`. Test. | VOICE (SHIFT + KIT, `vox`) | Kit | NRPN 98 |
 
 ## Sequencer / Tracks
 

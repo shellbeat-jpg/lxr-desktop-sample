@@ -51,6 +51,7 @@
 #define MENU_OCT_RND		32	//MOD: random octave of a track
 #define MENU_STEP_OCT		33	//MOD: of a step
 #define MENU_VOX_SRC		34	//MOD: vox engine
+#define MENU_VOX_CHD		35	//MOD: vox engine: chord
 
 //-----------------------------------------------------------------
 // Shared texts. Reduce mem usage by pooling common text
@@ -448,6 +449,19 @@ const char voxSrcNames[][4] =
 		{"vce"},	// vocal folds
 		{"syr"},	// syrinx (bird)
 };
+//MOD: vox engine: chord / unison of the sources
+const char voxChdNames[][4] =
+{
+		{8},
+		{"off"},
+		{"uni"},	// 3 sources, +-12 cents
+		{"oct"},
+		{"5th"},
+		{"min"},
+		{"maj"},
+		{"sus"},	// sus4
+		{"m7"},
+};
 const char stepOctNames[][4] =
 {
 		{7},
@@ -642,10 +656,10 @@ const char shortNames[][4]  =
 	{"src"},	//MOD: vox engine
 	{"len"},
 	{"nas"},
-	{"cns"},
+	{"veg"},
 	{"vow"},
 	{"tns"},
-	{"bre"},
+	{"chd"},
 
 };
 //-----------------------------------------------------------------
@@ -846,10 +860,10 @@ const char longNames[][16] =
 	{"Source"},		//MOD: vox engine
 	{"Tract len."},
 	{"Nasal"},
-	{"Consonant"},
+	{"Vowel EG"},
 	{"Vowel"},
 	{"Tension"},
-	{"Breath"},
+	{"Chord"},
 };
 
 
