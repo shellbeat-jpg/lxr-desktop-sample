@@ -16,6 +16,7 @@
 void Vox_init(VoxVoice* v, uint8_t slot)
 {
 	enginePost_init((VoiceCommon*)v, slot, &v->MixerPageFilter[0]);
+	memset(&v->core, 0, sizeof v->core);	/* the slot's memory held another engine */
 	const VoxParams p = { 54, 0, 64, 20, 64, 0, 0 };	/* "a", adult, no nasal, no consonant */
 	v->par = p;
 	v->dirty = 1;

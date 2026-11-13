@@ -6,7 +6,8 @@
  * the LXR: a source (vocal folds or a bird's syrinx) drives a tube of
  * sections (the vocal tract, Kelly-Lochbaum lattice at half the sample rate)
  * with a nasal branch. Vowel shapes (area functions) were fitted offline to
- * the formants of 8 vowels; VOW morphs between them, LEN scales the tract.
+ * the formants of 8 vowels; VOW morphs between them, LEN scales the tract
+ * (continuously: the lips sit between the last two sections).
  * Syrinx: the normal form of Gardner/Mindlin (labial oscillator).
  * No hardware dependencies: also built by the host test (tests/host/vox.c).
  *
@@ -47,8 +48,14 @@ typedef struct
 	float phase, f0;		/* source phase 0..1, pitch [Hz] */
 	float oq, tilt, tiltZ, breath, gain;
 	float sx, sy, sa, sb, sT, sLo, sHi, sPrev;	/* syrinx */
+	float nzZ;				/* breath noise highpass */
 	float out0, out1, dcX, dcY;
 	float pn;				/* level by pitch: sqrt(f0 / tract rate) */
+	float Nf, NfT;			/* tract length in sections (smoothed, target): the last section is partial */
+	float lipF;				/* part of the last section that is used, 0..1 */
+	float vowPos;			/* vowel position 0..VOX_VOWELS-1 */
+	float sLoT, sHiT, sTT;	/* syrinx: targets (smoothed per tick: no clicks) */
+	uint8_t shapeDirty;
 	uint16_t bPos, bLen;	/* consonant burst */
 	uint8_t cns;
 	uint32_t rnd;
@@ -102,8 +109,9 @@ static const float voxCore_syrHi[VOX_SYR][VOX_SYR] =
 
 #define VOX_FST(fs)		((fs) * 0.5f)	/* tract rate */
 #define VOX_GLOT_GAIN	1.f
-#define VOX_SYR_GAIN	2.5f
+#define VOX_SYR_GAIN	0.8f
 #define VOX_CNS_GAIN	6.f
+#define VOX_BREATH_GAIN	2.f
 
 static inline float voxCore_bilin(const float t[VOX_SYR][VOX_SYR], const float b, const float a)
 {
@@ -112,51 +120,72 @@ static inline float voxCore_bilin(const float t[VOX_SYR][VOX_SYR], const float b
 	return (t[bi][ai] * (1.f - fa) + t[bi][ai+1] * fa) * (1.f - fb) + (t[bi+1][ai] * (1.f - fa) + t[bi+1][ai+1] * fa) * fb;
 }
 
-/* shape, length, velum, source: on a parameter change (control rate) */
-static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
+/* the shape: vowel morph and length (control rate) */
+static inline void voxCore_shape(VoxCore* v)
 {
-	uint8_t N = p->len < 64 ? (uint8_t)(VOX_MINN + ((VOX_REFN - VOX_MINN) * (uint32_t)p->len + 32) / 64)
-		: (uint8_t)(VOX_REFN + ((VOX_MAXN - VOX_REFN) * (uint32_t)(p->len - 64) + 31) / 63);
-	if(N != v->N)
-	{
-		for(uint8_t i=v->N;i<N;i++) v->R[i] = 0.f;
-		v->N = N;
-	}
-	/* vowel morph, resampled from VOX_REFN to N sections */
-	const float pos = p->vow * ((VOX_VOWELS - 1) / 127.f);
+	uint8_t N = (uint8_t)ceilf(v->Nf - 1e-4f);
+	if(N < VOX_MINN) N = VOX_MINN;
+	if(N > VOX_MAXN) N = VOX_MAXN;
+	for(uint8_t i=v->N;i<N;i++) v->R[i] = 0.f;
+	v->N = N;
+	v->lipF = v->Nf - (N - 1);
+	if(v->lipF < 0.f) v->lipF = 0.f;
+	if(v->lipF > 1.f) v->lipF = 1.f;
+	const float pos = v->vowPos;
 	const uint8_t a = pos >= VOX_VOWELS-1 ? VOX_VOWELS-2 : (uint8_t)pos;
 	const float fv = pos - a;
+	const float sc = (float)VOX_REFN / v->Nf;
 	for(uint8_t i=0;i<N;i++)
 	{
-		const float x = (i + 0.5f) * ((float)VOX_REFN / N) - 0.5f;
-		uint8_t j = x <= 0.f ? 0 : (uint8_t)x;
+		float x = (i + 0.5f) * sc - 0.5f;
+		if(x < 0.f) x = 0.f;
+		uint8_t j = (uint8_t)x;
 		if(j > VOX_REFN-2) j = VOX_REFN-2;
-		float f = x - j; if(f < 0.f) f = 0.f; if(f > 1.f) f = 1.f;
+		float f = x - j; if(f > 1.f) f = 1.f;
 		const float A0 = voxCore_vowels[a][j] * (1.f - f) + voxCore_vowels[a][j+1] * f;
 		const float A1 = voxCore_vowels[a+1][j] * (1.f - f) + voxCore_vowels[a+1][j+1] * f;
 		v->A[i] = A0 * (1.f - fv) + A1 * fv;
 	}
-	/* lips: the last section keeps the fitted lip area */
-	v->A[N-1] = voxCore_vowels[a][VOX_REFN-1] * (1.f - fv) + voxCore_vowels[a+1][VOX_REFN-1] * fv;
+	/* lips: the last section has the fitted lip area; the one before becomes the lips while
+	 * the end moves towards it (lipF -> 0), so a new section starts where the lips were */
+	const float lip = voxCore_vowels[a][VOX_REFN-1] * (1.f - fv) + voxCore_vowels[a+1][VOX_REFN-1] * fv;
+	v->A[N-1] = lip;
+	v->A[N-2] += (lip - v->A[N-2]) * (1.f - v->lipF);
 	v->k[0] = 0.f;
 	for(uint8_t i=1;i<N;i++)
 		v->k[i] = (v->A[i-1] - v->A[i]) / (v->A[i-1] + v->A[i]);
-	/* nasal branch at about half the tract */
-	v->nv = (uint8_t)(N / 2);
-	v->nA0 = p->nas * (1.8f / 127.f);
+	v->nv = (uint8_t)(v->Nf * 0.5f + 0.5f);
+}
+
+/* parameters (control rate); length and syrinx settle smoothly */
+static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
+{
+	v->NfT = p->len < 64 ? VOX_MINN + (VOX_REFN - VOX_MINN) * (p->len / 64.f)
+		: VOX_REFN + (VOX_MAXN - VOX_REFN) * ((p->len - 64) / 63.f);
+	if(v->Nf < VOX_MINN) { v->Nf = v->NfT; v->N = 0; }	/* first call */
+	const float vp = p->vow * ((VOX_VOWELS - 1) / 127.f);
+	if(vp != v->vowPos || !v->N) { v->vowPos = vp; v->shapeDirty = 1; }
+	/* velum area: measured so that each step of NAS changes the spectrum about equally */
+	{
+		static const float q[9] = { 0.f, 0.02f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 0.9f, 1.f };
+		static const float ar[9] = { 0.f, 0.008f, 0.0196f, 0.04f, 0.108f, 0.294f, 0.736f, 1.374f, 2.f };
+		const float n = p->nas * (1.f / 127.f);
+		uint8_t i = 1;
+		while(i < 8 && n > q[i]) i++;
+		v->nA0 = ar[i-1] + (ar[i] - ar[i-1]) * (n - q[i-1]) / (q[i] - q[i-1]);
+	}
 	if(p->nas && !v->nasOn)
 		for(uint8_t i=0;i<VOX_NASN;i++) v->nR[i] = 0.f;
 	v->nasOn = p->nas != 0;
 	{
-		/* nasal tube areas: velum port, cavity, nostrils */
-		float prev = v->nA0 > 0.01f ? v->nA0 : 0.01f;
+		/* nasal tube: velum port, cavity, nostrils */
+		static const float nasA[VOX_NASN] = { 0.f, 1.10f, 1.70f, 2.20f, 2.55f, 2.70f, 2.60f, 2.30f, 1.90f, 1.45f, 1.05f, 0.75f };
+		float prev = v->nA0 > 0.001f ? v->nA0 : 0.001f;
 		v->nk[0] = 0.f;
 		for(uint8_t i=1;i<VOX_NASN;i++)
 		{
-			const float x = i / (float)(VOX_NASN - 1);
-			const float An = 0.6f + 2.2f * sinf(3.14159f * x) * (1.f - 0.5f * x);
-			v->nk[i] = (prev - An) / (prev + An);
-			prev = An;
+			v->nk[i] = (prev - nasA[i]) / (prev + nasA[i]);
+			prev = nasA[i];
 		}
 	}
 	/* source */
@@ -165,14 +194,16 @@ static inline void voxCore_setParams(VoxCore* v, const VoxParams* p)
 	const float t = p->tns / 127.f;
 	v->oq = 0.85f - 0.5f * t;					/* open quotient */
 	v->tilt = 0.75f - 0.65f * t;				/* lowpass of the source: soft = dark */
-	v->breath = p->bre * (4.f / 127.f);
-	v->gain = 1.f / (0.3f + 0.7f * v->oq);
-	/* syrinx: drive -> alpha, tension -> beta (table indices) */
-	v->sa = p->bre * ((VOX_SYR - 1) / 127.f);
+	const float b = p->bre * (1.f / 127.f);
+	v->breath = VOX_BREATH_GAIN * b * b;
+	v->gain = (1.f - 0.7f * b * b) / (0.3f + 0.7f * v->oq);	/* much breath: less voicing (whisper) */
+	/* syrinx: drive -> alpha, tension -> beta (table indices; alpha from the 2nd column: always oscillating) */
+	v->sa = 1.f + p->bre * ((VOX_SYR - 2) / 127.f);
 	v->sb = p->tns * ((VOX_SYR - 1) / 127.f);
-	v->sT = voxCore_bilin(voxCore_syrT, v->sb, v->sa);
-	v->sLo = voxCore_bilin(voxCore_syrLo, v->sb, v->sa);
-	v->sHi = voxCore_bilin(voxCore_syrHi, v->sb, v->sa);
+	v->sTT = voxCore_bilin(voxCore_syrT, v->sb, v->sa);
+	v->sLoT = voxCore_bilin(voxCore_syrLo, v->sb, v->sa);
+	v->sHiT = voxCore_bilin(voxCore_syrHi, v->sb, v->sa);
+	if(v->sT == 0.f) { v->sT = v->sTT; v->sLo = v->sLoT; v->sHi = v->sHiT; }
 }
 
 static inline void voxCore_setPitch(VoxCore* v, const float f0, const float fs)
@@ -210,13 +241,17 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 	const float noise = (int32_t)v->rnd * (1.f / 2147483648.f);
 	if(v->src)
 	{
-		/* syrinx: alpha 0.07..0.6, beta 0.1..1.3; tau advances by T * f0 / fs per sample */
+		/* settings glide (a step of lo/hi would click through the derivative) */
+		v->sT += 0.01f * (v->sTT - v->sT);
+		v->sLo += 0.01f * (v->sLoT - v->sLo);
+		v->sHi += 0.01f * (v->sHiT - v->sHi);
+		/* alpha 0.07..0.6, beta 0.1..1.3; tau advances by T * f0 / fs per sample */
 		const float a = 0.07f + 0.0757f * v->sa, b = 0.1f + 0.1714f * v->sb;
 		float dtau = v->sT * v->f0 / fst;
 		uint8_t n = (uint8_t)(dtau * 4.f) + 1;		/* steps of at most 0.25 */
 		if(n > 4) n = 4;
 		const float h = dtau / n;
-		float x = v->sx, y = v->sy;
+		float x = v->sx, y = v->sy + 1e-4f * noise;	/* a little noise: leaves a resting point */
 		for(uint8_t i=0;i<n;i++)
 		{
 			float k1x, k1y, k2x, k2y, k3x, k3y, k4x, k4y;
@@ -232,7 +267,9 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 		float u = (x - v->sLo) / (v->sHi - v->sLo + 1e-3f);
 		u = u < 0.f ? 0.f : (u > 1.f ? 1.f : u);
 		u *= u;
-		const float d = (u - v->sPrev) * VOX_SYR_GAIN / (v->pn * v->pn);
+		float pn2 = v->pn * v->pn;
+		if(pn2 < 0.005f) pn2 = 0.005f;
+		const float d = (u - v->sPrev) * VOX_SYR_GAIN / pn2;
 		v->sPrev = u;
 		return d;
 	}
@@ -243,24 +280,29 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 	if(v->phase < v->oq)
 	{
 		const float ph = v->phase / v->oq;
-		d = 6.75f * ph * (2.f - 3.f * ph);
+		d = 6.75f * ph * (2.f - 3.f * ph) * VOX_GLOT_GAIN;
 		u = 6.75f * ph * ph * (1.f - ph);
-		/* scaled to the period (steeper for a short open phase) */
-		d *= VOX_GLOT_GAIN;
 	}
 	v->tiltZ += (1.f - v->tilt) * (d - v->tiltZ);
-	return v->tiltZ * v->gain + v->breath * noise * (0.15f + u);
+	/* breath: aspiration noise, modulated by the flow (not chopped: half of it always there),
+	 * highpassed (no rumble) */
+	const float hn = noise - v->nzZ;
+	v->nzZ += 0.3f * (noise - v->nzZ);
+	return v->tiltZ * v->gain + v->breath * hn * (0.5f + 0.5f * u);
 }
 
-/* one tick of the tract (at the tract rate): returns the radiated sound */
+/* one tick of the tract (at the tract rate): returns the radiated sound.
+ * Waves are volume velocities (Kelly-Lochbaum); right-going delayed, left-going not */
 static inline float voxCore_tick(VoxCore* v, const float src)
 {
 	const float rg = 0.75f, rl = -0.85f, rn = -0.85f, loss = 0.996f;
 	const uint8_t N = v->N, nv = v->nv;
 	float* R = v->R;
 	const float* k = v->k;
-	float out = R[N-1] * (1.f + rl);
-	float l = rl * R[N-1];
+	/* lips: the end is between the last two sections (smooth length) */
+	const float Rl = R[N-2] + v->lipF * (R[N-1] - R[N-2]);
+	float out = Rl * (1.f + rl);
+	float l = rl * Rl;
 	float nl = 0.f;
 	if(v->nasOn)
 	{
@@ -278,12 +320,12 @@ static inline float voxCore_tick(VoxCore* v, const float src)
 	{
 		if(j == nv && v->nasOn)
 		{
-			/* three-port junction: pharynx side (j-1), mouth side (j), velum */
+			/* three-port junction (volume velocities): pharynx side (j-1), mouth side (j), velum */
 			const float Al = v->A[j-1], Ar = v->A[j], An = v->nA0;
-			const float pJ = 2.f * (Al * R[j-1] + Ar * l + An * nl) / (Al + Ar + An);
-			const float rOut = pJ - l;
-			v->nR[0] = (pJ - nl) * loss;
-			l = (pJ - R[j-1]) * loss;
+			const float S = 2.f * (R[j-1] + l + nl) / (Al + Ar + An);
+			const float rOut = Ar * S - l;
+			v->nR[0] = (An * S - nl) * loss;
+			l = (Al * S - R[j-1]) * loss;
 			R[j] = rOut * loss;
 			continue;
 		}
@@ -300,6 +342,18 @@ static inline float voxCore_tick(VoxCore* v, const float src)
 static inline void voxCore_render(VoxCore* v, const int16_t* extra, float* out, const uint8_t n, const float fs)
 {
 	const float fst = VOX_FST(fs);
+	/* length glides (a few ms), the shape follows per block */
+	if(v->Nf != v->NfT)
+	{
+		const float d = v->NfT - v->Nf;
+		v->Nf = fabsf(d) < 0.01f ? v->NfT : v->Nf + 0.25f * d;
+		v->shapeDirty = 1;
+	}
+	if(v->shapeDirty)
+	{
+		v->shapeDirty = 0;
+		voxCore_shape(v);
+	}
 	for(uint8_t i=0;i<n;i++)
 	{
 		float y;

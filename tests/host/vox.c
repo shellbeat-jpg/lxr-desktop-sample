@@ -67,6 +67,16 @@ int main(int argc, char** argv)
 		if(pk >= 0 && pk < minpk) minpk = pk;
 	}
 	printf("Extremwerte: Pegel %.4f .. %.3f\n", minpk, maxpk);
+	/* 2b. the syrinx sounds at every corner of tension and drive (it stayed silent at 0/0) */
+	for(int tns=0;tns<=127;tns+=127) for(int bre=0;bre<=127;bre+=127)
+	{
+		VoxCore v; memset(&v, 0, sizeof v); float x[32]; double s = 0;
+		VoxParams p = { 54, 0, 64, (uint8_t)bre, (uint8_t)tns, 1, 0 };
+		voxCore_setParams(&v, &p); voxCore_setPitch(&v, 800.f, FS); voxCore_trigger(&v);
+		for(int i=0;i<1000;i++) { voxCore_render(&v, 0, x, 32, FS); if(i >= 500) for(int j=0;j<32;j++) s += x[j]*x[j]; }
+		const double rms = sqrt(s / (500 * 32));
+		if(rms < 0.05) { printf("FEHLER: Syrinx stumm bei tns %d bre %d (rms %.4f)\n", tns, bre, rms); fail++; }
+	}
 	/* 3. demos */
 	if(dir)
 	{

@@ -801,13 +801,13 @@ engines (SHIFT + KIT, `vox`); drum pages:
 | Page | Displayed name | Name | Description |
 |---|---|---|---|
 | OSC | `COA`, `FIN` | Coarse, Fine | the pitch of the source (the note follows) |
-| MOD | `LEN` | Tract len. | 0 = 10 sections (small, bright) … 64 = adult (22, about 17 cm) … 127 = 36 (giant) |
-| MOD | `NAS` | Nasal | velum opening: 0 = closed … 127 = wide open (nasal, "ng") |
+| MOD | `LEN` | Tract len. | 0 = 10 sections (small, bright) … 64 = adult (22, about 17 cm) … 127 = 36 (giant); continuous, glides |
+| MOD | `NAS` | Nasal | velum opening: 0 = closed … 127 = wide open (nasal, "ng"); scaled so that each step changes the sound about equally |
 | MOD | `CNS` | Consonant | 0 = off; otherwise a noise burst at the front of the mouth on a trigger, 18 … 90 ms, the source sets in at its middle ("t", "ts") |
 | FM | `VOW` | Vowel | morphs u › o › ɔ › a › ɛ › e › i › y (0, 18, 36, 54, 73, 91, 109, 127) |
 | FM | `TNS` | Tension | vocal folds: soft and dark (0) … pressed and bright (127); syrinx: labial tension |
 | FM | `SRC` | Source | `vce` vocal folds, `syr` syrinx (a bird's: from a pure whistle to pulses) |
-| FM | `BRE` | Breath | vocal folds: breath noise (127 with `TNS` 0: whispered); syrinx: drive (air sac pressure) |
+| FM | `BRE` | Breath | vocal folds: breath noise, the voicing fades as it rises (127: whispered); syrinx: drive (air sac pressure) |
 
 The vowel shapes were fitted offline to the formants of the 8 vowels (`tools/vox`). The tube runs
 at half the sample rate (sound up to about 11 kHz). The amp EG applies (new voice: decay 110), so do
