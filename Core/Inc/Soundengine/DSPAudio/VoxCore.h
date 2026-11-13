@@ -47,7 +47,7 @@ typedef struct
 	float nA0;				/* velum port area */
 	float phase, f0;		/* source phase 0..1, pitch [Hz] */
 	float oq, tilt, tiltZ, breath, gain;
-	float sx, sy, sa, sb, sT, sLo, sHi, sPrev;	/* syrinx */
+	float sx, sy, sa, sb, sT, sLo, sHi;	/* syrinx */
 	float nzZ;				/* breath noise highpass */
 	float out0, out1, dcX, dcY;
 	float pn;				/* level by pitch: sqrt(f0 / tract rate) */
@@ -109,7 +109,7 @@ static const float voxCore_syrHi[VOX_SYR][VOX_SYR] =
 
 #define VOX_FST(fs)		((fs) * 0.5f)	/* tract rate */
 #define VOX_GLOT_GAIN	1.f
-#define VOX_SYR_GAIN	0.8f
+#define VOX_SYR_GAIN	0.7f
 #define VOX_CNS_GAIN	6.f
 #define VOX_BREATH_GAIN	2.f
 
@@ -221,11 +221,6 @@ static inline void voxCore_trigger(VoxCore* v)
 	v->bLen = v->cns ? (uint16_t)(400.f + 1600.f * v->cns * v->cns * (1.f / 16129.f)) : 0;	/* 18 .. 90 ms */
 	if(!v->rnd) v->rnd = 0x2545F491u;
 	if(!(v->sx == v->sx) || v->sx == 0.f) { v->sx = 0.2f; v->sy = 0.f; }
-	{
-		float u = (v->sx - v->sLo) / (v->sHi - v->sLo + 1e-3f);
-		u = u < 0.f ? 0.f : (u > 1.f ? 1.f : u);
-		v->sPrev = u * u;	/* no step at the start */
-	}
 }
 
 static inline void voxCore_syrRhs(const float x, const float y, const float a, const float b, float* dx, float* dy)
@@ -264,14 +259,13 @@ static inline float voxCore_source(VoxCore* v, const float fst)
 		}
 		if(!(x == x) || fabsf(x) > 10.f) { x = 0.2f; y = 0.f; }
 		v->sx = x; v->sy = y;
-		float u = (x - v->sLo) / (v->sHi - v->sLo + 1e-3f);
-		u = u < 0.f ? 0.f : (u > 1.f ? 1.f : u);
-		u *= u;
-		float pn2 = v->pn * v->pn;
-		if(pn2 < 0.005f) pn2 = 0.005f;
-		const float d = (u - v->sPrev) * VOX_SYR_GAIN / pn2;
-		v->sPrev = u;
-		return d;
+		/* flow u = un^2 (un = labial opening 0..1); its derivative by the oscillator's own time:
+		 * du/dtau = 2 un y / (hi - lo), from the equation, not a difference:
+		 * no clicks when settings change */
+		const float rg = 1.f / (v->sHi - v->sLo + 1e-3f);
+		const float un = (x - v->sLo) * rg;
+		if(un <= 0.f || un >= 1.f) return 0.f;
+		return 2.f * un * y * rg * (VOX_SYR_GAIN / v->pn);	/* / pn: as loud at low as at high pitches */
 	}
 	/* vocal folds: KLGLOTT88-like flow pulse u = 27/4 phi^2 (1 - phi) in the open phase */
 	v->phase += v->f0 / fst;
