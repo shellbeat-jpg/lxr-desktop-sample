@@ -8,4 +8,4 @@ Offline scripts for `Core/Inc/Soundengine/DSPAudio/VoxCore.h` (Python 3, numpy, 
   8 × 8 grid of drive α and tension β → `syr.json`.
 - `gen_tables.py` writes both as C tables (`tables.inc`), pasted into `VoxCore.h`.
 
-Host test with demo WAVs: `gcc -O2 -ICore/Inc tests/host/vox.c -lm && ./a.out <dir>`.
+Host test with demo WAVs: `gcc -O2 -ICore/Inc -Itests/host tests/host/vox.c -lm && ./a.out <dir>`.

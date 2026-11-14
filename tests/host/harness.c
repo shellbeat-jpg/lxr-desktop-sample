@@ -12,6 +12,7 @@ void* dw_open(const char*); const char* dw_next(void*); void dw_close(void*);
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include "wavwrite.h"
 static char root[512];
 int eraseCalls=0, badErase=0, badProg=0, progCount=0, failAfter=-1, locked=1;
 int bigOk=1, bigErase=0, failUpper=0, maxSector=0;
@@ -51,34 +52,26 @@ FRESULT f_readdir(DIR* d,FILINFO* fi){const char* en=dw_next(d->d); memset(fi,0,
   char b[900];snprintf(b,900,"%s/%s",d->path,en);struct stat st;stat(b,&st);
   strncpy(fi->fname,en,12);fi->fsize=st.st_size;fi->fattrib=S_ISDIR(st.st_mode)?AM_DIR:0;return FR_OK;}
 FRESULT f_closedir(DIR* d){dw_close(d->d);return FR_OK;}
-/* WAV writer */
+/* WAV writer (tests/host/wavwrite.h): a sample file in /SAMPLES, 16 or 24 bit PCM, a test
+ * pattern from the name; extraChunk: an odd "LIST" chunk (with its pad byte) before fmt */
 static void wav(const char* name,int ch,int bits,int rate,int frames,int extraChunk){
-  char b[600];snprintf(b,600,"%s/SAMPLES/%s",root,name);FILE* f=fopen(b,"wb");
-  int bps=bits/8, data=frames*ch*bps; int fmtlen=16;
-  int riff=4+8+fmtlen+(extraChunk?8+5+1:0)+8+data;
-  fwrite("RIFF",1,4,f);fwrite(&riff,4,1,f);fwrite("WAVE",1,4,f);
-  if(extraChunk){fwrite("LIST",1,4,f);int l=5;fwrite(&l,4,1,f);fwrite("abcde\0",1,6,f);}
-  fwrite("fmt ",1,4,f);fwrite(&fmtlen,4,1,f);short fmt=1,c=ch,bb=bits;int br=rate*ch*bps;short ba=ch*bps;
-  fwrite(&fmt,2,1,f);fwrite(&c,2,1,f);fwrite(&rate,4,1,f);fwrite(&br,4,1,f);fwrite(&ba,2,1,f);fwrite(&bb,2,1,f);
-  fwrite("data",1,4,f);fwrite(&data,4,1,f);
-  for(int i=0;i<frames;i++)for(int k=0;k<ch;k++){ int v=(i*37+k*1000+ (int)(name[0])*11)%30000-15000; if(bits==16){short s=v;fwrite(&s,2,1,f);} else {int s=v<<8;fwrite(&s,3,1,f);} }
-  fclose(f);}
+  WavWriter w; if(wavw_open(&w,"%s/SAMPLES/%s",root,name)) return;
+  if(extraChunk) wavw_chunk(&w,"LIST","abcde",5);
+  wavw_fmt(&w,WAV_FORMAT_PCM,(uint16_t)ch,(uint32_t)rate,(uint16_t)bits);
+  wavw_data(&w);
+  for(int i=0;i<frames;i++)for(int k=0;k<ch;k++){ int v=(i*37+k*1000+ (int)(name[0])*11)%30000-15000; if(bits==16) wavw_s16(&w,(int16_t)v); else wavw_s24(&w,v*256);}
+  wavw_close(&w);}
 /* MOD: a wavetable file in /SAMPLES/TABLES: cycles of L points (cycle c: a sine
  * with harmonic 1..c+1, phase shifted by c*0.3 rad), 16 bit or 32 bit float,
  * optionally with a Serum "clm " chunk */
 static void table(const char* name,int L,int cycles,int isFloat,int clm,int ch){
-  char b[600];snprintf(b,600,"%s/SAMPLES/TABLES/%s",root,name);FILE* f=fopen(b,"wb");
-  int bps=isFloat?4:2, frames=L*cycles, data=frames*ch*bps, fmtlen=16; char cl[16]; int cll=0;
-  if(clm){ cll=snprintf(cl,16,"<!>%d 1000",L); if(cll&1) cl[cll++]=0; }
-  int riff=4+8+fmtlen+(clm?8+cll:0)+8+data;
-  fwrite("RIFF",1,4,f);fwrite(&riff,4,1,f);fwrite("WAVE",1,4,f);
-  fwrite("fmt ",1,4,f);fwrite(&fmtlen,4,1,f);short fmt=isFloat?3:1,c=ch,bb=bps*8;int rate=44100,br=rate*ch*bps;short ba=ch*bps;
-  fwrite(&fmt,2,1,f);fwrite(&c,2,1,f);fwrite(&rate,4,1,f);fwrite(&br,4,1,f);fwrite(&ba,2,1,f);fwrite(&bb,2,1,f);
-  if(clm){fwrite("clm ",1,4,f);fwrite(&cll,4,1,f);fwrite(cl,1,cll,f);}
-  fwrite("data",1,4,f);fwrite(&data,4,1,f);
+  WavWriter w; if(wavw_open(&w,"%s/SAMPLES/TABLES/%s",root,name)) return;
+  wavw_fmt(&w,isFloat?WAV_FORMAT_FLOAT:WAV_FORMAT_PCM,(uint16_t)ch,44100,isFloat?32:16);
+  if(clm){ char cl[16]; const int n=snprintf(cl,sizeof cl,"<!>%d 1000",L); if(n>0&&(size_t)n<sizeof cl) wavw_chunk(&w,"clm ",cl,(uint32_t)n); else wavw_fail(&w,"clm chunk too long"); }
+  wavw_data(&w);
   for(int cy=0;cy<cycles;cy++)for(int i=0;i<L;i++){ double x=0; for(int h=1;h<=cy+1&&h<6;h++) x+=sin(2*M_PI*h*i/L+cy*0.3*h)/h; x*=0.5;
-    for(int k=0;k<ch;k++){ if(isFloat){float v=(float)x;fwrite(&v,4,1,f);} else {short s=(short)(x*32000);fwrite(&s,2,1,f);} } }
-  fclose(f);}
+    for(int k=0;k<ch;k++){ if(isFloat) wavw_f32(&w,(float)x); else wavw_s16(&w,(short)(x*32000)); } }
+  wavw_close(&w);}
 /* frame f, level l of a set: the sample nearest to a sine of the fundamental at phase 0? */
 static double tbl_fundPhase(const int16_t* fr,int l){ int n=WT_LEVEL_LEN(l); const int16_t* p=fr+WT_LEVEL_OFS(l); double re=0,im=0;
   for(int i=0;i<n;i++){ re+=p[i]*cos(2*M_PI*i/n); im+=p[i]*sin(2*M_PI*i/n);} return atan2(re,im); }
@@ -231,4 +224,5 @@ int main(){
   RUN("23 TABLES entfernt"); { uint8_t n=0; CHECK(last==SF_OK_IMPORTED && sampleFlash_table(1,&n)==NULL && sampleFlash_table(0,&n)==NULL,"keine Sets mehr"); }
   CHECK(badErase==0,"NIE ein anderer Sektor als 6-11 geloescht, nie ohne Unlock");
   CHECK(badProg==0,"NIE ausserhalb 0x08080000-0x080FFFFF oder auf nicht geloeschte Woerter geschrieben");
+  if(wavw_errors){ printf("   FAIL: %d Fehler beim Schreiben der Test-WAVs\n",wavw_errors); fails++; }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails;}

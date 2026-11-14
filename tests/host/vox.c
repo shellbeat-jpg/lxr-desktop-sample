@@ -1,64 +1,37 @@
 /* MOD: host test of the vox engine's sound (VoxCore.h): stability, level, demo renders.
- * Usage: gcc -O2 -ICore/Inc tests/host/vox.c -lm && ./a.out [dir for wavs] */
+ * Usage: gcc -O2 -ICore/Inc -Itests/host tests/host/vox.c -lm && ./a.out [dir for wavs] */
 #include "Soundengine/DSPAudio/VoxCore.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include "wavwrite.h"
 #define FS 44140.f
-/* demo WAVs: 16 bit PCM mono at FS, little endian. A NULL dir (no demo output wanted, only the
- * checks run) gives a NULL file, which put() and wavClose() accept. Write errors count as test
- * failures (wavErrors). */
-#define WAV_HEADER_SIZE	44	/* RIFF + fmt + data chunk of a plain PCM WAV */
-#define WAV_FMT_SIZE	16	/* fmt chunk of PCM */
-#define WAV_PCM			1
-#define WAV_CHANNELS	1
-#define WAV_BITS		16
-static int wavErrors = 0;
-static FILE* wavOpen(const char* dir, const char* name)
+/* demo WAVs (tests/host/wavwrite.h): 16 bit PCM mono at FS. A NULL dir (no demo output
+ * wanted, only the checks run) gives NULL, which put() and wavClose() accept; write errors
+ * count as test failures (wavw_errors). */
+static WavWriter* wavOpen(WavWriter* w, const char* dir, const char* name)
 {
 	if(!dir) return NULL;
-	char p[512];
-	const int n = snprintf(p, sizeof p, "%s/%s.wav", dir, name);
-	if(n < 0 || (size_t)n >= sizeof p) { fprintf(stderr, "WAV path too long: %s/%s\n", dir, name); wavErrors++; return NULL; }
-	FILE* f = fopen(p, "wb");
-	if(!f) { perror(p); wavErrors++; return NULL; }
-	if(fseek(f, WAV_HEADER_SIZE, SEEK_SET) != 0) { perror(p); fclose(f); wavErrors++; return NULL; }
-	return f;
+	if(wavw_open(w, "%s/%s.wav", dir, name)) return NULL;
+	wavw_fmt(w, WAV_FORMAT_PCM, 1, (uint32_t)FS, 16);
+	wavw_data(w);
+	return w;
 }
-static uint8_t* le16(uint8_t* p, const uint16_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); return p + 2; }
-static uint8_t* le32(uint8_t* p, const uint32_t v) { for(int i=0;i<4;i++) p[i] = (uint8_t)(v >> (8*i)); return p + 4; }
-static uint8_t* tag(uint8_t* p, const char t[4]) { memcpy(p, t, 4); return p + 4; }
-/* writes the header for the data written so far and closes the file */
-static void wavClose(FILE* f)
+static void wavClose(WavWriter* w)
 {
-	if(!f) return;
-	const long end = ftell(f);
-	if(end < WAV_HEADER_SIZE) { fclose(f); wavErrors++; return; }
-	const uint32_t data = (uint32_t)(end - WAV_HEADER_SIZE);
-	const uint16_t align = WAV_CHANNELS * WAV_BITS / 8;
-	const uint32_t rate = (uint32_t)FS;
-	uint8_t h[WAV_HEADER_SIZE], *p = h;
-	p = tag(p, "RIFF"); p = le32(p, WAV_HEADER_SIZE - 8 + data); p = tag(p, "WAVE");
-	p = tag(p, "fmt "); p = le32(p, WAV_FMT_SIZE); p = le16(p, WAV_PCM); p = le16(p, WAV_CHANNELS);
-	p = le32(p, rate); p = le32(p, rate * align); p = le16(p, align); p = le16(p, WAV_BITS);
-	p = tag(p, "data"); p = le32(p, data);
-	const int ok = (p - h == WAV_HEADER_SIZE) && fseek(f, 0, SEEK_SET) == 0 && fwrite(h, sizeof h, 1, f) == 1;
-	if(fclose(f) != 0 || !ok) { fprintf(stderr, "WAV header not written\n"); wavErrors++; }
+	if(w) wavw_close(w);
 }
 /* one sample, x * g clipped to -1..1 */
-static void put(FILE* w, const float x, const float g)
+static void put(WavWriter* w, const float x, const float g)
 {
 	if(!w) return;
 	float v = x * g;
 	if(v > 1.f) v = 1.f;
 	if(v < -1.f) v = -1.f;
-	const int16_t s = (int16_t)(v * 32767.f);
-	uint8_t b[2];
-	le16(b, (uint16_t)s);
-	if(fwrite(b, sizeof b, 1, w) != 1) wavErrors++;
+	wavw_s16(w, (int16_t)(v * 32767.f));
 }
-static float renderVowel(VoxParams p, float f0, float sec, FILE* w)
+static float renderVowel(VoxParams p, float f0, float sec, WavWriter* w)
 {
 	VoxCore v; memset(&v, 0, sizeof v);
 	voxCore_setParams(&v, &p); voxCore_setPitch(&v, f0, FS); voxCore_trigger(&v);
@@ -74,7 +47,7 @@ int main(int argc, char** argv)
 	static const char* names[VOX_VOWELS] = { "u", "o", "O", "a", "E", "e", "i", "y" };
 	int fail = 0;
 	/* 1. the vowels at a male pitch (formants: checked offline, see VoxCore.h) */
-	FILE* w = wavOpen(dir, "vox_vowels");
+	WavWriter ww; WavWriter* w = wavOpen(&ww, dir, "vox_vowels");
 	for(int i=0;i<VOX_VOWELS;i++)
 	{
 		VoxParams p = { .vow = (uint8_t)(i * 127 / (VOX_VOWELS-1)), .len = 64, .tns = 64, .veg = 63 };
@@ -122,7 +95,7 @@ int main(int argc, char** argv)
 		};
 		for(unsigned k=0;k<sizeof d/sizeof d[0];k++)
 		{
-			FILE* f = wavOpen(dir, d[k].name);
+			WavWriter wf; WavWriter* f = wavOpen(&wf, dir, d[k].name);
 			memset(&v, 0, sizeof v);
 			VoxParams p = { .nas = (uint8_t)d[k].nas, .len = (uint8_t)d[k].len, .tns = (uint8_t)d[k].tns, .src = (uint8_t)d[k].src, .veg = 63, .chd = (uint8_t)d[k].chd };
 			voxCore_setParams(&v, &p); voxCore_setPitch(&v, d[k].f0, FS); voxCore_trigger(&v);
@@ -142,7 +115,7 @@ int main(int argc, char** argv)
 			free(all); wavClose(f);
 		}
 		/* drum-like: short triggers with the AEG done here as a decay */
-		FILE* f = wavOpen(dir, "vox_hits");
+		WavWriter wh; WavWriter* f = wavOpen(&wh, dir, "vox_hits");
 		memset(&v, 0, sizeof v);
 		for(int hit=0;hit<16;hit++)
 		{
@@ -172,7 +145,7 @@ int main(int argc, char** argv)
 			printf("%s: %.1f ns pro Sample (Host)\n", s ? "Syrinx" : "Stimme+Nase", ns);
 		}
 	}
-	if(wavErrors) { printf("FEHLER: %d beim Schreiben der WAVs\n", wavErrors); fail++; }
+	if(wavw_errors) { printf("FEHLER: %d beim Schreiben der WAVs\n", wavw_errors); fail++; }
 	printf(fail ? "VOX: %d FEHLER\n" : "VOX: ok\n", fail);
 	return fail != 0;
 }

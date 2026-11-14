@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <assert.h>
+#include "wavwrite.h"
 int harness_main(void);
 const int16_t sine_table[TABLESIZE+1]; const int16_t sawTable[11][1024]; const int16_t triTable[11][1024]; const int16_t recTable[11][1024];
 uint32_t GetRngValue(void){return 0;}
@@ -19,10 +20,12 @@ void osc_setFreq(OscInfo* osc); void osc_setBaseNote(OscInfo* osc, uint8_t baseN
 extern char lcdbuf[]; 
 int fails=0;
 #define CHECK(c,msg) do{ if(!(c)){printf("   FAIL: %s\n",msg);fails++;} else printf("   ok: %s\n",msg);}while(0)
+/* a 16 bit mono sample file in sd/SAMPLES (tests/host/wavwrite.h) */
 static void wav16(const char* name,int rate,int frames,int16_t (*f)(int)){
-  char b[256];snprintf(b,256,"sd/SAMPLES/%s",name);FILE* fp=fopen(b,"wb");int data=frames*2,riff=36+data,fl=16,br=rate*2;short fmt=1,c=1,ba=2,bb=16;
-  fwrite("RIFF",1,4,fp);fwrite(&riff,4,1,fp);fwrite("WAVEfmt ",1,8,fp);fwrite(&fl,4,1,fp);fwrite(&fmt,2,1,fp);fwrite(&c,2,1,fp);fwrite(&rate,4,1,fp);fwrite(&br,4,1,fp);fwrite(&ba,2,1,fp);fwrite(&bb,2,1,fp);
-  fwrite("data",1,4,fp);fwrite(&data,4,1,fp);for(int i=0;i<frames;i++){int16_t s=f(i);fwrite(&s,2,1,fp);}fclose(fp);}
+  WavWriter w; if(wavw_open(&w,"sd/SAMPLES/%s",name)) return;
+  wavw_fmt(&w,WAV_FORMAT_PCM,1,(uint32_t)rate,16); wavw_data(&w);
+  for(int i=0;i<frames;i++) wavw_s16(&w,f(i));
+  wavw_close(&w);}
 static int16_t ramp(int i){return (int16_t)(i*7-12000);}
 static int16_t sine(int i){return (int16_t)(20000*sin(2*M_PI*i/100.0));}
 static OscInfo mk(uint8_t slot){OscInfo o;memset(&o,0,sizeof o);o.waveform=NUM_OSC_WAVEFORMS+slot;o.pitchMod=1;o.modNodeValue=1;o.fmMod=0;o.midiFreq=(60<<8)|64;return o;}
@@ -157,4 +160,5 @@ int main(){
     CHECK(t.freq==MidiNoteFrequencies[60],"Track 7: Frequenz der Voice unveraendert");
     t.altWave=0; t.altPitch=0.f; osc_setBaseNote(&t,60); t.freq=MidiNoteFrequencies[60]; osc_setFreq(&t); calcNextOscSampleBlock(&t,buf,32,1.f,0.f);
 CHECK(t.smpWave==NUM_OSC_WAVEFORMS && t.phaseInc==(1u<<17),"Track 6 danach: wieder Sample 1 in Originalhoehe"); }
+  if(wavw_errors){ printf("   FAIL: %d Fehler beim Schreiben der Test-WAVs\n",wavw_errors); fails++; }
   printf("\n%s (%d Fehler)\n", fails?"FEHLER":"ALLE TESTS BESTANDEN", fails); return fails; }
