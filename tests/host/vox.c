@@ -6,27 +6,57 @@
 #include <stdlib.h>
 #include <time.h>
 #define FS 44140.f
+/* demo WAVs: 16 bit PCM mono at FS, little endian. A NULL dir (no demo output wanted, only the
+ * checks run) gives a NULL file, which put() and wavClose() accept. Write errors count as test
+ * failures (wavErrors). */
+#define WAV_HEADER_SIZE	44	/* RIFF + fmt + data chunk of a plain PCM WAV */
+#define WAV_FMT_SIZE	16	/* fmt chunk of PCM */
+#define WAV_PCM			1
+#define WAV_CHANNELS	1
+#define WAV_BITS		16
+static int wavErrors = 0;
 static FILE* wavOpen(const char* dir, const char* name)
 {
-	if(!dir) return 0;
-	char p[512]; snprintf(p, sizeof p, "%s/%s.wav", dir, name);
-	FILE* f = fopen(p, "wb"); if(!f) return 0;
-	fseek(f, 44, SEEK_SET); return f;
+	if(!dir) return NULL;
+	char p[512];
+	const int n = snprintf(p, sizeof p, "%s/%s.wav", dir, name);
+	if(n < 0 || (size_t)n >= sizeof p) { fprintf(stderr, "WAV path too long: %s/%s\n", dir, name); wavErrors++; return NULL; }
+	FILE* f = fopen(p, "wb");
+	if(!f) { perror(p); wavErrors++; return NULL; }
+	if(fseek(f, WAV_HEADER_SIZE, SEEK_SET) != 0) { perror(p); fclose(f); wavErrors++; return NULL; }
+	return f;
 }
+static uint8_t* le16(uint8_t* p, const uint16_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); return p + 2; }
+static uint8_t* le32(uint8_t* p, const uint32_t v) { for(int i=0;i<4;i++) p[i] = (uint8_t)(v >> (8*i)); return p + 4; }
+static uint8_t* tag(uint8_t* p, const char t[4]) { memcpy(p, t, 4); return p + 4; }
+/* writes the header for the data written so far and closes the file */
 static void wavClose(FILE* f)
 {
 	if(!f) return;
-	long n = ftell(f) - 44; uint32_t sr = 44140, br = sr * 2, sz = (uint32_t)n, rs = sz + 36;
-	fseek(f, 0, SEEK_SET);
-	fwrite("RIFF", 1, 4, f); fwrite(&rs, 4, 1, f); fwrite("WAVEfmt ", 1, 8, f);
-	uint32_t fl = 16; uint16_t fmt = 1, ch = 1, ba = 2, bps = 16;
-	fwrite(&fl, 4, 1, f); fwrite(&fmt, 2, 1, f); fwrite(&ch, 2, 1, f); fwrite(&sr, 4, 1, f); fwrite(&br, 4, 1, f);
-	fwrite(&ba, 2, 1, f); fwrite(&bps, 2, 1, f); fwrite("data", 1, 4, f); fwrite(&sz, 4, 1, f); fclose(f);
+	const long end = ftell(f);
+	if(end < WAV_HEADER_SIZE) { fclose(f); wavErrors++; return; }
+	const uint32_t data = (uint32_t)(end - WAV_HEADER_SIZE);
+	const uint16_t align = WAV_CHANNELS * WAV_BITS / 8;
+	const uint32_t rate = (uint32_t)FS;
+	uint8_t h[WAV_HEADER_SIZE], *p = h;
+	p = tag(p, "RIFF"); p = le32(p, WAV_HEADER_SIZE - 8 + data); p = tag(p, "WAVE");
+	p = tag(p, "fmt "); p = le32(p, WAV_FMT_SIZE); p = le16(p, WAV_PCM); p = le16(p, WAV_CHANNELS);
+	p = le32(p, rate); p = le32(p, rate * align); p = le16(p, align); p = le16(p, WAV_BITS);
+	p = tag(p, "data"); p = le32(p, data);
+	const int ok = (p - h == WAV_HEADER_SIZE) && fseek(f, 0, SEEK_SET) == 0 && fwrite(h, sizeof h, 1, f) == 1;
+	if(fclose(f) != 0 || !ok) { fprintf(stderr, "WAV header not written\n"); wavErrors++; }
 }
-static void put(FILE* w, float x, float g)
+/* one sample, x * g clipped to -1..1 */
+static void put(FILE* w, const float x, const float g)
 {
 	if(!w) return;
-	float v = x * g; if(v > 1) v = 1; if(v < -1) v = -1; int16_t s = (int16_t)(v * 32767); fwrite(&s, 2, 1, w);
+	float v = x * g;
+	if(v > 1.f) v = 1.f;
+	if(v < -1.f) v = -1.f;
+	const int16_t s = (int16_t)(v * 32767.f);
+	uint8_t b[2];
+	le16(b, (uint16_t)s);
+	if(fwrite(b, sizeof b, 1, w) != 1) wavErrors++;
 }
 static float renderVowel(VoxParams p, float f0, float sec, FILE* w)
 {
@@ -142,6 +172,7 @@ int main(int argc, char** argv)
 			printf("%s: %.1f ns pro Sample (Host)\n", s ? "Syrinx" : "Stimme+Nase", ns);
 		}
 	}
+	if(wavErrors) { printf("FEHLER: %d beim Schreiben der WAVs\n", wavErrors); fail++; }
 	printf(fail ? "VOX: %d FEHLER\n" : "VOX: ok\n", fail);
 	return fail != 0;
 }
